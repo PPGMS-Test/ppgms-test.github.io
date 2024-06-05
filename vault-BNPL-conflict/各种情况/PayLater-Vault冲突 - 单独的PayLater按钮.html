@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>单独的PayLater按钮</title>
+    </head>
+    <body>
+        <p>单独的PayLater按钮, create order也与vault没有关系</p>
+        <p>注意, 此时不可以传 vault=true或者displayOnly: ["vaultable"]参数</p>
+        <p>单独的PayLater默认是白色的, 需要自己改式样color:gold (这里是blue)</p>
+        <p>https://developer.paypal.com/sdk/js/reference/#link-color</p>
+        <div id="paypal-button-container" style="margin: auto"></div>
+        <script>
+            /**
+             * Global variable and constants area
+             */
+            var access_token;
+            var id_token;
+            // US client
+            const clientID =
+                "AaB-X2CM2jf9k-DU-sWSaNbpfKnHeRLHa84MppXHdBpv36uWUqGui9ldOk6SeET9Os5Hc4J5puUTetXo";
+            const secretKey =
+                "EAwyCjl9UrSmRqV4h6E_xoZdt3CVdJof6P9_1c8IY-jUca_m7g9oCAuMiw5vJ-MyhJzopPiRwbTaqUYy";
+
+            const CreateOrderRequestBody = {
+                intent: "CAPTURE",
+                payment_source: {
+                    paypal: {
+                        //*****************************
+                        // Billing address is here
+                        name: {
+                            given_name: "Fritz",
+                            surname: "von Berlichingen",
+                        },
+                        address: {
+                            address_line_1: "Albert-Einstein-Ring 2-6 ",
+                            address_line_2: "PayPal",
+                            admin_area_2: "Kleinmachnow",
+                            admin_area_1: "Brandenburg",
+                            postal_code: "14532",
+                            country_code: "DE",
+                        },
+                        experience_context: {
+                            payment_method_preference:
+                                "IMMEDIATE_PAYMENT_REQUIRED",
+                            brand_name: "EXAMPLE INC",
+                            locale: "en-US",
+                            landing_page: "LOGIN",
+                            shipping_preference: "SET_PROVIDED_ADDRESS",
+                            user_action: "PAY_NOW",
+                            // ********************************************
+                            //This param is required!
+                            return_url: "https://example.com/returnUrl",
+                            // ********************************************
+                            cancel_url: "https://example.com/cancelUrl",
+                        },
+                    },
+                },
+                purchase_units: [
+                    {
+                        // ********************************************
+                        //This param is required!
+                        description: "This is description for item",
+                        // ********************************************
+                        amount: {
+                            currency_code: "USD",
+                            value: "152",
+                            breakdown: {
+                                item_total: {
+                                    currency_code: "USD",
+                                    value: "148.00",
+                                },
+                                tax_total: {
+                                    currency_code: "USD",
+                                    value: "0",
+                                },
+                                shipping: {
+                                    currency_code: "USD",
+                                    value: "2.00",
+                                },
+                                discount: {
+                                    currency_code: "USD",
+                                    value: "0.00",
+                                },
+                                handling: {
+                                    currency_code: "USD",
+                                    value: "1.00",
+                                },
+                                shipping_discount: {
+                                    currency_code: "USD",
+                                    value: "0",
+                                },
+                                insurance: {
+                                    currency_code: "USD",
+                                    value: "1.00",
+                                },
+                            },
+                        },
+                        items: [
+                            {
+                                name: "Team Awesome - The Movie",
+                                sku: "TA1000",
+                                unit_amount: {
+                                    currency_code: "USD",
+                                    value: "148.00",
+                                },
+                                tax: {
+                                    currency_code: "USD",
+                                    value: "0.00",
+                                },
+                                quantity: "1",
+                            },
+                        ],
+                        //*****************************
+                        // Shipping address is here
+                        shipping: {
+                            type: "SHIPPING",
+                            method: "DHL",
+                            name: {
+                                full_name: "Fritz von Berlichingen",
+                            },
+                            address: {
+                                address_line_1: "Albert-Einstein-Ring 2-6",
+                                address_line_2: "PayPal",
+                                postal_code: "14532",
+                                admin_area_2: "Kleinmachnow",
+                                country_code: "US",
+                                admin_area_1: "Brandenburg",
+                            },
+                        },
+                    },
+                ],
+            };
+
+            /**
+             * Generate PayPal request ID in request header
+             */
+            const generateRandomPayPalRequestID = () => {
+                let PayPal_Request_Id = (Math.random() * 100000000).toString(
+                    36
+                );
+                PayPal_Request_Id = Date.now().toString(32);
+                return PayPal_Request_Id;
+            };
+
+            /**
+             * Generate PayPal Auth Assertion in request header
+             */
+            const generatePayPalAuthAssertion = (clientID, merchantID) => {
+                let PayPal_Auth_Assertion;
+                let to_encode = {
+                    iss: clientID,
+                    payer_id: merchantID,
+                };
+
+                let to_encode_str = JSON.stringify(to_encode);
+                let encoded_str = btoa(to_encode_str);
+                PayPal_Auth_Assertion = `eyJhbGciOiJub25lIn0=.${encoded_str}.`;
+                return PayPal_Auth_Assertion;
+            };
+
+            async function createOrderCallback() {
+                //return orderID from postman/server
+                // return "2YC07459E4793470C";
+                let orderID = await fetch(
+                    "https://api.sandbox.paypal.com/v2/checkout/orders",
+                    {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "Paypal-Auth-Assertion":
+                                generatePayPalAuthAssertion(
+                                    clientID,
+                                    //Replace your own Merchant ID here
+                                    "CMHAMMNAXCMGA"
+                                ),
+                            Authorization: `Bearer ${access_token}`,
+                            "PayPal-Request-Id":
+                                generateRandomPayPalRequestID(),
+                        },
+
+                        body: JSON.stringify(CreateOrderRequestBody),
+                    }
+                )
+                    .then((data) => data.json())
+                    .then((jsonData) => {
+                        return jsonData.id;
+                    });
+                return orderID;
+            }
+
+            const approveCallBack = async (data) => {
+                console.log(JSON.stringify(data, null, "  "));
+                let result = await fetch(
+                    `https://api.sandbox.paypal.com/v2/checkout/orders/${data.orderID}/capture`,
+                    {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "Paypal-Auth-Assertion":
+                                generatePayPalAuthAssertion(
+                                    clientID,
+                                    //Replace your own Merchant ID here
+                                    "CMHAMMNAXCMGA"
+                                ),
+                            Authorization: `Bearer ${access_token}`,
+                            "PayPal-Request-Id":
+                                generateRandomPayPalRequestID(),
+                        },
+                    }
+                );
+                let orderData = await result.json();
+                console.log(JSON.stringify(orderData, null, "  "));
+                let transactionObject =
+                    orderData?.purchase_units?.[0]?.payments?.captures?.[0] ||
+                    orderData?.purchase_units?.[0]?.payments
+                        ?.authorizations?.[0];
+                window.alert(`transactionID:${transactionObject.id}`);
+            };
+
+            async function initPage() {
+                const auth = btoa(`${clientID}:${secretKey}`);
+                fetch("https://api.sandbox.paypal.com/v1/oauth2/token", {
+                    method: "POST",
+                    headers: {
+                        Authorization: `Basic ${auth}`,
+                        "Paypal-Auth-Assertion": generatePayPalAuthAssertion(
+                            clientID,
+                            "CMHAMMNAXCMGA"
+                        ),
+                    },
+
+                    body: new URLSearchParams({
+                        grant_type: "client_credentials",
+
+                        // [customer ID and id_token is no need in basic Integration]
+                        // response_type: "id_token",
+                        // target_customer_id: "aVXDDGGdgE",
+                    }),
+                })
+                    .then((data) => data.json())
+                    .then((jsonData) => {
+                        access_token = jsonData.access_token;
+                        id_token = jsonData.id_token;
+                        const script = document.createElement("script");
+                        script.type = "text/javascript";
+                        script.src = `https://www.paypal.com/sdk/js?client-id=${clientID}&buyer-country=US&currency=USD&enable-funding=venmo,paylater`;
+                        script.crossorigin = "anonymous";
+
+                        // [id_token is no need in basic Integration]
+                        // script.setAttribute("data-user-id-token", id_token);
+                        script.onload = async function () {
+                            await initPayPal();
+                        };
+                        document.head.appendChild(script);
+
+                        return {
+                            access_token: jsonData.access_token,
+                            id_token: jsonData.id_token,
+                        };
+                    });
+            }
+
+            async function initPayPal() {
+                await paypal
+                    .Buttons({
+                        createOrder: createOrderCallback,
+                        onApprove: approveCallBack,
+                        fundingSource: window.paypal.FUNDING.PAYLATER,
+                        
+                        style: {
+                            label: "pay",
+                            color:"blue"
+                        },
+                       
+                    })
+                    .render("#paypal-button-container");
+            }
+
+            initPage();
+        </script>
+    </body>
+</html>
