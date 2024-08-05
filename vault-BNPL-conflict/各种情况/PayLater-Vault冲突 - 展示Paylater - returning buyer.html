@@ -7,7 +7,10 @@
     </head>
     <body>
         <p>展示Paylater - returning buyer (customerID和vaultID是写死的)</p>
-        <p>因为这里orderV2里是用vault_id来付款的, 虽然paylater可以被展示, 但是使用会出错</p>
+        <p>
+            因为这里orderV2里是用vault_id来付款的, 虽然paylater可以被展示,
+            但是使用会出错
+        </p>
         <div id="paypal-button-container" style="margin: auto"></div>
         <script>
             /**
@@ -21,87 +24,96 @@
             const secretKey =
                 "EAwyCjl9UrSmRqV4h6E_xoZdt3CVdJof6P9_1c8IY-jUca_m7g9oCAuMiw5vJ-MyhJzopPiRwbTaqUYy";
 
-            const CreateOrderRequestBody = {
-                intent: "CAPTURE",
-                payment_source: {
-                    paypal: {
-                        vault_id: "36s83413kl1211321",
-                    },
-                },
-                purchase_units: [
-                    {
-                        // ********************************************
-                        //This param is required!
-                        description: "This is description for item",
-                        // ********************************************
-                        amount: {
-                            currency_code: "USD",
-                            value: "152",
-                            breakdown: {
-                                item_total: {
-                                    currency_code: "USD",
-                                    value: "148.00",
+            const CreateOrderRequestBody = (paymentSource) => {
+                let baseObj = {
+                    intent: "CAPTURE",
+
+                    purchase_units: [
+                        {
+                            // ********************************************
+                            //This param is required!
+                            description: "This is description for item",
+                            // ********************************************
+                            amount: {
+                                currency_code: "USD",
+                                value: "152",
+                                breakdown: {
+                                    item_total: {
+                                        currency_code: "USD",
+                                        value: "148.00",
+                                    },
+                                    tax_total: {
+                                        currency_code: "USD",
+                                        value: "0",
+                                    },
+                                    shipping: {
+                                        currency_code: "USD",
+                                        value: "2.00",
+                                    },
+                                    discount: {
+                                        currency_code: "USD",
+                                        value: "0.00",
+                                    },
+                                    handling: {
+                                        currency_code: "USD",
+                                        value: "1.00",
+                                    },
+                                    shipping_discount: {
+                                        currency_code: "USD",
+                                        value: "0",
+                                    },
+                                    insurance: {
+                                        currency_code: "USD",
+                                        value: "1.00",
+                                    },
                                 },
-                                tax_total: {
-                                    currency_code: "USD",
-                                    value: "0",
+                            },
+                            items: [
+                                {
+                                    name: "Team Awesome - The Movie",
+                                    sku: "TA1000",
+                                    unit_amount: {
+                                        currency_code: "USD",
+                                        value: "148.00",
+                                    },
+                                    tax: {
+                                        currency_code: "USD",
+                                        value: "0.00",
+                                    },
+                                    quantity: "1",
                                 },
-                                shipping: {
-                                    currency_code: "USD",
-                                    value: "2.00",
+                            ],
+                            //*****************************
+                            // Shipping address is here
+                            shipping: {
+                                type: "SHIPPING",
+                                method: "DHL",
+                                name: {
+                                    full_name: "Fritz von Berlichingen",
                                 },
-                                discount: {
-                                    currency_code: "USD",
-                                    value: "0.00",
-                                },
-                                handling: {
-                                    currency_code: "USD",
-                                    value: "1.00",
-                                },
-                                shipping_discount: {
-                                    currency_code: "USD",
-                                    value: "0",
-                                },
-                                insurance: {
-                                    currency_code: "USD",
-                                    value: "1.00",
+                                address: {
+                                    address_line_1: "Albert-Einstein-Ring 2-6",
+                                    address_line_2: "PayPal",
+                                    postal_code: "14532",
+                                    admin_area_2: "Kleinmachnow",
+                                    country_code: "US",
+                                    admin_area_1: "Brandenburg",
                                 },
                             },
                         },
-                        items: [
-                            {
-                                name: "Team Awesome - The Movie",
-                                sku: "TA1000",
-                                unit_amount: {
-                                    currency_code: "USD",
-                                    value: "148.00",
-                                },
-                                tax: {
-                                    currency_code: "USD",
-                                    value: "0.00",
-                                },
-                                quantity: "1",
-                            },
-                        ],
-                        //*****************************
-                        // Shipping address is here
-                        shipping: {
-                            type: "SHIPPING",
-                            method: "DHL",
-                            name: {
-                                full_name: "Fritz von Berlichingen",
-                            },
-                            address: {
-                                address_line_1: "Albert-Einstein-Ring 2-6",
-                                address_line_2: "PayPal",
-                                postal_code: "14532",
-                                admin_area_2: "Kleinmachnow",
-                                country_code: "US",
-                                admin_area_1: "Brandenburg",
+                    ],
+                };
+
+                if (paymentSource === "paypal") {
+                    baseObj = Object.assign(baseObj, {
+                        payment_source: {
+                            paypal: {
+                                vault_id: "5y418999dj5248428",
                             },
                         },
-                    },
-                ],
+                    });
+                }
+                return baseObj;
             };
 
             /**
@@ -131,10 +143,9 @@
                 return PayPal_Auth_Assertion;
             };
 
-            async function createOrderCallback() {
-                //return orderID from postman/server
-                // return "2YC07459E4793470C";
-                let orderID = await fetch(
+            async function createOrderCallback(data, actions) {
+                console.log(data.paymentSource);
+                let createRes = await fetch(
                     "https://api.sandbox.paypal.com/v2/checkout/orders",
                     {
                         method: "POST",
@@ -151,14 +162,22 @@
                                 generateRandomPayPalRequestID(),
                         },
 
-                        body: JSON.stringify(CreateOrderRequestBody),
+                        body: JSON.stringify(
+                            CreateOrderRequestBody(data.paymentSource)
+                        ),
                     }
                 )
                     .then((data) => data.json())
                     .then((jsonData) => {
-                        return jsonData.id;
+                        return jsonData;
                     });
-                return orderID;
+
+                const {status, id} = createRes;  
+                // debugger;  
+                if (status==="COMPLETED") {
+                    alert(`Order: ${id} Is Complete!`);
+                }
+                return id;
             }
 
             const approveCallBack = async (data) => {
