@@ -6,6 +6,9 @@ Test Env下的GMS Exhibition工程:
 Vault和Buy Now Pay Later冲突问题  
 [查看conflict](https://ppgms-test.github.io/vault-BNPL-conflict   "Vault和Buy Now Pay Later冲突问题 ")。
 
+---
+ACDC with 3DS, 记得打开控制台
+[查看conflict](https://ppgms-test.github.io/ACDC-Sample.html   "Vault和Buy Now Pay Later冲突问题 ")。
 
 ---
 
