@@ -32,7 +32,7 @@
                     "
                 >
                     Card Number:
-                    <span id="PAYPAL_TEST_CARD_NO">5200000000001005</span>
+                    <span id="PAYPAL_TEST_CARD_NO">4868719841831470</span>
                 </div>
             </div>
             <div class="ui attached menu">
@@ -282,6 +282,7 @@
 
             const approveCallBack = async (data) => {
                 console.log(JSON.stringify(data, null, "  "));
+                debugger;
                 let result = await fetch(
                     `https://api.sandbox.paypal.com/v2/checkout/orders/${data.orderID}/capture`,
                     {
