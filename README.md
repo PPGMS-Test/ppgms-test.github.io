@@ -8,7 +8,7 @@ Vault和Buy Now Pay Later冲突问题
 
 ---
 ACDC with 3DS, 记得打开控制台
-[查看conflict](https://ppgms-test.github.io/ACDC-Sample.html   "Vault和Buy Now Pay Later冲突问题 ")。
+[查看ACDC](https://ppgms-test.github.io/ACDC-Sample.html   "查看使用ACDC支付")。
 
 ---
 
