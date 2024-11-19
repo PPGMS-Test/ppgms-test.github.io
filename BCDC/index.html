@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
+        <link
+            rel="stylesheet"
+            href="https://cdn.jsdelivr.net/npm/semantic-ui@2.4.2/dist/semantic.min.css"
+        />
+        <script src="https://cdn.jsdelivr.net/npm/semantic-ui@2.4.2/dist/semantic.min.js"></script>
+        <script src=" https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js "></script>
+    
+        <title>Different Button Display Behavior</title>
+    </head>
+    <body>
+       
+        <div class="ui container">
+            <div class="ui container segment">
+                1.展示全部按钮, 通用, "Debit or Credit Card"为下拉框,
+                预填账单信息已经完成 (Show All buttons, autofill is made)
+                <div
+                    id="paypal-button-container-full"
+                    style="margin: auto"
+                ></div>
+            </div>
+
+            <div class="ui container segment">
+                <div class="m1 ui blue horizontal label" style="margin: 4px;">这是正确做法(Best practice)</div>
+                2.只展示"Debit or Credit Card"按钮, "Debit or Credit
+                Card"按钮为下拉框, 预填账单信息已经完成(Show only BCDC btn. autofill is done)
+                <div
+                    id="paypal-button-container-only-BCDC"
+                    style="margin: auto"
+                ></div>
+            </div>
+
+            <div class="ui container segment">
+                <div class="m1 ui red horizontal label" style="margin: 4px;">这是错误做法(This is the wrong way.)</div>
+                3.只展示"Debit or Credit Card"按钮,
+                传入了"onShippingChange"回调函数 -> 弹窗, 预填账单信息已经完成
+                <div
+                    id="paypal-button-container-only-BCDC-withShippingChange"
+                    style="margin: auto"
+                ></div>
+            </div>
+
+            <div class="ui container segment">
+                <div class="m1 ui red horizontal label" style="margin: 4px;">这是错误做法</div>
+                4.只展示"Debit or Credit Card"按钮, 预填账单信息没有填写,
+                物流信息填写完成
+                <div
+                    id="paypal-button-container-only-BCDC-noBillingAddress"
+                    style="margin: auto"
+                ></div>
+            </div>
+
+            <div class="ui container segment">
+                <div class="m1 ui red horizontal label" style="margin: 4px;">这是错误做法</div>
+          
+                5.<strong>Deprecated</strong>  只展示"Debit or Credit Card"按钮,
+                使用payer字段
+                <div
+                    id="paypal-button-container-only-BCDC-withPayer"
+                    style="margin: auto"
+                ></div>
+            </div>
+        </div>
+
+        <script>
+            /**
+             * Global variable and constants area
+             */
+            var access_token;
+            var id_token;
+            const clientID =
+                "AaB-X2CM2jf9k-DU-sWSaNbpfKnHeRLHa84MppXHdBpv36uWUqGui9ldOk6SeET9Os5Hc4J5puUTetXo";
+            const secretKey =
+                "EAwyCjl9UrSmRqV4h6E_xoZdt3CVdJof6P9_1c8IY-jUca_m7g9oCAuMiw5vJ-MyhJzopPiRwbTaqUYy";
+
+            const CreateOrderRequestBodyOld = () => {
+                return {
+                    intent: "CAPTURE",
+                    purchase_units: [
+                        {
+                            amount: {
+                                value: 115,
+                                currency_code: "USD",
+                            },
+                        },
+                    ],
+                    payer: {
+                        name: {
+                            given_name: "De Bruyne",
+                            surname: "Kevin",
+                        },
+                        address: {
+                            address_line_1: "14-1301 No.3",
+                            address_line_2: "Central Avenue",
+                            admin_area_2: "Austin",
+                            admin_area_1: "TX",
+                            postal_code: "78701",
+                            country_code: "PL",
+                        },
+                        email_address: "petro-test01-us@cctest.com",
+                        password: "Qq111222333",
+                        phone: {
+                            phone_type: "MOBILE",
+                            phone_number: {
+                                national_number: "16503858068",
+                            },
+                        },
+                    },
+                };
+            };
+
+            const CreateOrderRequestBody = (
+                withBillingAddress = true,
+                withShippingAddress = true
+            ) => {
+                const BillingAddressObject = {
+                    name: {
+                        given_name: "Fritz",
+                        surname: "von Berlichingen",
+                    },
+                    email_address: "test@test.com",
+
+                    address: {
+                        address_line_1: "Albert-Einstein-Ring 2-6 ",
+                        address_line_2: "PayPal",
+                        admin_area_2: "Kleinmachnow",
+                        admin_area_1: "Brandenburg",
+                        postal_code: "14532",
+                        country_code: "DE",
+                    },
+                };
+                const body = {
+                    intent: "CAPTURE",
+                    payment_source: {
+                        paypal: {
+                            //*****************************
+                            // Billing address is here
+
+                            experience_context: {
+                                payment_method_preference:
+                                    "IMMEDIATE_PAYMENT_REQUIRED",
+                                brand_name: "EXAMPLE INC",
+                                locale: "en-US",
+                                landing_page: "LOGIN",
+                                shipping_preference: "SET_PROVIDED_ADDRESS",
+                                user_action: "PAY_NOW",
+                                // ********************************************
+                                //This param is required!
+                                return_url: "https://example.com/returnUrl",
+                                // ********************************************
+                                cancel_url: "https://example.com/cancelUrl",
+                            },
+                        },
+                    },
+                    purchase_units: [
+                        {
+                            // ********************************************
+                            //This param is required!
+                            description: "This is description for item",
+                            // ********************************************
+                            amount: {
+                                currency_code: "USD",
+                                value: "152",
+                                breakdown: {
+                                    item_total: {
+                                        currency_code: "USD",
+                                        value: "148.00",
+                                    },
+                                    tax_total: {
+                                        currency_code: "USD",
+                                        value: "0",
+                                    },
+                                    shipping: {
+                                        currency_code: "USD",
+                                        value: "2.00",
+                                    },
+                                    discount: {
+                                        currency_code: "USD",
+                                        value: "0.00",
+                                    },
+                                    handling: {
+                                        currency_code: "USD",
+                                        value: "1.00",
+                                    },
+                                    shipping_discount: {
+                                        currency_code: "USD",
+                                        value: "0",
+                                    },
+                                    insurance: {
+                                        currency_code: "USD",
+                                        value: "1.00",
+                                    },
+                                },
+                            },
+                            items: [
+                                {
+                                    name: "Team Awesome - The Movie",
+                                    sku: "TA1000",
+                                    unit_amount: {
+                                        currency_code: "USD",
+                                        value: "148.00",
+                                    },
+                                    tax: {
+                                        currency_code: "USD",
+                                        value: "0.00",
+                                    },
+                                    quantity: "1",
+                                },
+                            ],
+                            //*****************************
+                            // Shipping address is here
+                            shipping: {
+                                type: "SHIPPING",
+                                method: "DHL",
+                                name: {
+                                    full_name: "Fritz von Berlichingen",
+                                },
+                                address: {
+                                    address_line_1: "Albert-Einstein-Ring 2-6",
+                                    address_line_2: "PayPal",
+                                    postal_code: "14532",
+                                    admin_area_2: "Kleinmachnow",
+                                    country_code: "US",
+                                    admin_area_1: "Brandenburg",
+                                },
+                            },
+                        },
+                    ],
+                };
+                if (withBillingAddress) {
+                    Object.assign(
+                        body.payment_source.paypal,
+                        BillingAddressObject
+                    );
+                }
+                console.log(JSON.stringify(body, null, "  "));
+                return body;
+            };
+
+            /**
+             * Generate PayPal request ID in request header
+             */
+            const generateRandomPayPalRequestID = () => {
+                let PayPal_Request_Id = (Math.random() * 100000000).toString(
+                    36
+                );
+                PayPal_Request_Id = Date.now().toString(32);
+                return PayPal_Request_Id;
+            };
+
+            /**
+             * Generate PayPal Auth Assertion in request header
+             */
+            const generatePayPalAuthAssertion = (clientID, merchantID) => {
+                let PayPal_Auth_Assertion;
+                let to_encode = {
+                    iss: clientID,
+                    payer_id: merchantID,
+                };
+
+                let to_encode_str = JSON.stringify(to_encode);
+                let encoded_str = btoa(to_encode_str);
+                PayPal_Auth_Assertion = `eyJhbGciOiJub25lIn0=.${encoded_str}.`;
+                return PayPal_Auth_Assertion;
+            };
+
+            /**
+             * @param {function} createOrderBodyMethod
+             */
+            function createOrderCallbackFactory(createOrderBody) {
+                return async function createOrderCallback() {
+                    let orderID = await fetch(
+                        "https://api.sandbox.paypal.com/v2/checkout/orders",
+                        {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json",
+                                "Paypal-Auth-Assertion":
+                                    generatePayPalAuthAssertion(
+                                        clientID,
+                                        //Replace your own Merchant ID here
+                                        "CMHAMMNAXCMGA"
+                                    ),
+                                Authorization: `Bearer ${access_token}`,
+                                "PayPal-Request-Id":
+                                    generateRandomPayPalRequestID(),
+                            },
+
+                            body: JSON.stringify(createOrderBody),
+                        }
+                    )
+                        .then((data) => data.json())
+                        .then((jsonData) => {
+                            return jsonData.id;
+                        });
+                    return orderID;
+                };
+            }
+
+
+            const onShippingChange = (data, actions) => {
+                //请忽略下方的代码逻辑, onShippingChange其实里面填什么都行
+                //please ignore code logic below, you can do whatever you want in "onShippingChange" callback function
+                debugger;
+                // Reject non-US addresses
+                if (data.shipping_address.country_code !== "US") {
+                    return actions.reject();
+                }
+
+                // Patch the shipping amount
+                const shippingAmount =
+                    data.shipping_address.state === "CA" ? "0.00" : "5.00";
+                return actions.order.patch([
+                    {
+                        op: "replace",
+                        path: "/purchase_units/@reference_id=='default",
+                        value: {
+                            currency_code: "USD",
+                            value: (
+                                parseFloat(baseOrderAmount) +
+                                parseFloat(shippingAmount)
+                            ).toFixed(2),
+                            breakdown: {
+                                item_total: {
+                                    currency_code: "USD",
+                                    value: baseOrderAmount,
+                                },
+                                shipping: {
+                                    currency_code: "USD",
+                                    value: shippingAmount,
+                                },
+                            },
+                        },
+                    },
+                ]);
+            };
+
+            const approveCallBack = async (data) => {
+                console.log(JSON.stringify(data, null, "  "));
+                let result = await fetch(
+                    `https://api.sandbox.paypal.com/v2/checkout/orders/${data.orderID}/capture`,
+                    {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "Paypal-Auth-Assertion":
+                                generatePayPalAuthAssertion(
+                                    clientID,
+                                    //Replace your own Merchant ID here
+                                    "CMHAMMNAXCMGA"
+                                ),
+                            Authorization: `Bearer ${access_token}`,
+                            "PayPal-Request-Id":
+                                generateRandomPayPalRequestID(),
+                        },
+                    }
+                );
+                let orderData = await result.json();
+                console.log(JSON.stringify(orderData, null, "  "));
+                let transactionObject =
+                    orderData?.purchase_units?.[0]?.payments?.captures?.[0] ||
+                    orderData?.purchase_units?.[0]?.payments
+                        ?.authorizations?.[0];
+                window.alert(`transactionID:${transactionObject.id}`);
+            };
+
+            async function initPage() {
+                const auth = btoa(`${clientID}:${secretKey}`);
+                fetch("https://api.sandbox.paypal.com/v1/oauth2/token", {
+                    method: "POST",
+                    headers: {
+                        Authorization: `Basic ${auth}`,
+                        "Paypal-Auth-Assertion": generatePayPalAuthAssertion(
+                            clientID,
+                            "CMHAMMNAXCMGA"
+                        ),
+                    },
+
+                    body: new URLSearchParams({
+                        grant_type: "client_credentials",
+
+                        // [customer ID and id_token is no need in basic Integration]
+                        // response_type: "id_token",
+                        // target_customer_id: "aVXDDGGdgE",
+                    }),
+                })
+                    .then((data) => data.json())
+                    .then((jsonData) => {
+                        access_token = jsonData.access_token;
+                        id_token = jsonData.id_token;
+                        const script = document.createElement("script");
+                        script.type = "text/javascript";
+                        script.src = `https://www.paypal.com/sdk/js?client-id=${clientID}&buyer-country=US`;
+                        script.crossorigin = "anonymous";
+
+                        // [id_token is no need in basic Integration]
+                        // script.setAttribute("data-user-id-token", id_token);
+                        script.onload = async function () {
+                            await initPayPal();
+                        };
+                        document.head.appendChild(script);
+
+                        return {
+                            access_token: jsonData.access_token,
+                            id_token: jsonData.id_token,
+                        };
+                    });
+            }
+
+            async function initPayPal() {
+                await paypal
+                    .Buttons({
+                        createOrder: createOrderCallbackFactory(
+                            CreateOrderRequestBody()
+                        ),
+                        onApprove: approveCallBack,
+                        expandCardForm:true
+                    })
+                    .render("#paypal-button-container-full");
+
+                await paypal
+                    .Buttons({
+                        fundingSource: window.paypal.FUNDING.CARD,
+                        createOrder: createOrderCallbackFactory(
+                            CreateOrderRequestBody()
+                        ),
+                        onApprove: approveCallBack,
+                        expandCardForm:true
+                    })
+                    .render("#paypal-button-container-only-BCDC");
+
+                await paypal
+                    .Buttons({
+                        fundingSource: window.paypal.FUNDING.CARD,
+                        createOrder: createOrderCallbackFactory(
+                            CreateOrderRequestBody()
+                        ),
+                        onApprove: approveCallBack,
+                        onShippingChange: onShippingChange,
+                        expandCardForm:true
+                    })
+                    .render(
+                        "#paypal-button-container-only-BCDC-withShippingChange"
+                    );
+
+                await paypal
+                    .Buttons({
+                        fundingSource: window.paypal.FUNDING.CARD,
+                        createOrder: createOrderCallbackFactory(
+                            CreateOrderRequestBody(false)
+                        ),
+                        onApprove: approveCallBack,
+                        expandCardForm:true
+                    })
+                    .render(
+                        "#paypal-button-container-only-BCDC-noBillingAddress"
+                    );
+
+                await paypal
+                    .Buttons({
+                        style:{
+                            tagline:true
+                        },
+                        fundingSource: window.paypal.FUNDING.CARD,
+                        createOrder: createOrderCallbackFactory(
+                            CreateOrderRequestBodyOld()
+                        ),
+                        onApprove: approveCallBack,
+                        expandCardForm:true
+                    })
+                    .render("#paypal-button-container-only-BCDC-withPayer");
+            }
+
+            initPage();
+        </script>
+    </body>
+</html>
