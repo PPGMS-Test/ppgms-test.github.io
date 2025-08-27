@@ -1,6 +1,6 @@
 
 
-Test Env下的GMS Exhibition工程:  
+Test Env下的GMS Exhibition导览入口:  
 <https://gmsshanghai.github.io/>
 
 ---
@@ -20,5 +20,5 @@ ACDC with 3DS, 记得打开控制台
 ---
 
 本仓库访问地址:
-> https://ppgms-test.github.io/  
+> https://github.com/PPGMS-Test/ppgms-test.github.io 
 
