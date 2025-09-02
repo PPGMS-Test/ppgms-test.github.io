@@ -166,6 +166,13 @@
                                 </option>
                             </select>
                         </div>
+                        <span
+                            class="col s12"
+                            style="color: #f44336; font-weight: bold"
+                            >如果选择并加载了1.latest的CDN,
+                            要再测试v1的CDN在非safari浏览器上无法显示的情况,
+                            请刷新页面, 因为1.latest的CDN已经被加载了</span
+                        >
                     </div>
 
                     <!-- 一方模式配置 -->
@@ -516,7 +523,7 @@
                                 id_token = jsonData.id_token;
                                 const script = document.createElement("script");
                                 script.type = "text/javascript";
-                                script.src = `https://www.paypal.com/sdk/js?client-id=${clientId}&buyer-country=US&components=applepay,buttons`;
+                                script.src = `https://www.paypal.com/sdk/js?client-id=${clientId}&buyer-country=US&currency=USD&components=applepay,buttons`;
                                 script.crossorigin = "anonymous";
 
                                 // [id_token is no need in basic Integration]
@@ -713,7 +720,7 @@
             }
 
             async function createOrderCallback() {
-                  const {
+                const {
                     access_token,
                     mode,
                     amount,
@@ -769,7 +776,6 @@
                     ],
                 };
 
-              
                 const requestHeader = {
                     "Content-Type": "application/json",
                     Authorization: `Bearer ${access_token}`,
