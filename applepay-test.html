@@ -834,6 +834,17 @@
             };
 
             /**
+             * Generate PayPal request ID in request header
+             */
+            const generateRandomPayPalRequestID = () => {
+                let PayPal_Request_Id = (Math.random() * 100000000).toString(
+                    36
+                );
+                PayPal_Request_Id = Date.now().toString(32);
+                return PayPal_Request_Id;
+            };
+
+            /**
              * Generate PayPal Auth Assertion in request header
              */
             const generatePayPalAuthAssertion = (clientID, merchantID) => {
