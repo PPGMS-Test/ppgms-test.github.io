@@ -18,6 +18,10 @@ ACDC with 3DS, 记得打开控制台
 [查看ACDC](https://ppgms-test.github.io/ACDC-Sample.html   "查看使用ACDC支付")。
 
 ---
+ApplePay详细测试Demo 
+[ApplePay Test](https://ppgms-test.github.io/applepay-test.html   "查看使用Apple Pay支付")。
+
+---
 
 本仓库访问地址:
 > https://github.com/PPGMS-Test/ppgms-test.github.io 
