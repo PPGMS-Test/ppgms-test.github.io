@@ -85,7 +85,15 @@
     </head>
     <body x-data="app">
         <div class="overlay" x-show="showSuccessDialog"></div>
-
+        <!-- 版本号信息 -->
+        <div class="fixed bottom-4 right-4 z-50">
+            <span class="chip tooltipped" data-tooltip="部署版本信息">
+                <i class="material-icons left">info_outline</i>
+                v1-<span
+                    x-text="new Date().toISOString().slice(0,10)"
+                ></span>
+            </span>
+        </div>
         <div class="success-dialog" x-show="showSuccessDialog">
             <i class="material-icons success-icon">check_circle</i>
             <h4>支付成功</h4>
@@ -698,7 +706,7 @@
                              * Capture order (must currently be made on server)
                              */
 
-                            await approveCallBack(id);
+                            await captureOrder(id);
 
                             session.completePayment({
                                 status: window.ApplePaySession.STATUS_SUCCESS,
