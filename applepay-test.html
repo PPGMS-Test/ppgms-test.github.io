@@ -51,7 +51,6 @@
                 margin-bottom: 2rem;
             }
             .success-dialog {
-                display: none;
                 position: fixed;
                 top: 50%;
                 left: 50%;
@@ -72,7 +71,6 @@
                 margin-bottom: 1rem;
             }
             .overlay {
-                display: none;
                 position: fixed;
                 top: 0;
                 left: 0;
@@ -80,6 +78,14 @@
                 height: 100%;
                 background-color: rgba(0, 0, 0, 0.5);
                 z-index: 999;
+            }
+
+            .vault-fields {
+                margin-top: 1rem;
+                padding: 1rem;
+                background-color: #f9f9f9;
+                border-radius: 8px;
+                border: 1px solid #e0e0e0;
             }
         </style>
     </head>
@@ -89,16 +95,14 @@
         <div class="fixed bottom-4 right-4 z-50">
             <span class="chip tooltipped" data-tooltip="部署版本信息">
                 <i class="material-icons left">info_outline</i>
-                v2-<span
-                    x-text="new Date().toISOString().slice(0,10)"
-                ></span>
+                v3-<span x-text="new Date().toISOString().slice(0,10)"></span>
             </span>
         </div>
         <div class="success-dialog" x-show="showSuccessDialog">
             <i class="material-icons success-icon">check_circle</i>
             <h4>支付成功</h4>
             <p>您的付款已成功处理。感谢您的购买！</p>
-            <p x-text="'订单ID: ' + orderId"></p>
+            <p x-text="'交易号ID: ' + transactionId"></p>
             <button
                 class="btn waves-effect waves-light"
                 x-on:click="closeDialog"
@@ -252,7 +256,7 @@
                             <div class="col s12 m6">
                                 <div class="input-field">
                                     <input
-                                        type="password"
+                                        type="text"
                                         id="partner-secret-key"
                                         x-model="partnerSecretKey"
                                         x-on:input="updateConfig"
@@ -317,6 +321,34 @@
                                 <label for="amount">金额 ($)</label>
                             </div>
                         </div>
+
+                        <div
+                            x-show="paymentType === 'recurring'"
+                            class="vault-fields"
+                        >
+                            <div class="row">
+                                <div class="input-field col s12">
+                                    <input
+                                        type="text"
+                                        id="vault-id"
+                                        x-model="vaultId"
+                                        placeholder="请输入Vault ID"
+                                    />
+                                    <label for="vault-id">Vault ID</label>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="input-field col s12">
+                                    <input
+                                        type="text"
+                                        id="customer-id"
+                                        x-model="customerId"
+                                        placeholder="请输入Customer ID"
+                                    />
+                                    <label for="customer-id">Customer ID</label>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- 保存支付方式选项 -->
@@ -338,14 +370,6 @@
                             </label>
                         </div>
                     </div>
-
-                    <button
-                        class="btn waves-effect waves-light"
-                        id="save-config"
-                        x-on:click="saveConfig"
-                    >
-                        确认配置并加载按钮
-                    </button>
                 </div>
             </div>
 
@@ -387,10 +411,16 @@
                             </div>
                         </div>
                     </div>
+                    <button
+                        class="btn waves-effect waves-light"
+                        id="save-config"
+                        x-on:click="saveConfig"
+                    >
+                        确认配置并加载按钮
+                    </button>
                 </div>
             </div>
 
-            <!-- 支付按钮 -->
             <div class="center-align">
                 <div id="applepay-container" class="applepay-container"></div>
                 <!-- applepay-container -->
@@ -413,6 +443,15 @@
                 );
             };
 
+            const getPayPalURLEndpoint = () => {
+                const mode = window.Alpine.$data(
+                    document.querySelector('[x-data="app"]')
+                )?.mode;
+                return mode === "merchant"
+                    ? "https://api.sandbox.paypal.com"
+                    : "https://api.paypal.com";
+            };
+
             document.addEventListener("alpine:init", () => {
                 logGreen("alpine:init");
 
@@ -422,9 +461,9 @@
                     mode: "merchant",
                     paymentType: "one-time",
                     amount: 10.0,
-                    savePaymentMethod: false,
+                    savePaymentMethod: true,
                     showSuccessDialog: false,
-                    orderId: "",
+                    transactionId: "",
                     errorMessage: "",
                     applePayCDNUrl:
                         "https://applepay.cdn-apple.com/jsapi/1.latest/apple-pay-sdk.js",
@@ -439,6 +478,8 @@
                     partnerMerchantId: "test_partner_merchant_id", // 沙箱默认Merchant ID
                     access_token: "",
                     authAuthorization: "",
+                    vaultId: "4ay47978lf4391843",
+                    customerId: "BQzraNHpkx",
 
                     // 初始化
                     init() {
@@ -511,21 +552,18 @@
                                     partnerMerchantId
                                 );
 
-                        fetch(
-                            "https://api.sandbox.paypal.com/v1/oauth2/token",
-                            {
-                                method: "POST",
-                                headers: requestHeader,
+                        fetch(`${getPayPalURLEndpoint()}/v1/oauth2/token`, {
+                            method: "POST",
+                            headers: requestHeader,
 
-                                body: new URLSearchParams({
-                                    grant_type: "client_credentials",
+                            body: new URLSearchParams({
+                                grant_type: "client_credentials",
 
-                                    // [customer ID and id_token is no need in basic Integration]
-                                    // response_type: "id_token",
-                                    // target_customer_id: "aVXDDGGdgE",
-                                }),
-                            }
-                        )
+                                // [customer ID and id_token is no need in basic Integration]
+                                // response_type: "id_token",
+                                // target_customer_id: "aVXDDGGdgE",
+                            }),
+                        })
                             .then((data) => data.json())
                             .then((jsonData) => {
                                 access_token = jsonData.access_token;
@@ -538,8 +576,19 @@
                                 // [id_token is no need in basic Integration]
                                 // script.setAttribute("data-user-id-token", id_token);
                                 script.onload = async function () {
-                                    logGreen("PayPal JS SDK: init!");
-                                    await loadApplePayScript(applePayCDNUrl);
+                                    const paymentType = window.Alpine.$data(
+                                        document.querySelector('[x-data="app"]')
+                                    )?.paymentType;
+                                    logGreen(
+                                        `PayPal JS SDK: init! Current Payment Mode: ${paymentType}`
+                                    );
+                                    if (paymentType === "recurring") {
+                                        await makeRecurringApplePay();
+                                    } else {
+                                        await loadApplePayScript(
+                                            applePayCDNUrl
+                                        );
+                                    }
                                 };
                                 document.head.appendChild(script);
                                 this.access_token = jsonData.access_token;
@@ -554,9 +603,91 @@
                     closeDialog() {
                         this.showSuccessDialog = false;
                     },
+
+                    handlePayButtonClick() {
+                        // 保存组件实例的引用
+                        const app = this;
+
+                        // 调用createOrderCallback创建订单
+                        createOrderCallback()
+                            .then((response) => {
+                                const orderData = response.data;
+                                let transactionObject =
+                                    orderData?.purchase_units?.[0]?.payments
+                                        ?.captures?.[0] ||
+                                    orderData?.purchase_units?.[0]?.payments
+                                        ?.authorizations?.[0];
+                                const orderID = transactionObject.id;
+
+                                // 保存订单ID到Alpine状态
+                                app.transactionId = orderID;
+
+                                // 使用保存的组件实例引用来设置状态
+                                app.showSuccessDialog = true;
+                            })
+                            .catch((error) => {
+                                console.error("支付过程中发生错误:", error);
+                                M.toast({ html: "支付失败，请重试" });
+                            })
+                            .finally(() => {});
+                    },
                 }));
             });
 
+            const makeRecurringApplePay = async () => {
+                // 获取applepay-container元素
+                const applePayContainer =
+                    document.getElementById("applepay-container");
+                if (!applePayContainer) {
+                    console.error("未找到applepay-container元素");
+                    return;
+                }
+
+                // 清空容器内容
+                applePayContainer.innerHTML = "";
+
+                // 创建支付按钮
+                const payButton = document.createElement("button");
+                payButton.className =
+                    "btn waves-effect waves-light green darken-1";
+                payButton.id = "pay-now-button";
+
+                // 创建图标元素
+                const icon = document.createElement("i");
+                icon.className = "material-icons left";
+                icon.textContent = "payment";
+
+                // 创建按钮文本节点
+                const buttonText = document.createTextNode("立即支付");
+
+                // 组装按钮
+                payButton.appendChild(icon);
+                payButton.appendChild(buttonText);
+
+                // 使用原生事件监听器
+                payButton.addEventListener("click", function () {
+                    // 获取Alpine组件实例并调用方法
+                    const app = Alpine.$data(
+                        document.querySelector('[x-data="app"]')
+                    );
+                    if (app && app.handlePayButtonClick) {
+                        app.handlePayButtonClick();
+                    }
+                });
+
+                // 添加到容器
+                applePayContainer.appendChild(payButton);
+
+                console.log("makeRecurringApplePay: 已动态创建支付按钮");
+
+                // 这里可以添加其他周期性Apple Pay相关的逻辑
+            };
+
+            /**
+             * 加载Apple Pay脚本
+             * @param {string} applePayCDNUrl - Apple Pay脚本的URL
+             * @returns {Promise} - 加载完成的Promise
+             */
             const loadApplePayScript = (applePayCDNUrl) => {
                 return new Promise((resolve, reject) => {
                     const script = document.createElement("script");
@@ -689,14 +820,14 @@
 
                     session.onpaymentauthorized = async (event) => {
                         try {
-                            const id = await createOrderCallback();
+                            const { orderID } = await createOrderCallback();
 
                             /**
                              * Confirm Payment
                              */
 
                             await applepay.confirmOrder({
-                                orderId: id,
+                                orderId: orderID,
                                 token: event.payment.token,
                                 billingContact: event.payment.billingContact,
                                 shippingContact: event.payment.shippingContact,
@@ -705,8 +836,7 @@
                             /*
                              * Capture order (must currently be made on server)
                              */
-
-                            await captureOrder(id);
+                            await captureOrder(orderID);
 
                             session.completePayment({
                                 status: window.ApplePaySession.STATUS_SUCCESS,
@@ -732,7 +862,11 @@
                 const {
                     access_token,
                     mode,
+                    paymentType,
                     amount,
+                    savePaymentMethod,
+                    vaultId,
+                    customerId,
                     partnerClientId,
                     partnerSecretKey,
                     authAuthorization,
@@ -740,19 +874,7 @@
 
                 const CreateOrderRequestBody = {
                     intent: "CAPTURE",
-                    payment_source: {
-                        apple_pay: {
-                            stored_credential: {
-                                payment_initiator: "CUSTOMER",
-                                payment_type: "RECURRING",
-                            },
-                            attributes: {
-                                vault: {
-                                    store_in_vault: "ON_SUCCESS",
-                                },
-                            },
-                        },
-                    },
+                    payment_source: {},
                     purchase_units: [
                         {
                             // ********************************************
@@ -785,6 +907,45 @@
                     ],
                 };
 
+                //https://developer.paypal.com/docs/checkout/save-payment-methods/during-purchase/js-sdk/applepay/#merchant-initiated-transactions
+                if (paymentType === "recurring") {
+                    CreateOrderRequestBody.payment_source.apple_pay = {
+                        vault_id: vaultId,
+                        experience_context: {
+                            return_url: "https://www.paypal.cn",
+                            cancel_url: "https://www.paypal.cn",
+                        },
+                        stored_credential: {
+                            payment_initiator: "MERCHANT",
+                            payment_type: "RECURRING",
+                            usage: "SUBSEQUENT",
+                        },
+                    };
+                }
+
+                if (paymentType === "one-time") {
+                    if (savePaymentMethod === true) {
+                        CreateOrderRequestBody.payment_source.apple_pay = {
+                            stored_credential: {
+                                payment_initiator: "CUSTOMER",
+                                payment_type: "RECURRING",
+                            },
+                            attributes: {
+                                vault: {
+                                    store_in_vault: "ON_SUCCESS",
+                                },
+                            },
+                        };
+                    } else {
+                        CreateOrderRequestBody.payment_source.apple_pay = {
+                            experience_context: {
+                                return_url: "https://www.paypal.cn",
+                                cancel_url: "https://www.paypal.cn",
+                            },
+                        };
+                    }
+                }
+
                 const requestHeader = {
                     "Content-Type": "application/json",
                     Authorization: `Bearer ${access_token}`,
@@ -793,8 +954,8 @@
                 if (mode === "partner")
                     requestHeader["Paypal-Auth-Assertion"] = authAuthorization;
 
-                let orderID = await fetch(
-                    "https://api.sandbox.paypal.com/v2/checkout/orders",
+                let responseObj = await fetch(
+                    `${getPayPalURLEndpoint()}/v2/checkout/orders`,
                     {
                         method: "POST",
                         headers: requestHeader,
@@ -803,9 +964,12 @@
                 )
                     .then((data) => data.json())
                     .then((jsonData) => {
-                        return jsonData.id;
+                        return {
+                            data: jsonData,
+                            orderID: jsonData.id,
+                        };
                     });
-                return orderID;
+                return responseObj;
             }
 
             const captureOrder = async (orderId) => {
@@ -824,9 +988,8 @@
                 if (mode === "partner")
                     requestHeader["Paypal-Auth-Assertion"] = authAuthorization;
 
-            
                 let result = await fetch(
-                    `https://api.sandbox.paypal.com/v2/checkout/orders/${orderId}/capture`,
+                    `${getPayPalURLEndpoint()}/v2/checkout/orders/${orderId}/capture`,
                     {
                         method: "POST",
                         headers: requestHeader,
@@ -839,8 +1002,21 @@
                     orderData?.purchase_units?.[0]?.payments
                         ?.authorizations?.[0];
 
-                logGreen(`transactionID:${transactionObject.id}`)
-               
+                saveAlpineTransactionID(transactionObject.id);
+                popSuccessDialog();
+                logGreen(`transactionID:${transactionObject.id}`);
+            };
+
+            const saveAlpineTransactionID = (transactionID) => {
+                Alpine.$data(
+                    document.querySelector('[x-data="app"]')
+                ).transactionId = transactionID;
+            };
+
+            const popSuccessDialog = () => {
+                Alpine.$data(
+                    document.querySelector('[x-data="app"]')
+                ).showSuccessDialog = false;
             };
 
             /**
