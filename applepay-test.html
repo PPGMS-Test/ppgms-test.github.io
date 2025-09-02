@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>PayPal Apple Pay Test</title>
+        <!-- Material Icons -->
+        <link
+            href="https://fonts.googleapis.com/icon?family=Material+Icons"
+            rel="stylesheet"
+        />
+        <!-- Materialize CSS -->
+        <link
+            rel="stylesheet"
+            href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css"
+        />
+        <!-- Materialize JS -->
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+        <!-- Alpine.js (轻量级数据框架) -->
+        <script
+            defer
+            src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"
+        ></script>
+        <!-- VConsole -->
+        <script src="https://cdn.jsdelivr.net/npm/vconsole@3.15.1/dist/vconsole.min.js"></script>
+
+        <style>
+            .container {
+                max-width: 800px;
+                margin-top: 2rem;
+            }
+            .card {
+                margin-bottom: 2rem;
+            }
+            .applepay-container {
+                display: inline-block;
+                width: 100%;
+                min-height: 60px;
+                background-color: transparent;
+                border: 2px dashed #999;
+                color: #666;
+                border-radius: 10px;
+                cursor: pointer;
+                display: flex;
+                align-items: center; /* 垂直居中 */
+                justify-content: center; /* 水平居中（可选） */
+            }
+
+            .config-section {
+                margin-bottom: 2rem;
+            }
+            .success-dialog {
+                display: none;
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                background: white;
+                padding: 2rem;
+                border-radius: 10px;
+                box-shadow: 0 24px 38px 3px rgba(0, 0, 0, 0.14),
+                    0 9px 46px 8px rgba(0, 0, 0, 0.12),
+                    0 11px 15px -7px rgba(0, 0, 0, 0.2);
+                z-index: 1000;
+                text-align: center;
+                min-width: 300px;
+            }
+            .success-icon {
+                color: #4caf50;
+                font-size: 4rem;
+                margin-bottom: 1rem;
+            }
+            .overlay {
+                display: none;
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background-color: rgba(0, 0, 0, 0.5);
+                z-index: 999;
+            }
+        </style>
+    </head>
+    <body x-data="app">
+        <div class="overlay" x-show="showSuccessDialog"></div>
+
+        <div class="success-dialog" x-show="showSuccessDialog">
+            <i class="material-icons success-icon">check_circle</i>
+            <h4>支付成功</h4>
+            <p>您的付款已成功处理。感谢您的购买！</p>
+            <p x-text="'订单ID: ' + orderId"></p>
+            <button
+                class="btn waves-effect waves-light"
+                x-on:click="closeDialog"
+            >
+                完成
+            </button>
+        </div>
+
+        <div class="container">
+            <h1 class="center-align">PayPal Apple Pay 测试</h1>
+
+            <!-- 配置表单 -->
+            <div class="card config-section">
+                <div class="card-content">
+                    <h5>配置选项</h5>
+                    <div class="row">
+                        <!-- 环境选择 -->
+                        <div class="col s12 m6">
+                            <h6>PayPal 环境</h6>
+                            <div class="input-field">
+                                <select
+                                    id="environment"
+                                    x-model="environment"
+                                    x-on:change="updateConfig"
+                                    class="browser-default"
+                                >
+                                    <option value="sandbox" selected>
+                                        沙箱环境
+                                    </option>
+                                    <option value="production">正式环境</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- 模式选择 -->
+                        <div class="col s12 m6">
+                            <h6>集成模式</h6>
+                            <div class="input-field">
+                                <select
+                                    id="mode"
+                                    x-model="mode"
+                                    x-on:change="updateConfig"
+                                    class="browser-default"
+                                >
+                                    <option value="merchant" selected>
+                                        一方模式
+                                    </option>
+                                    <option value="partner">三方模式</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <h6>Apple Pay CDN URL</h6>
+
+                        <div class="input-field">
+                            <select
+                                id="apple-pay-cdn-url"
+                                x-model="applePayCDNUrl"
+                                x-on:change="updateConfig"
+                                class="browser-default"
+                            >
+                                <option
+                                    value="https://applepay.cdn-apple.com/jsapi/v1/apple-pay-sdk.js"
+                                >
+                                    https://applepay.cdn-apple.com/jsapi/v1/apple-pay-sdk.js
+                                </option>
+                                <option
+                                    value="https://applepay.cdn-apple.com/jsapi/1.latest/apple-pay-sdk.js"
+                                    selected
+                                >
+                                    https://applepay.cdn-apple.com/jsapi/1.latest/apple-pay-sdk.js
+                                </option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- 一方模式配置 -->
+                    <div
+                        id="merchant-config"
+                        class="mode-config"
+                        x-show="mode === 'merchant'"
+                    >
+                        <div class="row">
+                            <div class="col s12">
+                                <h6>一方模式配置</h6>
+                            </div>
+                            <div class="col s12 m6">
+                                <div class="input-field">
+                                    <input
+                                        type="text"
+                                        id="merchant-client-id"
+                                        x-model="merchantClientId"
+                                        x-on:input="updateConfig"
+                                        placeholder="Client ID"
+                                    />
+                                    <label for="merchant-client-id"
+                                        >Client ID</label
+                                    >
+                                </div>
+                            </div>
+                            <div class="col s12 m6">
+                                <div class="input-field">
+                                    <input
+                                        type="text"
+                                        id="merchant-secret-key"
+                                        x-model="merchantSecretKey"
+                                        x-on:input="updateConfig"
+                                        placeholder="Secret Key"
+                                    />
+                                    <label for="merchant-secret-key"
+                                        >Secret Key</label
+                                    >
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 三方模式配置 -->
+                    <div
+                        id="partner-config"
+                        class="mode-config"
+                        x-show="mode === 'partner'"
+                    >
+                        <div class="row">
+                            <div class="col s12">
+                                <h6>三方模式配置</h6>
+                            </div>
+                            <div class="col s12 m6">
+                                <div class="input-field">
+                                    <input
+                                        type="text"
+                                        id="partner-client-id"
+                                        x-model="partnerClientId"
+                                        x-on:input="updateConfig"
+                                        placeholder="Partner Client ID"
+                                    />
+                                    <label for="partner-client-id"
+                                        >Partner Client ID</label
+                                    >
+                                </div>
+                            </div>
+                            <div class="col s12 m6">
+                                <div class="input-field">
+                                    <input
+                                        type="password"
+                                        id="partner-secret-key"
+                                        x-model="partnerSecretKey"
+                                        x-on:input="updateConfig"
+                                        placeholder="Partner Secret Key"
+                                    />
+                                    <label for="partner-secret-key"
+                                        >Partner Secret Key</label
+                                    >
+                                </div>
+                            </div>
+                            <div class="col s12 m6">
+                                <div class="input-field">
+                                    <input
+                                        type="text"
+                                        id="partner-merchant-id"
+                                        x-model="partnerMerchantId"
+                                        x-on:input="updateConfig"
+                                        placeholder="授权 Merchant ID"
+                                    />
+                                    <label for="partner-merchant-id"
+                                        >授权 Merchant ID</label
+                                    >
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <!-- 支付类型 -->
+                        <div class="col s12 m6">
+                            <h6>支付类型</h6>
+                            <div class="input-field">
+                                <select
+                                    id="payment-type"
+                                    x-model="paymentType"
+                                    x-on:change="onPaymentTypeChange"
+                                    class="browser-default"
+                                >
+                                    <option value="one-time" selected>
+                                        一次性支付
+                                    </option>
+                                    <option value="recurring">
+                                        使用vault的支付
+                                    </option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- 商品价格 -->
+                        <div class="col s12 m6">
+                            <h6>商品价格</h6>
+                            <div class="input-field">
+                                <input
+                                    type="number"
+                                    id="amount"
+                                    step="0.01"
+                                    min="0.01"
+                                    x-model.number="amount"
+                                    x-on:input="updateProductPrice"
+                                    value="10.00"
+                                />
+                                <label for="amount">金额 ($)</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 保存支付方式选项 -->
+                    <div
+                        class="row"
+                        id="save-payment-option"
+                        x-show="paymentType === 'one-time'"
+                    >
+                        <div class="col s12">
+                            <label>
+                                <input
+                                    type="checkbox"
+                                    id="save-payment-method"
+                                    x-model="savePaymentMethod"
+                                />
+                                <span
+                                    >保存支付信息以便后续使用(vault当前买家)</span
+                                >
+                            </label>
+                        </div>
+                    </div>
+
+                    <button
+                        class="btn waves-effect waves-light"
+                        id="save-config"
+                        x-on:click="saveConfig"
+                    >
+                        确认配置并加载按钮
+                    </button>
+                </div>
+            </div>
+
+            <!-- 商品信息 -->
+            <div class="card">
+                <div class="card-content">
+                    <div class="row">
+                        <div class="col s12 m4">
+                            <img
+                                src="https://www.svgrepo.com/show/486303/milk.svg"
+                                alt="测试商品"
+                                class="responsive-img"
+                            />
+                        </div>
+                        <div class="col s12 m8">
+                            <h5>测试商品</h5>
+                            <p>
+                                这是一个用于测试PayPal Apple Pay支付流程的商品。
+                            </p>
+                            <div class="row">
+                                <div class="col s12 m6">
+                                    <p>
+                                        <strong>价格:</strong>
+                                        <span
+                                            id="product-price"
+                                            x-text="'$' + amount.toFixed(2)"
+                                        ></span>
+                                    </p>
+                                </div>
+                                <div class="col s12 m6">
+                                    <p>
+                                        <strong>支付类型:</strong>
+                                        <span
+                                            id="product-payment-type"
+                                            x-text="paymentType === 'one-time' ? '一次性支付' : '定期支付'"
+                                        ></span>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 支付按钮 -->
+            <div class="center-align">
+                <div id="applepay-container" class="applepay-container"></div>
+                <!-- applepay-container -->
+                <p
+                    id="error-message"
+                    class="red-text"
+                    x-show="errorMessage"
+                    x-text="errorMessage"
+                ></p>
+            </div>
+        </div>
+
+        <script>
+            // const vConsole = new VConsole();
+            // console.log("VConsole initialized for development");
+            const logGreen = (msg) => {
+                console.log(
+                    "%c " + msg,
+                    "color: #4CAF50; font-weight: bold; background-color: #E8F5E9; padding: 2px 6px; border-radius: 4px;"
+                );
+            };
+
+            document.addEventListener("alpine:init", () => {
+                logGreen("alpine:init");
+
+                Alpine.data("app", () => ({
+                    // 状态管理
+                    environment: "sandbox",
+                    mode: "merchant",
+                    paymentType: "one-time",
+                    amount: 10.0,
+                    savePaymentMethod: false,
+                    showSuccessDialog: false,
+                    orderId: "",
+                    errorMessage: "",
+                    applePayCDNUrl:
+                        "https://applepay.cdn-apple.com/jsapi/1.latest/apple-pay-sdk.js",
+
+                    // 直接在Alpine store中定义凭证默认值
+                    merchantClientId:
+                        "Adz6qoCn9-BQ0tFfWVZBl_rSTyxD0_fpk39E_u2KqT1HoYtN8HTQsSwunpx5Jynk0q8tj1nxUHS-TWlL", // 沙箱默认Client ID
+                    merchantSecretKey:
+                        "ENCbxo_xFeOFsq4uVGll5gDau005zIVG_c7AeBipt60sqbbOdA6netNgqQjd1DUacHj2QUD-4GFVqcU8", // 沙箱默认Secret Key
+                    partnerClientId: "test_partner_client_id", // 沙箱默认Partner Client ID
+                    partnerSecretKey: "test_partner_secret_key", // 沙箱默认Partner Secret Key
+                    partnerMerchantId: "test_partner_merchant_id", // 沙箱默认Merchant ID
+                    access_token: "",
+                    authAuthorization: "",
+
+                    // 初始化
+                    init() {
+                        // 初始化Materialize组件
+                        document.addEventListener("DOMContentLoaded", () => {
+                            const selects = document.querySelectorAll("select");
+                            M.FormSelect.init(selects);
+                        });
+                    },
+
+                    // 作废了, 实时update太麻烦了, 点击保存按钮后再init了
+                    updateConfig() {
+                        // 使用Alpine.js后会自动更新UI和data
+                    },
+
+                    // 更新商品价格显示
+                    updateProductPrice() {
+                        // 使用Alpine.js后会自动更新UI和data
+                    },
+
+                    // 支付类型切换时更新金额
+                    onPaymentTypeChange() {
+                        this.amount =
+                            this.paymentType === "one-time" ? 10.0 : 5.0;
+                        // this.updateProductPrice();
+                    },
+
+                    // 保存配置
+                    saveConfig() {
+                        M.toast({ html: "正在初始化" });
+                        this.initPayPal();
+                    },
+
+                    // 初始化PayPal
+                    initPayPal() {
+                        // 清除之前的按钮
+                        const buttonContainer =
+                            document.getElementById("applepay-container");
+                        buttonContainer.innerHTML = "";
+                        this.errorMessage = "";
+
+                        const clientId =
+                            this.mode === "merchant"
+                                ? this.merchantClientId
+                                : this.partnerClientId;
+                        console.log(
+                            `%c 当前clientID: ${clientId}`,
+                            "color: blue; background-color: #2BBBAD; padding: 2px 10px; border-radius: 4px; font-size: 16px; font-weight: bold;"
+                        );
+                        const secretKey =
+                            this.mode === "merchant"
+                                ? this.merchantSecretKey
+                                : this.partnerSecretKey;
+                        console.log(
+                            `%c 当前secretKey: ${secretKey}`,
+                            "color: blue; background-color: #2BBBAD; padding: 2px 10px; border-radius: 4px; font-size: 16px; font-weight: bold;"
+                        );
+
+                        const auth = btoa(`${clientId}:${secretKey}`);
+                        const partnerMerchantId = this.partnerMerchantId;
+                        const requestHeader = {
+                            Authorization: `Basic ${auth}`,
+                        };
+                        const applePayCDNUrl = this.applePayCDNUrl;
+                        console.log("applePayCDNUrl:", applePayCDNUrl);
+                        if (this.mode === "partner")
+                            requestHeader["Paypal-Auth-Assertion"] =
+                                generatePayPalAuthAssertion(
+                                    clientId,
+                                    partnerMerchantId
+                                );
+
+                        fetch(
+                            "https://api.sandbox.paypal.com/v1/oauth2/token",
+                            {
+                                method: "POST",
+                                headers: requestHeader,
+
+                                body: new URLSearchParams({
+                                    grant_type: "client_credentials",
+
+                                    // [customer ID and id_token is no need in basic Integration]
+                                    // response_type: "id_token",
+                                    // target_customer_id: "aVXDDGGdgE",
+                                }),
+                            }
+                        )
+                            .then((data) => data.json())
+                            .then((jsonData) => {
+                                access_token = jsonData.access_token;
+                                id_token = jsonData.id_token;
+                                const script = document.createElement("script");
+                                script.type = "text/javascript";
+                                script.src = `https://www.paypal.com/sdk/js?client-id=${clientId}&buyer-country=US&components=applepay,buttons`;
+                                script.crossorigin = "anonymous";
+
+                                // [id_token is no need in basic Integration]
+                                // script.setAttribute("data-user-id-token", id_token);
+                                script.onload = async function () {
+                                    logGreen("PayPal JS SDK: init!");
+                                    await loadApplePayScript(applePayCDNUrl);
+                                };
+                                document.head.appendChild(script);
+                                this.access_token = jsonData.access_token;
+                                return {
+                                    access_token: jsonData.access_token,
+                                    id_token: jsonData.id_token,
+                                };
+                            });
+                    },
+
+                    // 关闭对话框
+                    closeDialog() {
+                        this.showSuccessDialog = false;
+                    },
+                }));
+            });
+
+            const loadApplePayScript = (applePayCDNUrl) => {
+                return new Promise((resolve, reject) => {
+                    const script = document.createElement("script");
+                    script.type = "text/javascript";
+                    script.src = applePayCDNUrl;
+                    script.async = true;
+                    script.onload = async () => {
+                        await initApplePay();
+                        resolve(async () => {
+                            console.log("Apple Pay Loaded");
+                        });
+                    };
+
+                    script.onerror = () =>
+                        reject(new Error("Apple Pay script failed to load"));
+                    document.head.appendChild(script);
+                });
+            };
+
+            const initApplePay = async () => {
+                if (!window.ApplePaySession) {
+                    console.error("This device does not support Apple Pay");
+                    return;
+                }
+                if (!ApplePaySession.canMakePayments()) {
+                    console.error(
+                        "This device is not capable of making Apple Pay payments"
+                    );
+                    return;
+                }
+                if (
+                    window.ApplePaySession?.supportsVersion(4) &&
+                    window.ApplePaySession?.canMakePayments()
+                ) {
+                    logGreen("[0] initApplePay Meet Criteria");
+                    setupApplepay().catch(console.error);
+                } else {
+                    logGreen("[0] initApplePay Fail");
+                }
+            };
+
+            async function setupApplepay() {
+                console.log("[1] setupApplepay start ---");
+                const applepay = paypal.Applepay();
+                console.log("[2] get Apple Pay object");
+
+                const {
+                    isEligible,
+                    countryCode,
+                    currencyCode,
+                    merchantCapabilities,
+                    supportedNetworks,
+                } = await applepay.config();
+
+                console.log("[3] get Apple Pay config");
+                if (!isEligible) {
+                    console.log("[4] Apple Pay is not Eligible");
+                    throw new Error("applepay is not eligible");
+                }
+
+                document.getElementById("applepay-container").innerHTML =
+                    '<apple-pay-button id="btn-apple" buttonstyle="black" type="buy" locale="en"> ';
+
+                document
+                    .getElementById("btn-apple")
+                    .addEventListener("click", onClick);
+
+                async function onClick() {
+                    console.log("     [onClick][1] Apple Pay is Clicked!");
+                    console.log({
+                        merchantCapabilities,
+                        currencyCode,
+                        supportedNetworks,
+                    });
+
+                    const amount =
+                        Alpine.$data(document.querySelector('[x-data="app"]'))
+                            ?.amount || 10;
+                    logGreen(`Amount: ${amount}`);
+
+                    const paymentRequest = {
+                        countryCode,
+                        currencyCode: "USD",
+                        merchantCapabilities,
+                        supportedNetworks,
+                        requiredBillingContactFields: [
+                            "name",
+                            "phone",
+                            "email",
+                            "postalAddress",
+                        ],
+                        requiredShippingContactFields: [],
+                        total: {
+                            label: "Demo (Card is not charged)",
+                            amount: amount,
+                            type: "final",
+                        },
+                    };
+
+                    let session = new ApplePaySession(4, paymentRequest);
+                    console.log(
+                        "     [onClick][2] Apple Pay Session is generated"
+                    );
+
+                    session.onvalidatemerchant = (event) => {
+                        console.log("     [onClick][3] onvalidatemerchant");
+                        applepay
+                            .validateMerchant({
+                                validationUrl: event.validationURL,
+                            })
+                            .then((payload) => {
+                                session.completeMerchantValidation(
+                                    payload.merchantSession
+                                );
+                            })
+                            .catch((err) => {
+                                console.log(
+                                    "     [onClick][onvalidatemerchant][4] onvalidatemerchant error"
+                                );
+                                console.error(err);
+                                session.abort();
+                            });
+                    };
+
+                    session.onpaymentmethodselected = () => {
+                        session.completePaymentMethodSelection({
+                            newTotal: paymentRequest.total,
+                        });
+                    };
+
+                    session.onpaymentauthorized = async (event) => {
+                        try {
+                            const id = await createOrderCallback();
+
+                            /**
+                             * Confirm Payment
+                             */
+
+                            await applepay.confirmOrder({
+                                orderId: id,
+                                token: event.payment.token,
+                                billingContact: event.payment.billingContact,
+                                shippingContact: event.payment.shippingContact,
+                            });
+
+                            /*
+                             * Capture order (must currently be made on server)
+                             */
+
+                            await approveCallBack(id);
+
+                            session.completePayment({
+                                status: window.ApplePaySession.STATUS_SUCCESS,
+                            });
+                        } catch (err) {
+                            console.error(err);
+                            session.completePayment({
+                                status: window.ApplePaySession.STATUS_FAILURE,
+                            });
+                        }
+                    };
+
+                    session.oncancel = () => {
+                        console.log("     [session.oncancel][0] ...");
+                        console.log("Apple Pay Cancelled !!");
+                    };
+
+                    session.begin();
+                }
+            }
+
+            async function createOrderCallback() {
+                  const {
+                    access_token,
+                    mode,
+                    amount,
+                    partnerClientId,
+                    partnerSecretKey,
+                    authAuthorization,
+                } = Alpine.$data(document.querySelector('[x-data="app"]'));
+
+                const CreateOrderRequestBody = {
+                    intent: "CAPTURE",
+                    payment_source: {
+                        apple_pay: {
+                            stored_credential: {
+                                payment_initiator: "CUSTOMER",
+                                payment_type: "RECURRING",
+                            },
+                            attributes: {
+                                vault: {
+                                    store_in_vault: "ON_SUCCESS",
+                                },
+                            },
+                        },
+                    },
+                    purchase_units: [
+                        {
+                            // ********************************************
+                            //This param is required!
+                            description: "This is description for item",
+                            // ********************************************
+                            amount: {
+                                currency_code: "USD",
+                                value: amount,
+                            },
+
+                            //*****************************
+                            // Shipping address is here
+                            shipping: {
+                                type: "SHIPPING",
+                                method: "DHL",
+                                name: {
+                                    full_name: "Apple Pay Test",
+                                },
+                                address: {
+                                    address_line_1: "Albert-Einstein-Ring 2-6",
+                                    address_line_2: "PayPal",
+                                    postal_code: "14532",
+                                    admin_area_2: "Somewhere-new",
+                                    country_code: "US",
+                                    admin_area_1: "Brandenburg",
+                                },
+                            },
+                        },
+                    ],
+                };
+
+              
+                const requestHeader = {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${access_token}`,
+                    "PayPal-Request-Id": generateRandomPayPalRequestID(),
+                };
+                if (mode === "partner")
+                    requestHeader["Paypal-Auth-Assertion"] = authAuthorization;
+
+                let orderID = await fetch(
+                    "https://api.sandbox.paypal.com/v2/checkout/orders",
+                    {
+                        method: "POST",
+                        headers: requestHeader,
+                        body: JSON.stringify(CreateOrderRequestBody),
+                    }
+                )
+                    .then((data) => data.json())
+                    .then((jsonData) => {
+                        return jsonData.id;
+                    });
+                return orderID;
+            }
+
+            const captureOrder = async (orderId) => {
+                const {
+                    access_token,
+                    mode,
+                    partnerClientId,
+                    partnerSecretKey,
+                    authAuthorization,
+                } = Alpine.$data(document.querySelector('[x-data="app"]'));
+                const requestHeader = {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${access_token}`,
+                    "PayPal-Request-Id": generateRandomPayPalRequestID(),
+                };
+                if (mode === "partner")
+                    requestHeader["Paypal-Auth-Assertion"] = authAuthorization;
+
+                console.log(JSON.stringify(data, null, "  "));
+                let result = await fetch(
+                    `https://api.sandbox.paypal.com/v2/checkout/orders/${orderId}/capture`,
+                    {
+                        method: "POST",
+                        headers: requestHeader,
+                    }
+                );
+                let orderData = await result.json();
+                console.log(JSON.stringify(orderData, null, "  "));
+                let transactionObject =
+                    orderData?.purchase_units?.[0]?.payments?.captures?.[0] ||
+                    orderData?.purchase_units?.[0]?.payments
+                        ?.authorizations?.[0];
+                window.alert(`transactionID:${transactionObject.id}`);
+            };
+
+            /**
+             * Generate PayPal Auth Assertion in request header
+             */
+            const generatePayPalAuthAssertion = (clientID, merchantID) => {
+                let PayPal_Auth_Assertion;
+                let to_encode = {
+                    iss: clientID,
+                    payer_id: merchantID,
+                };
+
+                let to_encode_str = JSON.stringify(to_encode);
+                let encoded_str = btoa(to_encode_str);
+                PayPal_Auth_Assertion = `eyJhbGciOiJub25lIn0=.${encoded_str}.`;
+                this.authAuthorization = PayPal_Auth_Assertion;
+                return PayPal_Auth_Assertion;
+            };
+        </script>
+        <!-- <script src="https://applepay.cdn-apple.com/jsapi/v1/apple-pay-sdk.js"></script> -->
+    </body>
+</html>
