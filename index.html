@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Material风格导航页</title>
+    <!-- Material Design CSS -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css" rel="stylesheet">
+    <style>
+        body {
+            display: flex;
+            min-height: 100vh;
+            flex-direction: column;
+            font-family: 'Roboto', sans-serif;
+        }
+        
+        main {
+            flex: 1 0 auto;
+            padding: 20px;
+        }
+        
+        .nav-container {
+            display: flex;
+            gap: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .nav-column {
+            flex: 1;
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        
+        .nav-column-header {
+            background-color: #6200ee;
+            color: white;
+            padding: 16px;
+            font-weight: 500;
+            font-size: 18px;
+        }
+        
+        .collapsible {
+            border: none;
+            box-shadow: none;
+        }
+        
+        .collapsible li {
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .collapsible-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .collapsible-header:hover {
+            background-color: #f5f5f5;
+        }
+        
+        .collapsible-body {
+            padding: 0 16px 16px 16px;
+        }
+        
+        .nav-item {
+            padding: 8px 0;
+            color: #616161;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .nav-item i {
+            color: #6200ee;
+        }
+        
+        /* 超链接样式 */
+        .nav-item a {
+            color: #6200ee;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.2s;
+            word-break: break-all;
+        }
+        
+        .nav-item a:hover {
+            color: #3700b3;
+            text-decoration: underline;
+        }
+        
+        body.dark-mode .nav-item a {
+            color: #bb86fc;
+        }
+        
+        body.dark-mode .nav-item a:hover {
+            color: #d1c4e9;
+            text-decoration: underline;
+        }
+        
+        /* 说明文本和链接容器 */
+        .link-container {
+            margin-left: 24px;
+            margin-top: 4px;
+            margin-bottom: 12px;
+        }
+        
+        .link-description {
+            display: block;
+            margin-bottom: 4px;
+            color: #616161;
+            font-weight: 400;
+        }
+        
+        body.dark-mode .link-description {
+            color: #b0b0b0;
+        }
+        
+        .link-url {
+            display: block;
+            margin-left: 16px;
+        }
+        
+        footer {
+            background-color: #f5f5f5;
+            padding: 20px;
+            text-align: center;
+            color: #616161;
+        }
+        
+        /* 深色模式样式 */
+        body.dark-mode {
+            background-color: #121212;
+            color: #ffffff;
+        }
+        
+        body.dark-mode .nav-column {
+            background-color: #1e1e1e;
+        }
+        
+        body.dark-mode .collapsible-header {
+            color: #ffffff;
+            background-color: #1e1e1e;
+        }
+        
+        body.dark-mode .collapsible-header:hover {
+            background-color: #2d2d2d;
+        }
+        
+        /* 修复Materialize框架默认样式在dark模式下的影响 */
+        body.dark-mode .collapsible {
+            border: none;
+        }
+        
+        body.dark-mode .collapsible-header.active {
+            background-color: #2d2d2d;
+        }
+        
+        body.dark-mode .nav-item {
+            color: #b0b0b0;
+        }
+        
+        body.dark-mode footer {
+            background-color: #1e1e1e;
+            color: #b0b0b0;
+        }
+        
+        body.dark-mode .collapsible li {
+            border-bottom: 1px solid #333333;
+        }
+        
+        /* 切换按钮样式 */
+        .theme-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+        
+        .theme-toggle-btn {
+            background-color: #6200ee;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 56px;
+            height: 56px;
+            cursor: pointer;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.3s;
+        }
+        
+        .theme-toggle-btn:hover {
+            background-color: #7b1fa2;
+        }
+        
+        @media (max-width: 768px) {
+            .nav-container {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 主题切换按钮 -->
+    <div class="theme-toggle">
+        <button class="theme-toggle-btn" id="themeToggle" title="切换dark/light">
+            <i class="material-icons">dark_mode</i>
+        </button>
+    </div>
+    
+    <main>
+        <div class="nav-container">
+            <!-- 第一栏导航 -->
+            <div class="nav-column">
+                <div class="nav-column-header">
+                    <i class="material-icons left">menu</i>JS V6
+                </div>
+                <ul class="collapsible expandable">
+                    <li class="active">
+                        <div class="collapsible-header">
+                            <span><i class="material-icons">folder</i>Main Test Site</span>
+                            <i class="material-icons">expand_more</i>
+                        </div>
+                        <div class="collapsible-body">
+                            <div class="nav-item"><i class="material-icons">chevron_right</i></div>
+                            <div class="link-container">
+                                <span class="link-description">Please Visit:</span>
+                                <a href="https://jsv6-test.pages.dev/" target="_blank" class="link-url">https://jsv6-test.pages.dev/</a>
+                            </div>
+                        </div>
+                    </li>
+                    
+                    
+                </ul>
+            </div>
+            
+            <!-- 第二栏导航 -->
+            <div class="nav-column">
+                <div class="nav-column-header">
+                    <i class="material-icons left">menu</i>JS v5
+                </div>
+                <ul class="collapsible expandable">
+                    <li class="active">
+                        <div class="collapsible-header">
+                            <span><i class="material-icons">folder</i>Main Test Site</span>
+                            <i class="material-icons">expand_more</i>
+                        </div>
+                        <div class="collapsible-body">
+                            <div class="nav-item"><i class="material-icons">chevron_right</i></div>
+                            <div class="link-container">
+                                <span class="link-description">Test Env下的GMS Exhibition导览入口:</span>
+                                <a href="https://gmsshanghai.github.io/" target="_blank" class="link-url">https://gmsshanghai.github.io/</a>
+                            </div>
+                        </div>
+                    </li>
+                    <li class="active">
+                        <div class="collapsible-header">
+                            <span><i class="material-icons">folder</i>Smart Payment Button</span>
+                            <i class="material-icons">expand_more</i>
+                        </div>
+                        <div class="collapsible-body">
+                            <!-- BCDC链接 -->
+                            <div class="nav-item"><i class="material-icons">chevron_right</i></div>
+                            <div class="link-container">
+                                <span class="link-description">BCDC的各种常见情况:</span>
+                                <a href="https://ppgms-test.github.io/BCDC" target="_blank" class="link-url">查看使用BCDC时的正确和错误做法(已经添加自动展开参数)</a>
+                            </div>
+                            
+                            <!-- Vault和Buy Now Pay Later冲突问题链接 -->
+                            <div class="nav-item"><i class="material-icons">chevron_right</i></div>
+                            <div class="link-container">
+                                <span class="link-description">Vault和Buy Now Pay Later冲突问题:</span>
+                                <a href="https://ppgms-test.github.io/vault-BNPL-conflict" target="_blank" class="link-url">查看conflict</a>
+                            </div>
+                        </div>
+                    </li>
+                    <li class="active">
+                        <div class="collapsible-header">
+                            <span><i class="material-icons">folder</i>ACDC</span>
+                            <i class="material-icons">expand_more</i>
+                        </div>
+                        <div class="collapsible-body">
+                            <!-- ApplePay测试Demo链接 -->
+                            <div class="nav-item"><i class="material-icons">chevron_right</i></div>
+                            <div class="link-container">
+                                <span class="link-description">ApplePay详细测试Demo:</span>
+                                <a href="https://ppgms-test.github.io/applepay-test.html" target="_blank" class="link-url">ApplePay Test</a>
+                            </div>
+                            
+                            <!-- ACDC with 3DS链接 -->
+                            <div class="nav-item"><i class="material-icons">chevron_right</i></div>
+                            <div class="link-container">
+                                <span class="link-description">ACDC with 3DS, 记得打开控制台:</span>
+                                <a href="https://ppgms-test.github.io/ACDC-Sample.html" target="_blank" class="link-url">查看ACDC</a>
+                            </div>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </main>
+    
+    <footer>
+        <p>本仓库访问地址:</p>
+        <p><a href="https://github.com/PPGMS-Test/ppgms-test.github.io" target="_blank">https://github.com/PPGMS-Test/ppgms-test.github.io</a></p>
+    </footer>
+    
+    <!-- Materialize JavaScript -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 初始化可折叠组件
+            var collapsibles = document.querySelectorAll('.collapsible');
+            M.Collapsible.init(collapsibles, {
+                accordion: false,
+                inDuration: 300,
+                outDuration: 200
+            });
+            
+            // 监听折叠事件，更新图标
+            collapsibles.forEach(function(collapsible) {
+                collapsible.addEventListener('click', function(e) {
+                    if (e.target.closest('.collapsible-header')) {
+                        var header = e.target.closest('.collapsible-header');
+                        var icon = header.querySelector('.material-icons:last-child');
+                        var li = header.parentElement;
+                        
+                        if (li.classList.contains('active')) {
+                            icon.textContent = 'expand_more';
+                        } else {
+                            icon.textContent = 'expand_less';
+                        }
+                    }
+                });
+            });
+            
+            // 主题切换功能
+            const themeToggle = document.getElementById('themeToggle');
+            const themeIcon = themeToggle.querySelector('i');
+            
+            // 检查本地存储中的主题偏好
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.body.classList.add('dark-mode');
+                themeIcon.textContent = 'light_mode';
+            }
+            
+            // 主题切换点击事件
+            themeToggle.addEventListener('click', function() {
+                document.body.classList.toggle('dark-mode');
+                
+                if (document.body.classList.contains('dark-mode')) {
+                    themeIcon.textContent = 'light_mode';
+                    localStorage.setItem('theme', 'dark');
+                } else {
+                    themeIcon.textContent = 'dark_mode';
+                    localStorage.setItem('theme', 'light');
+                }
+            });
+        });
+    </script>
+</body>
+</html>
