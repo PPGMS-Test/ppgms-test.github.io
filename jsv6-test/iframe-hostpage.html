@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PayPal JS SDK v6 Iframe Test</title>
+    <!-- Materialize CSS -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css" rel="stylesheet">
+    <!-- Material Icons -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <!-- Google Fonts - Roboto -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* Material Design base styles */
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #f0f0f0; /* 使用更高级的灰色调 */
+            margin: 0;
+            padding: 20px 0 40px 0; 
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start; /* 内容从顶部开始排列 */
+            color: #333;
+        }
+        
+        /* Header section */
+        .header {
+            text-align: center;
+            margin-bottom: 16px;
+            padding: 10px;
+        }
+        
+        .header h1 {
+            font-size: 2rem;
+            font-weight: 500;
+            color: #1976d2;
+            margin-bottom: 2px;
+        }
+        
+        .header p {
+            font-size: 1.1rem;
+            color: #666;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        /* Iframe container */
+        .iframe-container {
+            width: 85%;
+            max-height: calc(100vh - 200px); /* 考虑顶部和底部留白，设置最大高度 */
+            height: auto;
+            min-height: 60vh;
+            margin: 0 auto;
+            border-radius: 12px;
+            overflow-y: auto;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+            border: 3px solid #1976d2;
+            background-color: #ffffff;
+        }
+        
+        /* Iframe styling */
+        .iframe-container iframe {
+            width: 100%;
+            min-height: 1200px; /* 设置最小高度以确保内容完整显示 */
+            border: none;
+            display: block;
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.5rem;
+            }
+            
+            .header p {
+                font-size: 1rem;
+            }
+            
+            .iframe-container {
+                width: 95%;
+                height: 75vh;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header section with notice -->
+    <div class="header">
+        <h1>PayPal JS SDK v6 Iframe Test</h1>
+        <p>Please notice, this is a test page for PayPal JS SDK v6 in iframe behavior.</p>
+    </div>
+    
+    <!-- Iframe container -->
+    <div class="iframe-container">
+        <iframe src="https://jsv6-test.pages.dev/jsv6-test-cases/browser-display/sandboxedIframe" allow="payment"></iframe>
+    </div>
+    
+    <!-- Materialize JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+</body>
+</html>
