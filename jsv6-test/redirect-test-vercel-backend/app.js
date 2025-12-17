@@ -67,7 +67,7 @@ async function setupPayPalButton(paypalPaymentSession) {
 }
 
 async function getBrowserSafeClientToken() {
-  const response = await fetch("https://paypal-backend-api-vercel.vercel.app/api/paypal-api/auth/browser-safe-client-token", {
+  const response = await fetch("https://paypal-backend-api-vercel.vercel.app/api/auth/browser-safe-client-token", {
     method: "GET",
     headers: {
       "Content-Type": "application/json",
@@ -107,7 +107,7 @@ async function createRedirectOrder() {
     ],
   };
 
-  const response = await fetch("https://paypal-backend-api-vercel.vercel.app/api/paypal-api/auth/browser-safe-client-token", {
+  const response = await fetch("https://paypal-backend-api-vercel.vercel.app/api/checkout/orders/create", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
