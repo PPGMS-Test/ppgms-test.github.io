@@ -1,21 +1,92 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <title>One-Time Payment - Redirect Flow - PayPal Web SDK</title>
+    <title>One-Time Payment - Direct App Switch Flow - PayPal Web SDK</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+      :root {
+        --bg: linear-gradient(135deg, #f5f8ff 0%, #e7eefc 100%);
+        --text: #0f1a2a;
+        --muted: #5a6b87;
+        --accent: #0b6ef6;
+        --border: #d5deec;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 32px;
+        background: var(--bg);
+        font-family: "Space Grotesk", "Segoe UI", sans-serif;
+        color: var(--text);
+      }
+      .card {
+        width: min(640px, 100%);
+        background: #fff;
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        box-shadow: 0 12px 40px rgba(15, 26, 42, 0.08);
+        padding: 28px 32px;
+      }
+      h1 {
+        margin: 0 0 8px;
+        font-size: 24px;
+        letter-spacing: -0.02em;
+      }
+      .subtitle {
+        margin: 0 0 20px;
+        color: var(--muted);
+        font-size: 14px;
+      }
+      .toggle {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        padding: 12px 14px;
+        border: 1px dashed var(--border);
+        border-radius: 12px;
+        background: #f7faff;
+        color: var(--muted);
+        user-select: none;
+      }
+      #button-container {
+        margin-top: 18px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 22px;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        background: #f9fbff;
+      }
+      paypal-button {
+        width: 240px;
+        height: 54px;
+      }
+    </style>
   </head>
 
   <body>
-    <h1>Paypal Redirect Flow</h1>
-    <div>
-      <input type="checkbox" id="enable-auto-redirect" checked />
-      <label for="enable-auto-redirect"> Enable auto-redirect </label>
-    </div>
-    <div id="button-container">
-      <paypal-button id="paypal-button" hidden></paypal-button>
-    </div>
+    <main class="card">
+      <h1>PayPal Direct App Switch Flow</h1>
+      <p class="subtitle">Toggle auto-redirect and launch the PayPal button below.</p>
 
-    <script src="./redirect-test-vercel-backend/app.js"></script>
+      <label class="toggle" for="enable-auto-redirect">
+        <input type="checkbox" id="enable-auto-redirect" checked />
+        <span>Enable auto-redirect</span>
+      </label>
+
+      <div id="button-container">
+        <paypal-button id="paypal-button" hidden></paypal-button>
+      </div>
+    </main>
+
+    <script src="app.js"></script>
     <script
       async
       onload="onPayPalWebSdkLoaded()"
