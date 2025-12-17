@@ -120,7 +120,7 @@ async function createRedirectOrder() {
 
 async function captureOrder({ orderId }) {
   const response = await fetch(
-    `/paypal-api/checkout/orders/${orderId}/capture`,
+    `https://paypal-backend-api-vercel.vercel.app/api/checkout/orders/${orderId}/capture`,
     {
       method: "POST",
       headers: {
