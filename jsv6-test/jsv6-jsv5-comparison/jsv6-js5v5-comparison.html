@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PayPal JS SDK v6 vs v5 - Lucide风格对比</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --primary: #0070ba;
+      --primary-light: #e6f0fa;
+      --text: #374151;
+      --text-secondary: #6b7280;
+      --border: #e5e7eb;
+      --background: #ffffff;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --error: #ef4444;
+      --card-bg: #f9fafb;
+      --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
+      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background-color: var(--background);
+      color: var(--text);
+      line-height: 1.6;
+      padding: 20px;
+      background: linear-gradient(135deg, #f0f9ff 0%, #e6f0fa 100%);
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    /* Header Section */
+    .header {
+      text-align: center;
+      padding: 3rem 1rem;
+      margin-bottom: 2rem;
+      background: var(--background);
+      border-radius: 12px;
+      box-shadow: var(--shadow-lg);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .header::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, var(--primary), var(--success));
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      margin-bottom: 1rem;
+    }
+
+    .logo-icon {
+      width: 48px;
+      height: 48px;
+      background: var(--primary);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 20px;
+    }
+
+    .header h1 {
+      font-size: 2.5rem;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 0.5rem;
+      background: linear-gradient(135deg, var(--primary), var(--success));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .header p {
+      color: var(--text-secondary);
+      font-size: 1.1rem;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    /* Stats Cards */
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .stat-card {
+      background: var(--background);
+      padding: 1.5rem;
+      border-radius: 10px;
+      box-shadow: var(--shadow);
+      text-align: center;
+      border: 1px solid var(--border);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .stat-card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-lg);
+    }
+
+    .stat-number {
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--primary);
+      margin-bottom: 0.5rem;
+    }
+
+    .stat-label {
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+    }
+
+    /* Section Styling */
+    .section {
+      margin-bottom: 2.5rem;
+      background: var(--background);
+      border-radius: 12px;
+      box-shadow: var(--shadow-lg);
+      overflow: hidden;
+    }
+
+    .section-header {
+      background: var(--primary-light);
+      padding: 1.2rem 1.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .section-title {
+      font-size: 1.4rem;
+      font-weight: 600;
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .section-content {
+      padding: 0;
+    }
+
+    /* Table Styling */
+    .comparison-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .comparison-table th {
+      background: var(--primary);
+      color: white;
+      padding: 1rem 1.2rem;
+      text-align: left;
+      font-weight: 600;
+      position: sticky;
+      top: 0;
+    }
+
+    .comparison-table td {
+      padding: 1rem 1.2rem;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+    }
+
+    .comparison-table tr:nth-child(even) {
+      background-color: var(--card-bg);
+    }
+
+    .comparison-table tr:hover {
+      background-color: #f8fafc;
+    }
+
+    .feature-name {
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .v6-cell, .v5-cell {
+      min-width: 200px;
+    }
+
+    .positive {
+      color: var(--success);
+      font-weight: 600;
+    }
+
+    .negative {
+      color: var(--error);
+      font-weight: 600;
+    }
+
+    .neutral {
+      color: var(--text-secondary);
+    }
+
+    /* Icons */
+    .icon-check {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      color: var(--success);
+    }
+
+    .icon-cross {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      color: var(--error);
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      body {
+        padding: 10px;
+      }
+
+      .header {
+        padding: 2rem 1rem;
+      }
+
+      .header h1 {
+        font-size: 2rem;
+      }
+
+      .stats {
+        grid-template-columns: 1fr;
+      }
+
+      .comparison-table {
+        display: block;
+        overflow-x: auto;
+      }
+
+      .comparison-table th,
+      .comparison-table td {
+        min-width: 180px;
+        white-space: nowrap;
+      }
+
+      .section-title {
+        font-size: 1.2rem;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .header h1 {
+        font-size: 1.5rem;
+      }
+
+      .comparison-table th,
+      .comparison-table td {
+        padding: 0.75rem 0.5rem;
+        font-size: 0.9rem;
+      }
+    }
+
+    /* Footer */
+    .footer {
+      text-align: center;
+      padding: 2rem 0;
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+      margin-top: 2rem;
+    }
+
+    .footer a {
+      color: var(--primary);
+      text-decoration: none;
+    }
+
+    .footer a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Header Section -->
+    <div class="header">
+      <div class="logo">
+        <div class="logo-icon">
+          <i class="fas fa-exchange-alt"></i>
+        </div>
+      </div>
+      <h1>PayPal JS SDK</h1>
+      <p>v6 vs v5 Feature & Performance Comparison</p>
+    </div>
+
+    <!-- Stats Overview -->
+    <div class="stats">
+      <div class="stat-card">
+        <div class="stat-number">6/9</div>
+        <div class="stat-label">Core Features</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number">6</div>
+        <div class="stat-label">Performance Upgrade</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number">12%</div>
+        <div class="stat-label">Bundle Size Reduction</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number">5</div>
+        <div class="stat-label">Browser Display Mode</div>
+      </div>
+    </div>
+
+    <!-- Product Features Section -->
+    <div class="section">
+      <div class="section-header">
+        <h2 class="section-title">
+          <i class="fas fa-cube"></i>
+          A. 产品功能覆盖指标
+        </h2>
+      </div>
+      <div class="section-content">
+        <table class="comparison-table">
+          <thead>
+            <tr>
+              <th>功能</th>
+              <th>v6</th>
+              <th>v5</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="feature-name">PayPal Wallet</td>
+              <td class="v6-cell"><span class="icon-check"><i class="fas fa-check-circle"></i> 支持</span></td>
+              <td class="v5-cell"><span class="icon-check"><i class="fas fa-check-circle"></i> 支持</span></td>
+            </tr>
+            <tr>
+              <td class="feature-name">Pay Later</td>
+              <td class="v6-cell"><span class="icon-check"><i class="fas fa-check-circle"></i> 支持</span></td>
+              <td class="v5-cell"><span class="icon-check"><i class="fas fa-check-circle"></i> 支持</span></td>
+            </tr>
+            <tr>
+              <td class="feature-name">Pay Later Message</td>
+              <td class="v6-cell"><span class="icon-cross"><i class="fas fa-times-circle"></i> 不支持跨境消息</span></td>
+              <td class="v5-cell"><span class="icon-check"><i class="fas fa-check-circle"></i> 支持</span></td>
+            </tr>
+            <tr>
+              <td class="feature-name">BCDC Standalone Button</td>
+              <td class="v6-cell"><span class="icon-cross"><i class="fas fa-times-circle"></i> inline模式auto expansion有问题</span></td>
+              <td class="v5-cell"><span class="icon-check"><i class="fas fa-check-circle"></i> 支持</span></td>
+            </tr>
+            <tr>
+              <td class="feature-name">ACDC 信用卡支付</td>
+              <td class="v6-cell"><span class="icon-check"><i class="fas fa-check-circle"></i> 支持</span></td>
+              <td class="v5-cell"><span class="icon-check"><i class="fas fa-check-circle"></i> 支持</span></td>
+            </tr>
+            <tr>
+              <td class="feature-name">Apple Pay</td>
+              <td class="v6-cell"><span class="icon-check"><i class="fas fa-check-circle"></i> 支持</span></td>
+              <td class="v5-cell"><span class="icon-check"><i class="fas fa-check-circle"></i> 支持</span></td>
+            </tr>
+            <tr>
+              <td class="feature-name">Google Pay</td>
+              <td class="v6-cell"><span class="icon-check"><i class="fas fa-check-circle"></i> 支持</span></td>
+              <td class="v5-cell"><span class="icon-check"><i class="fas fa-check-circle"></i> 支持</span></td>
+            </tr>
+            <tr>
+              <td class="feature-name">APM(本地支付方式)</td>
+              <td class="v6-cell"><span class="positive">已发布5个</span></td>
+              <td class="v5-cell"><span class="icon-check"><i class="fas fa-check-circle"></i> 支持</span></td>
+            </tr>
+            <tr>
+              <td class="feature-name">Vault(Returning UX)</td>
+              <td class="v6-cell"><span class="icon-cross"><i class="fas fa-times-circle"></i> Wallet没有returning UX</span></td>
+              <td class="v5-cell"><span class="icon-check"><i class="fas fa-check-circle"></i> 支持</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Technical Performance Section -->
+    <div class="section">
+      <div class="section-header">
+        <h2 class="section-title">
+          <i class="fas fa-tachometer-alt"></i>
+          B. 产品技术性能指标
+        </h2>
+      </div>
+      <div class="section-content">
+        <table class="comparison-table">
+          <thead>
+            <tr>
+              <th>指标</th>
+              <th>v6</th>
+              <th>v5</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="feature-name">PayPal买家支付体验</td>
+              <td class="v6-cell"><span class="positive"><i class="fas fa-check-circle"></i> 支持所有主流的浏览器行为</span></td>
+              <td class="v5-cell"><span class="negative">不支持payment handler, redirect等新的浏览器特性</span></td>
+            </tr>
+            <tr>
+              <td class="feature-name">开发者友好程度</td>
+              <td class="v6-cell"><span class="positive"><i class="fas fa-code"></i> 更好的代码可读性, 并且与stripe, apple pay, google pay等保持相同规范</span></td>
+              <td class="v5-cell"><span class="neutral">没有引入payment session概念</span></td>
+            </tr>
+            <tr>
+              <td class="feature-name">加载速度</td>
+              <td class="v6-cell"><span class="positive"><i class="fas fa-bolt"></i> 更小的资源包, 只有v5的12%大小</span></td>
+              <td class="v5-cell"><span class="neutral">—</span></td>
+            </tr>
+            <tr>
+              <td class="feature-name">代码实现</td>
+              <td class="v6-cell"><span class="positive"><i class="fas fa-cogs"></i> 可以使用模块化设计和设计模式, 加载速度几乎可以做到瞬间</span></td>
+              <td class="v5-cell"><span class="neutral">—</span></td>
+            </tr>
+            <tr>
+              <td class="feature-name">UI兼容性</td>
+              <td class="v6-cell"><span class="positive"><i class="fas fa-paint-brush"></i> 使用shadow DOM代替原来的iframe, 对iframe的支持更加友好</span></td>
+              <td class="v5-cell"><span class="negative">无法做到iframe的嵌套</span></td>
+            </tr>
+            <tr>
+              <td class="feature-name">定制化</td>
+              <td class="v6-cell"><span class="positive"><i class="fas fa-palette"></i> 可以使用客制化的按钮</span></td>
+              <td class="v5-cell"><span class="negative">必须使用PayPal按钮</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+      <p>Generated with ❤️ using Lucide-inspired design principles</p>
+    </div>
+  </div>
+
+
