@@ -72,15 +72,16 @@
         }
         
         .nav-item {
-            padding: 8px 0;
+            padding: 12px 0;
             color: #616161;
             display: flex;
-            align-items: center;
-            gap: 8px;
+            align-items: flex-start;
+            gap: 12px;
         }
         
         .nav-item i {
             color: #6200ee;
+            flex-shrink: 0;
         }
         
         /* 超链接样式 */
@@ -108,9 +109,7 @@
         
         /* 说明文本和链接容器 */
         .link-container {
-            margin-left: 24px;
-            margin-top: 4px;
-            margin-bottom: 12px;
+            margin: 0;
         }
         
         .link-description {
@@ -233,14 +232,19 @@
                             <i class="material-icons">expand_more</i>
                         </div>
                         <div class="collapsible-body">
-                            <div class="nav-item"><i class="material-icons">chevron_right</i></div>
-                            <div class="link-container">
-                                <span class="link-description">Test Case Collection Please Visit:</span>
-                                <a href="https://jsv6-test.pages.dev/" target="_blank" class="link-url">https://jsv6-test.pages.dev/</a>
+                            <div class="nav-item">
+                                <i class="material-icons">chevron_right</i>
+                                <div class="link-container">
+                                    <span class="link-description">Test Case Collection Please Visit:</span>
+                                    <a href="https://jsv6-test.pages.dev/" target="_blank" class="link-url">https://jsv6-test.pages.dev/</a>
+                                </div>
                             </div>
-                             <div class="link-container">
-                                <span class="link-description">JSv6-JSv5 Talking point Comparison:</span>
-                                <a href="https://ppgms-test.github.io/jsv6-test/jsv6-jsv5-comparison/jsv6-jsv5-comparison.html" target="_blank" class="link-url">jsv6-jsv5-comparison.html</a>
+                            <div class="nav-item">
+                                <i class="material-icons">chevron_right</i>
+                                <div class="link-container">
+                                    <span class="link-description">JSv6-JSv5 Talking point Comparison:</span>
+                                    <a href="jsv6-test/jsv6-jsv5-comparison/jsv6-jsv5-comparison.html" data-relative-href="jsv6-test/jsv6-jsv5-comparison/jsv6-jsv5-comparison.html" target="_blank" class="link-url">jsv6-jsv5-comparison.html</a>
+                                </div>
                             </div>
                         </div>
 
@@ -264,10 +268,12 @@
                             <i class="material-icons">expand_more</i>
                         </div>
                         <div class="collapsible-body">
-                            <div class="nav-item"><i class="material-icons">chevron_right</i></div>
-                            <div class="link-container">
-                                <span class="link-description">Test Env下的GMS Exhibition导览入口:</span>
-                                <a href="https://gmsshanghai.github.io/" target="_blank" class="link-url">https://gmsshanghai.github.io/</a>
+                            <div class="nav-item">
+                                <i class="material-icons">chevron_right</i>
+                                <div class="link-container">
+                                    <span class="link-description">Test Env下的GMS Exhibition导览入口:</span>
+                                    <a href="https://gmsshanghai.github.io/" target="_blank" class="link-url">https://gmsshanghai.github.io/</a>
+                                </div>
                             </div>
                         </div>
                     </li>
@@ -278,17 +284,21 @@
                         </div>
                         <div class="collapsible-body">
                             <!-- BCDC链接 -->
-                            <div class="nav-item"><i class="material-icons">chevron_right</i></div>
-                            <div class="link-container">
-                                <span class="link-description">BCDC的各种常见情况:</span>
-                                <a href="https://ppgms-test.github.io/BCDC" target="_blank" class="link-url">查看使用BCDC时的正确和错误做法(已经添加自动展开参数)</a>
+                            <div class="nav-item">
+                                <i class="material-icons">chevron_right</i>
+                                <div class="link-container">
+                                    <span class="link-description">BCDC的各种常见情况:</span>
+                                    <a href="BCDC" data-relative-href="BCDC" target="_blank" class="link-url">查看使用BCDC时的正确和错误做法(已经添加自动展开参数)</a>
+                                </div>
                             </div>
                             
                             <!-- Vault和Buy Now Pay Later冲突问题链接 -->
-                            <div class="nav-item"><i class="material-icons">chevron_right</i></div>
-                            <div class="link-container">
-                                <span class="link-description">Vault和Buy Now Pay Later冲突问题:</span>
-                                <a href="https://ppgms-test.github.io/vault-BNPL-conflict" target="_blank" class="link-url">查看conflict</a>
+                            <div class="nav-item">
+                                <i class="material-icons">chevron_right</i>
+                                <div class="link-container">
+                                    <span class="link-description">Vault和Buy Now Pay Later冲突问题(2024-06):</span>
+                                    <a href="vault-BNPL-conflict" data-relative-href="vault-BNPL-conflict" target="_blank" class="link-url">查看conflict</a>
+                                </div>
                             </div>
                         </div>
                     </li>
@@ -299,17 +309,21 @@
                         </div>
                         <div class="collapsible-body">
                             <!-- ApplePay测试Demo链接 -->
-                            <div class="nav-item"><i class="material-icons">chevron_right</i></div>
-                            <div class="link-container">
-                                <span class="link-description">ApplePay详细测试Demo:</span>
-                                <a href="https://ppgms-test.github.io/applepay-test.html" target="_blank" class="link-url">ApplePay Test</a>
+                            <div class="nav-item">
+                                <i class="material-icons">chevron_right</i>
+                                <div class="link-container">
+                                    <span class="link-description">ApplePay详细测试Demo:</span>
+                                    <a href="applePay/applepay-test.html" data-relative-href="applePay/applepay-test.html" target="_blank" class="link-url">ApplePay Test</a>
+                                </div>
                             </div>
                             
-                            <!-- ACDC with 3DS链接 -->
-                            <div class="nav-item"><i class="material-icons">chevron_right</i></div>
-                            <div class="link-container">
-                                <span class="link-description">ACDC with 3DS, 记得打开控制台:</span>
-                                <a href="https://ppgms-test.github.io/ACDC-Sample.html" target="_blank" class="link-url">查看ACDC</a>
+                            <!-- ACDC -->
+                            <div class="nav-item">
+                                <i class="material-icons">chevron_right</i>
+                                <div class="link-container">
+                                    <span class="link-description">ACDC First View, 记得打开控制台:</span>
+                                    <a href="ACDC/ACDC-Sample.html" data-relative-href="ACDC/ACDC-Sample.html" target="_blank" class="link-url">查看ACDC</a>
+                                </div>
                             </div>
                         </div>
                     </li>
@@ -373,6 +387,14 @@
                 } else {
                     themeIcon.textContent = 'dark_mode';
                     localStorage.setItem('theme', 'light');
+                }
+            });
+
+            // 根据当前访问地址动态生成站内链接，方便本地/线上测试
+            document.querySelectorAll('[data-relative-href]').forEach(function(link) {
+                var relativePath = link.getAttribute('data-relative-href');
+                if (relativePath) {
+                    link.href = new URL(relativePath, window.location.href).href;
                 }
             });
         });
