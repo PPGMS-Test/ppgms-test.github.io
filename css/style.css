@@ -1,0 +1,202 @@
+@charset "UTF-8";
+
+body {
+    display: flex;
+    min-height: 100vh;
+    flex-direction: column;
+    font-family: 'Roboto', sans-serif;
+}
+
+main {
+    flex: 1 0 auto;
+    padding: 20px;
+}
+
+.nav-container {
+    display: flex;
+    gap: 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.nav-column {
+    flex: 1;
+    background-color: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+.nav-column-header {
+    background-color: #6200ee;
+    color: white;
+    padding: 16px;
+    font-weight: 500;
+    font-size: 18px;
+}
+
+.collapsible {
+    border: none;
+    box-shadow: none;
+    margin: 0; /* Materialize default is not 0 usually, good to reset */
+}
+
+.collapsible li {
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.collapsible-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.collapsible-header:hover {
+    background-color: #f5f5f5;
+}
+
+.collapsible-body {
+    padding: 0 16px 16px 16px;
+}
+
+.nav-item {
+    padding: 12px 0;
+    color: #616161;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+}
+
+.nav-item i {
+    color: #6200ee;
+    flex-shrink: 0;
+}
+
+/* 超链接样式 */
+.nav-item a {
+    color: #6200ee;
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.2s;
+    word-break: break-all;
+}
+
+.nav-item a:hover {
+    color: #3700b3;
+    text-decoration: underline;
+}
+
+body.dark-mode .nav-item a {
+    color: #bb86fc;
+}
+
+body.dark-mode .nav-item a:hover {
+    color: #d1c4e9;
+    text-decoration: underline;
+}
+
+/* 说明文本和链接容器 */
+.link-container {
+    margin: 0;
+}
+
+.link-description {
+    display: block;
+    margin-bottom: 4px;
+    color: #616161;
+    font-weight: 400;
+}
+
+body.dark-mode .link-description {
+    color: #b0b0b0;
+}
+
+.link-url {
+    display: block;
+    margin-left: 16px;
+}
+
+footer {
+    background-color: #f5f5f5;
+    padding: 20px;
+    text-align: center;
+    color: #616161;
+}
+
+/* 深色模式样式 */
+body.dark-mode {
+    background-color: #121212;
+    color: #ffffff;
+}
+
+body.dark-mode .nav-column {
+    background-color: #1e1e1e;
+}
+
+body.dark-mode .collapsible-header {
+    color: #ffffff;
+    background-color: #1e1e1e;
+}
+
+body.dark-mode .collapsible-header:hover {
+    background-color: #2d2d2d;
+}
+
+/* 修复Materialize框架默认样式在dark模式下的影响 */
+body.dark-mode .collapsible {
+    border: none;
+}
+
+body.dark-mode .collapsible-header.active {
+    background-color: #2d2d2d;
+}
+
+body.dark-mode .nav-item {
+    color: #b0b0b0;
+}
+
+body.dark-mode footer {
+    background-color: #1e1e1e;
+    color: #b0b0b0;
+}
+
+body.dark-mode .collapsible li {
+    border-bottom: 1px solid #333333;
+}
+
+/* 切换按钮样式 */
+.theme-toggle {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1000;
+}
+
+.theme-toggle-btn {
+    background-color: #6200ee;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 56px;
+    height: 56px;
+    cursor: pointer;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.3s;
+}
+
+.theme-toggle-btn:hover {
+    background-color: #7b1fa2;
+}
+
+@media (max-width: 768px) {
+    .nav-container {
+        flex-direction: column;
+    }
+}

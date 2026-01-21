@@ -7,8 +7,8 @@
 |------|----|----|
 | PayPal Wallet | ✅ | ✅ |
 | Pay Later | ✅ | ✅ |
-| Pay Later Message | ❌（不支持跨境消息） | ✅ |
-| BCDC Standalone Button | ❌（inline模式auto expansion有问题） | ✅ |
+| Pay Later Message | ✅（cross-border-messaging） | ✅ |
+| BCDC Standalone Button | ✅（inline/auto expansion有问题） | ✅ |
 | ACDC 信用卡支付 | ✅ | ✅ |
 | Apple Pay | ✅ | ✅ |
 | Google Pay | ✅ | ✅ |
