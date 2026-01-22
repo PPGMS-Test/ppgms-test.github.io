@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PayPal PayLater Message Check - With Status Feedback</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .status-container {
+            background-color: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .status-header {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .status-message {
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 4px;
+        }
+        .status-start {
+            background-color: #e3f2fd;
+            color: #0d47a1;
+        }
+        .status-progress {
+            background-color: #fff3e0;
+            color: #e65100;
+        }
+        .status-warning {
+            background-color: #fff8e1;
+            color: #f57f17;
+        }
+        .status-completed {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+            font-weight: bold;
+            font-size: 16px;
+        }
+        .results-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        .results-table th, .results-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        .results-table th {
+            background-color: #f2f2f2;
+        }
+        .success-row {
+            background-color: #e8f5e9;
+        }
+        .failed-row {
+            background-color: #ffebee;
+        }
+    </style>
+</head>
+<body>
+    <h1>PayPal PayLater Message Availability Checker</h1>
+    
+    <div class="status-container">
+        <div class="status-header">Instructions</div>
+        <div class="status-message status-warning">
+            Note: During the check process, you may see error messages in the browser console. 
+            This is normal and expected. Please ignore these temporary error messages.
+        </div>
+        <button id="startCheckBtn" onclick="startCheck()" style="padding: 10px 20px; font-size: 16px;">Start PayLater Check</button>
+    </div>
+    
+    <div id="statusContainer" style="display: none;"></div>
+    <div id="resultsContainer" style="display: none;"></div>
+
+    <div id="test-containers" style="position: absolute; visibility: hidden; width: 1px; height: 1px; overflow: hidden;"></div>
+
+    <script src="https://www.paypal.com/sdk/js?client-id=AZzRp3LalDO6KnI67OauLv0eFHjBq0TQJ7VpQK4M60B05SsPf-WB_nbh4DJraygQzf3B4ZLJGA2Uv0aZ&components=messages"></script>
+
+    <script>
+        const countryList = ['US', 'GB', 'DE', 'FR', 'IT', 'ES', 'AU', 'CA'];
+        
+        // Status update function
+        function updateStatus(message, type = 'progress') {
+            const statusContainer = document.getElementById('statusContainer');
+            statusContainer.style.display = 'block';
+            
+            const statusClass = `status-${type}`;
+            const messageElement = document.createElement('div');
+            messageElement.className = `status-message ${statusClass}`;
+            messageElement.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            
+            statusContainer.appendChild(messageElement);
+            
+            // Scroll to bottom to see latest status
+            statusContainer.scrollTop = statusContainer.scrollHeight;
+        }
+
+        /**
+         * 检测单个国家的 PayLater Message 是否能渲染
+         * @param {string} country 
+         */
+        function checkCountry(country) {
+            return new Promise((resolve) => {
+                // 1. 动态创建一个容器
+                const containerId = `pp-msg-${country}`;
+                const div = document.createElement('div');
+                div.id = containerId;
+                document.getElementById('test-containers').appendChild(div);
+
+                let isResolved = false;
+
+                // 3. 调用 SDK 渲染
+                try {
+                    if (!window.paypal || !window.paypal.Messages) {
+                        throw new Error("SDK not ready");
+                    }
+
+                    paypal.Messages({
+                        buyerCountry: country,
+                        placement: "product",
+                       
+                        
+                        // 成功回调
+                        onRender: function() {
+                            if (!isResolved) {
+                                isResolved = true;
+                                resolve({ country, success: true, reason: 'Rendered' });
+                            }
+                        }
+                    })
+                    .render(`#${containerId}`)
+                    .catch((err) => {
+                        // SDK 明确报错
+                        if (!isResolved) {
+                            isResolved = true;
+                            resolve({ country, success: false, reason: err.message || 'Render Error' });
+                        }
+                    });
+                } catch (e) {
+                    // 代码执行错误
+                    if (!isResolved) {
+                        isResolved = true;
+                        resolve({ country, success: false, reason: e.message || 'Script Error' });
+                    }
+                }
+            });
+        }
+
+        /**
+         * 主要的检测函数 - 执行所有国家的 PayLater 消息检测
+         * @param {string} clientId - PayPal Client ID (可选，如果不传入则使用默认的)
+         * @returns {Promise<Array<Object>>} - 检测结果数组
+         */
+        async function checkPayLaterAvailability(clientId = null) {
+            // 如果提供了新的client id，需要重新加载SDK（这里简化处理，实际可能需要更复杂的逻辑）
+            if (clientId && window.paypal) {
+                updateStatus('Using existing PayPal SDK with provided client ID', 'warning');
+            }
+            
+            updateStatus('Starting PayLater availability check...', 'start');
+            updateStatus(`Testing countries: ${countryList.join(', ')}`, 'progress');
+            
+            if (!window.paypal) {
+                updateStatus('Error: PayPal SDK failed to load entirely.', 'warning');
+                return [];
+            }
+
+            try {
+                updateStatus('Running checks for each country...', 'progress');
+                
+                const results = await Promise.all(countryList.map(item => checkCountry(item)));
+                
+                updateStatus('All checks completed successfully!', 'completed');
+                
+                // Display results in a table
+                displayResults(results);
+                
+                return results;
+            } catch (err) {
+                updateStatus(`Test suite error: ${err.message}`, 'warning');
+                return [];
+            }
+        }
+        
+        /**
+         * 显示检测结果表格
+         */
+        function displayResults(results) {
+            const resultsContainer = document.getElementById('resultsContainer');
+            resultsContainer.style.display = 'block';
+            
+            let tableHTML = `
+                <h3>PayLater Availability Results</h3>
+                <table class="results-table">
+                    <thead>
+                        <tr>
+                            <th>Country</th>
+                            <th>Status</th>
+                            <th>Reason</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+            
+            results.forEach(result => {
+                const rowClass = result.success ? 'success-row' : 'failed-row';
+                tableHTML += `
+                    <tr class="${rowClass}">
+                        <td>${result.country}</td>
+                        <td>${result.success ? '✅ Available' : '❌ Not Available'}</td>
+                        <td>${result.reason}</td>
+                    </tr>
+                `;
+            });
+            
+            tableHTML += `
+                    </tbody>
+                </table>
+            `;
+            
+            resultsContainer.innerHTML = tableHTML;
+        }
+        
+        /**
+         * 启动检测流程的便捷函数
+         */
+        async function startCheck() {
+            // Clear previous results
+            document.getElementById('statusContainer').innerHTML = '';
+            document.getElementById('resultsContainer').style.display = 'none';
+            
+            // Start the check
+            await checkPayLaterAvailability();
+        }
+    </script>
+</body>
+</html>

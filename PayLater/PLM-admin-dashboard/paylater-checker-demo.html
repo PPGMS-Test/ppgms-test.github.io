@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PayLater Availability Checker - Example</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .instructions {
+            background-color: #fff8e1;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            border-left: 4px solid #fbc02d;
+        }
+        .warning {
+            color: #e65100;
+            font-weight: bold;
+        }
+        .btn {
+            background-color: #1976d2;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        .btn:hover {
+            background-color: #1565c0;
+        }
+        .results {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 4px;
+        }
+        .success {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+        }
+        .error {
+            background-color: #ffebee;
+            color: #c62828;
+        }
+        .summary {
+            background-color: #e3f2fd;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>PayLater Availability Checker</h1>
+        
+        <div class="instructions">
+            <p><span class="warning">Important Notice:</span> During the check process, you may see error messages in the browser console. This is normal and expected behavior. Please ignore these temporary error messages.</p>
+            <p>All results will be displayed on this page when the process completes.</p>
+        </div>
+        
+        <div>
+            <label for="clientId">Client ID:</label>
+            <input type="text" id="clientId" value="AZzRp3LalDO6KnI67OauLv0eFHjBq0TQJ7VpQK4M60B05SsPf-WB_nbh4DJraygQzf3B4ZLJGA2Uv0aZ" style="width: 400px; margin-right: 10px;">
+            <button class="btn" onclick="runCheck()">Run Check</button>
+            <button class="btn" onclick="clearResults()">Clear Results</button>
+        </div>
+        
+        <div id="resultsContainer" style="margin-top: 20px;"></div>
+    </div>
+
+    <!-- Include the PayLater checker module -->
+    <script src="./paylater-checker.js"></script>
+    
+    <script>
+        async function runCheck() {
+            const clientId = document.getElementById('clientId').value.trim();
+            const resultsContainer = document.getElementById('resultsContainer');
+            
+            if (!clientId) {
+                alert('Please enter a Client ID');
+                return;
+            }
+            
+            // Show loading state
+            resultsContainer.innerHTML = `
+                <div class="results" style="background-color: #e3f2fd; color: #0d47a1;">
+                    <h3>Checking PayLater availability...</h3>
+                    <p>Please wait. You may see console messages during this process - this is normal.</p>
+                    <p>Process started at: ${new Date().toLocaleTimeString()}</p>
+                </div>
+            `;
+            
+            try {
+                // Perform the check
+                const results = await checkPayLaterAvailability(clientId);
+                
+                // Calculate summary
+                const successfulCount = results.filter(r => r.success).length;
+                const totalCount = results.length;
+                
+                // Generate results HTML
+                let resultsHtml = `
+                    <div class="results success">
+                        <h3>✅ Check Completed Successfully!</h3>
+                        <p>Process finished at: ${new Date().toLocaleTimeString()}</p>
+                        
+                        <div class="summary">
+                            <strong>Summary: ${successfulCount}/${totalCount} countries support PayLater</strong>
+                        </div>
+                        
+                        <h4>Detailed Results:</h4>
+                        <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+                            <thead>
+                                <tr style="background-color: #f5f5f5;">
+                                    <th style="border: 1px solid #ddd; padding: 8px;">Country</th>
+                                    <th style="border: 1px solid #ddd; padding: 8px;">Status</th>
+                                    <th style="border: 1px solid #ddd; padding: 8px;">Reason</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                `;
+                
+                results.forEach(result => {
+                    const rowClass = result.success ? 'style="background-color: #e8f5e9;"' : 'style="background-color: #ffebee;"';
+                    const status = result.success ? '✅ Available' : '❌ Not Available';
+                    resultsHtml += `
+                        <tr ${rowClass}>
+                            <td style="border: 1px solid #ddd; padding: 8px;">${result.country}</td>
+                            <td style="border: 1px solid #ddd; padding: 8px;">${status}</td>
+                            <td style="border: 1px solid #ddd; padding: 8px;">${result.reason}</td>
+                        </tr>
+                    `;
+                });
+                
+                resultsHtml += `
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+                
+                resultsContainer.innerHTML = resultsHtml;
+                
+                // Also display in console
+                displayPayLaterResults(results);
+            } catch (error) {
+                resultsContainer.innerHTML = `
+                    <div class="results error">
+                        <h3>❌ Error occurred during check</h3>
+                        <p>Error: ${error.message}</p>
+                        <p>Process finished at: ${new Date().toLocaleTimeString()}</p>
+                    </div>
+                `;
+            }
+        }
+        
+        function clearResults() {
+            document.getElementById('resultsContainer').innerHTML = '';
+        }
+    </script>
+</body>
+</html>

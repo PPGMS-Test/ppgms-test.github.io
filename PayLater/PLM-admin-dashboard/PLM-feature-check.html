@@ -1,0 +1,101 @@
+
+<div id="test-containers" style="position: absolute; visibility: hidden; width: 1px; height: 1px; overflow: hidden;"></div>
+
+<!-- <script src="https://www.paypal.com/sdk/js?client-id=AVmKF-CgqAXcDEMvjXUnw1kR-z9kwv-jl2Gc0uR45EwoW2QUk9FcAReTqLn15NvKkCWHIC2FddzS2dYe&components=messages"></script> -->
+<script src="https://www.paypal.com/sdk/js?client-id=AZzRp3LalDO6KnI67OauLv0eFHjBq0TQJ7VpQK4M60B05SsPf-WB_nbh4DJraygQzf3B4ZLJGA2Uv0aZ&components=messages"></script>
+
+<script>
+    
+    const countryList = ['US', 'GB', 'DE', 'FR', 'IT', 'ES', 'AU', 'CA'];
+
+    /**
+     * 检测单个国家的 PayLater Message 是否能渲染
+     * @param {string} country 
+     */
+    function checkCountry(country) {
+        return new Promise((resolve) => {
+            // 1. 动态创建一个容器
+            const containerId = `pp-msg-${country}`;
+            const div = document.createElement('div');
+            div.id = containerId;
+            document.getElementById('test-containers').appendChild(div);
+
+            let isResolved = false;
+
+            // 2. 超时保护：如果 5秒内没有 onRender，认为失败（或不支持）
+            const timer = setTimeout(() => {
+                if (!isResolved) {
+                    isResolved = true;
+                    resolve({ country, success: false, reason: 'Timeout (Not Rendered)' });
+                    console.log(`⚠️ [${country}] Detection Timed out`);
+                }
+            }, 5000);
+
+            // 3. 调用 SDK 渲染
+            try {
+                if (!window.paypal || !window.paypal.Messages) {
+                    throw new Error("SDK not ready");
+                }
+
+                paypal.Messages({
+                    buyerCountry: country,
+                    placement: "product",
+                   
+                    
+                    // 成功回调
+                    onRender: function() {
+                        if (!isResolved) {
+                            isResolved = true;
+                            clearTimeout(timer);
+                            resolve({ country, success: true, reason: 'Rendered' });
+                            console.log(`✅ [${country}] Supported & Rendered`);
+                        }
+                    }
+                })
+                .render(`#${containerId}`)
+                .catch((err) => {
+                    // SDK 明确报错
+                    if (!isResolved) {
+                        isResolved = true;
+                        clearTimeout(timer);
+                        resolve({ country, success: false, reason: err.message || 'Render Error' });
+                        console.error(`❌ [${country}] Error:`, err);
+                    }
+                });
+            } catch (e) {
+                // 代码执行错误
+                if (!isResolved) {
+                    isResolved = true;
+                    clearTimeout(timer);
+                    resolve({ country, success: false, reason: e.message || 'Script Error' });
+                }
+            }
+        });
+    }
+
+    // 主执行逻辑
+    (async function runTests() {
+        console.log('🚀 Starting Country Check for:', countryList);
+        
+        if (!window.paypal) {
+            console.error("PayPal SDK failed to load entirely.");
+            return;
+        }
+
+      
+        try {
+            const results = await Promise.all(countryList.map(item => checkCountry(item)));
+            
+            console.log('--------------------------------------------------');
+            console.log('🏁 Final Report:');
+            console.table(results);
+            console.log('--------------------------------------------------');
+            
+        } catch (err) {
+            console.error("Test suite error", err);
+        } finally {
+            // 测试结束，还原 console，避免影响其他逻辑
+            restoreConsole();
+        }
+    })();
+</script>
