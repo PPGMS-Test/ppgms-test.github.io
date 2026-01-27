@@ -74,6 +74,12 @@
 			padding: 20px 24px;
 			box-shadow: 0 12px 30px rgba(15, 23, 42, 0.06);
 			border: 1px solid var(--border);
+			transition: all 0.3s ease;
+		}
+
+		.card:hover {
+			box-shadow: 0 16px 40px rgba(15, 23, 42, 0.1);
+			transform: translateY(-2px);
 		}
 
 		.card h2, .card h3 {
@@ -81,8 +87,17 @@
 			align-items: center;
 			gap: 10px;
 			margin-top: 0;
-			margin-bottom: 12px;
 			font-weight: 600;
+		}
+
+		.card h2 {
+			margin-bottom: 16px;
+			font-size: 1.25rem;
+		}
+
+		.card h3 {
+			margin-bottom: 12px;
+			font-size: 1.1rem;
 		}
 
 		.chip {
@@ -108,11 +123,25 @@
 			gap: 10px;
 			color: var(--muted);
 			font-size: 0.95rem;
+			word-wrap: break-word;
+			line-height: 1.4;
 		}
 
 		.info-row strong {
 			color: var(--text);
 			font-weight: 600;
+			display: block;
+			margin-bottom: 4px;
+		}
+
+		.info-row .material-icons {
+			flex-shrink: 0;
+			margin-top: 2px;
+		}
+
+		.info-row-content {
+			flex: 1;
+			min-width: 0;
 		}
 
 		.button-panel {
@@ -210,10 +239,34 @@
 		<section class="card">
 			<h2><span class="material-icons" aria-hidden="true">storage</span>沙箱信息</h2>
 			<div class="grid-two">
-				<div class="info-row"><span class="material-icons" aria-hidden="true">vpn_key</span><strong>Client ID:</strong>&nbsp;Aa9Fj_yJs0Ylv2ZxdwWd-5ATa8vNqnn8ykMXksfwk5TRR0zvu1XoTZRhrAvI5YtnyaIJrFSanfQUq-9O</div>
-				<div class="info-row"><span class="material-icons" aria-hidden="true">link</span><strong>Create API:</strong>&nbsp;paypal-backend-api-vercel.vercel.app/api/checkout/orders/create-with-sample-data</div>
-				<div class="info-row"><span class="material-icons" aria-hidden="true">link</span><strong>Capture API:</strong>&nbsp;paypal-backend-api-vercel.vercel.app/api/checkout/orders/{id}/capture</div>
-				<div class="info-row"><span class="material-icons" aria-hidden="true">smartphone</span><strong>App Switch:</strong>&nbsp;appSwitchWhenAvailable = true（JS SDK v5）</div>
+				<div class="info-row">
+					<span class="material-icons" aria-hidden="true">vpn_key</span>
+					<div class="info-row-content">
+						<strong>Client ID:</strong>
+						Aa9Fj_yJs0Ylv2ZxdwWd-5ATa8vNqnn8ykMXksfwk5TRR0zvu1XoTZRhrAvI5YtnyaIJrFSanfQUq-9O
+					</div>
+				</div>
+				<div class="info-row">
+					<span class="material-icons" aria-hidden="true">link</span>
+					<div class="info-row-content">
+						<strong>Create API:</strong>
+						paypal-backend-api-vercel.vercel.app/api/checkout/orders/create-with-sample-data
+					</div>
+				</div>
+				<div class="info-row">
+					<span class="material-icons" aria-hidden="true">link</span>
+					<div class="info-row-content">
+						<strong>Capture API:</strong>
+						paypal-backend-api-vercel.vercel.app/api/checkout/orders/{id}/capture
+					</div>
+				</div>
+				<div class="info-row">
+					<span class="material-icons" aria-hidden="true">smartphone</span>
+					<div class="info-row-content">
+						<strong>App Switch:</strong>
+						appSwitchWhenAvailable = true（JS SDK v5）
+					</div>
+				</div>
 			</div>
 		</section>
 
@@ -234,7 +287,7 @@
 		<footer>PayPal App Switch JS SDK Demo · Sandbox Only · 无需额外框架</footer>
 	</div>
 
-	<script src="https://www.paypal.com/sdk/js?client-id=Aa9Fj_yJs0Ylv2ZxdwWd-5ATa8vNqnn8ykMXksfwk5TRR0zvu1XoTZRhrAvI5YtnyaIJrFSanfQUq-9O&currency=USD&intent=CAPTURE&components=buttons"></script>
+	<script src="https://www.paypal.com/sdk/js?client-id=Aa9Fj_yJs0Ylv2ZxdwWd-5ATa8vNqnn8ykMXksfwk5TRR0zvu1XoTZRhrAvI5YtnyaIJrFSanfQUq-9O"></script>
 	<script>
 		(function () {
 			const CREATE_ENDPOINT = "https://paypal-backend-api-vercel.vercel.app/api/checkout/orders/create-with-sample-data";
@@ -279,6 +332,8 @@
 					shape: "pill",
 					label: "paypal",
 				},
+
+				
 				createOrder: async () => {
 					updateStatus("创建订单中...", "pending", "hourglass_top");
 					const orderRequest = buildOrderRequest();
@@ -302,6 +357,8 @@
 					updateStatus("等待买家在 PayPal 中确认", "pending", "hourglass_empty");
 					return orderData.id;
 				},
+
+
 				onApprove: async (data) => {
 					appendLog("买家已批准，开始 capture", data);
 					updateStatus("捕获中...", "pending", "sync");
