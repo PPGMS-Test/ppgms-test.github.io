@@ -290,8 +290,12 @@
 	<script src="https://www.paypal.com/sdk/js?client-id=Aa9Fj_yJs0Ylv2ZxdwWd-5ATa8vNqnn8ykMXksfwk5TRR0zvu1XoTZRhrAvI5YtnyaIJrFSanfQUq-9O"></script>
 	<script>
 		(function () {
-			const CREATE_ENDPOINT = "https://paypal-backend-api-vercel.vercel.app/api/checkout/orders/create-with-sample-data";
+			const CREATE_ENDPOINT = "https://paypal-backend-api-vercel.vercel.app/api/checkout/orders/create-order-with-sample-data-app-switch-jsv5";
+
+
 			const CAPTURE_ENDPOINT = (orderId) => `https://paypal-backend-api-vercel.vercel.app/api/checkout/orders/${orderId}/capture`;
+
+			
 			const logPane = document.getElementById("event-log");
 			const statusChip = document.getElementById("status-chip");
 
@@ -317,11 +321,10 @@
 			};
 
 			const buildOrderRequest = () => ({
-				appSwitchMeta: {
+				
 					returnUrl: getCanonicalUrl(),
 					cancelUrl: getCanonicalUrl(),
-				},
-				sessionId: (window.crypto?.randomUUID?.() || Date.now().toString()),
+				
 			});
 
 			const buttons = paypal.Buttons({
@@ -353,6 +356,7 @@
 					}
 
 					const orderData = await response.json();
+
 					appendLog("订单创建完成", orderData);
 					updateStatus("等待买家在 PayPal 中确认", "pending", "hourglass_empty");
 					return orderData.id;
@@ -380,10 +384,14 @@
 					updateStatus("订单已成功捕获", "success", "check_circle");
 					return captureData;
 				},
+
+
 				onCancel: (data) => {
 					appendLog("买家取消了流程", data);
 					updateStatus("买家已取消", "pending", "do_not_disturb_on");
 				},
+
+
 				onError: (error) => {
 					appendLog("SDK 报错", { message: error.message });
 					updateStatus("出现错误，详见日志", "error", "report_problem");
