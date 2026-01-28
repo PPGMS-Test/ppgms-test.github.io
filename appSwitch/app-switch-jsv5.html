@@ -290,12 +290,12 @@
 	<script src="https://www.paypal.com/sdk/js?client-id=Aa9Fj_yJs0Ylv2ZxdwWd-5ATa8vNqnn8ykMXksfwk5TRR0zvu1XoTZRhrAvI5YtnyaIJrFSanfQUq-9O"></script>
 	<script>
 		(function () {
-			const CREATE_ENDPOINT = "https://paypal-backend-api-vercel.vercel.app/api/checkout/orders/create-order-with-sample-data-app-switch-jsv5";
+			const CREATE_ENDPOINT = "https://paypal-backend-api-vercel.vercel.app/api/checkout/orders/create-order-with-sample-data-app-switch-jsv5-native";
 
 
 			const CAPTURE_ENDPOINT = (orderId) => `https://paypal-backend-api-vercel.vercel.app/api/checkout/orders/${orderId}/capture`;
 
-			
+
 			const logPane = document.getElementById("event-log");
 			const statusChip = document.getElementById("status-chip");
 
