@@ -250,7 +250,7 @@
 					<span class="material-icons" aria-hidden="true">link</span>
 					<div class="info-row-content">
 						<strong>Create API:</strong>
-						paypal-backend-api-vercel.vercel.app/api/checkout/orders/create-with-sample-data
+						paypal-backend-api-vercel.vercel.app/api/checkout/orders/create-order-with-sample-data-app-switch-jsv5-native
 					</div>
 				</div>
 				<div class="info-row">
@@ -366,6 +366,8 @@
 				onApprove: async (data) => {
 					appendLog("买家已批准，开始 capture", data);
 					updateStatus("捕获中...", "pending", "sync");
+
+					// debugger;
 
 					const response = await fetch(CAPTURE_ENDPOINT(data.orderID), {
 						method: "POST",

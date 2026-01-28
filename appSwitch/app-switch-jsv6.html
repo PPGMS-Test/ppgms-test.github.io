@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>PayPal App Switch JS SDK Demo</title>
+        <link
+            href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600&display=swap"
+            rel="stylesheet"
+        />
+        <link
+            href="https://fonts.googleapis.com/icon?family=Material+Icons"
+            rel="stylesheet"
+        />
+        <style>
+            :root {
+                color-scheme: light;
+                --card-bg: #ffffff;
+                --accent: #005ea6;
+                --accent-soft: rgba(0, 94, 166, 0.1);
+                --text: #1c1c1c;
+                --muted: #5f6368;
+                --border: #e0e0e0;
+                --success: #2e7d32;
+                --warning: #c77800;
+                --error: #c62828;
+                --code-bg: #0f172a;
+            }
+
+            * {
+                box-sizing: border-box;
+            }
+
+            body {
+                margin: 0;
+                font-family: "Roboto", system-ui, -apple-system,
+                    BlinkMacSystemFont, "Segoe UI", sans-serif;
+                background: radial-gradient(
+                    circle at top,
+                    #f4f9ff 10%,
+                    #ecf0f5 55%,
+                    #e4e8ed 100%
+                );
+                color: var(--text);
+                min-height: 100vh;
+                padding: 32px 16px 48px;
+            }
+
+            .page-shell {
+                max-width: 960px;
+                margin: 0 auto;
+                display: flex;
+                flex-direction: column;
+                gap: 20px;
+            }
+
+            .page-header {
+                display: flex;
+                gap: 16px;
+                align-items: center;
+                background: var(--card-bg);
+                padding: 20px 24px;
+                border-radius: 18px;
+                box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+            }
+
+            .page-header .material-icons {
+                font-size: 40px;
+                color: var(--accent);
+            }
+
+            .page-header h1 {
+                margin: 0;
+                font-size: 1.75rem;
+                font-weight: 600;
+            }
+
+            .page-header p {
+                margin: 4px 0 0;
+                color: var(--muted);
+            }
+
+            .card {
+                background: var(--card-bg);
+                border-radius: 18px;
+                padding: 20px 24px;
+                box-shadow: 0 12px 30px rgba(15, 23, 42, 0.06);
+                border: 1px solid var(--border);
+                transition: all 0.3s ease;
+            }
+
+            .card:hover {
+                box-shadow: 0 16px 40px rgba(15, 23, 42, 0.1);
+                transform: translateY(-2px);
+            }
+
+            .card h2,
+            .card h3 {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                margin-top: 0;
+                font-weight: 600;
+            }
+
+            .card h2 {
+                margin-bottom: 16px;
+                font-size: 1.25rem;
+            }
+
+            .card h3 {
+                margin-bottom: 12px;
+                font-size: 1.1rem;
+            }
+
+            .chip {
+                display: inline-flex;
+                align-items: center;
+                gap: 6px;
+                font-size: 0.85rem;
+                padding: 6px 12px;
+                border-radius: 999px;
+                background: var(--accent-soft);
+                color: var(--accent);
+            }
+
+            .grid-two {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+                gap: 14px;
+            }
+
+            .info-row {
+                display: flex;
+                align-items: flex-start;
+                gap: 10px;
+                color: var(--muted);
+                font-size: 0.95rem;
+                word-wrap: break-word;
+                line-height: 1.4;
+            }
+
+            .info-row strong {
+                color: var(--text);
+                font-weight: 600;
+                display: block;
+                margin-bottom: 4px;
+            }
+
+            .info-row .material-icons {
+                flex-shrink: 0;
+                margin-top: 2px;
+            }
+
+            .info-row-content {
+                flex: 1;
+                min-width: 0;
+            }
+
+            .button-panel {
+                display: flex;
+                flex-direction: column;
+                gap: 18px;
+            }
+
+           
+            .status {
+                display: inline-flex;
+                align-items: center;
+                gap: 8px;
+                font-weight: 500;
+                padding: 8px 14px;
+                border-radius: 999px;
+                border: 1px solid var(--border);
+            }
+
+            .status[data-tone="pending"] {
+                color: var(--warning);
+                border-color: rgba(199, 120, 0, 0.4);
+            }
+
+            .status[data-tone="success"] {
+                color: var(--success);
+                border-color: rgba(46, 125, 50, 0.4);
+            }
+
+            .status[data-tone="error"] {
+                color: var(--error);
+                border-color: rgba(198, 40, 40, 0.4);
+            }
+
+            .log-pane {
+                background: var(--code-bg);
+                color: #e0e8ff;
+                border-radius: 14px;
+                padding: 16px;
+                font-family: "JetBrains Mono", "SFMono-Regular", Consolas,
+                    monospace;
+                min-height: 140px;
+                overflow: auto;
+                font-size: 0.9rem;
+                white-space: pre-wrap;
+                word-break: break-word;
+            }
+
+            ol.guide {
+                margin: 0;
+                padding-left: 20px;
+                color: var(--muted);
+            }
+
+            footer {
+                text-align: center;
+                color: var(--muted);
+                font-size: 0.85rem;
+            }
+
+            @media (max-width: 640px) {
+                body {
+                    padding: 20px 12px 32px;
+                }
+
+                .page-header,
+                .card {
+                    padding: 18px;
+                }
+            }
+
+            paypal-button {
+                display: flex;
+                width: 100%;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="page-shell">
+            <header class="page-header">
+                <span class="material-icons" aria-hidden="true">sync_alt</span>
+                <div>
+                    <h1>PayPal App Switch 测试页</h1>
+                    <p>
+                        使用 JS SDK + Orders v2 接口体验 App Switch（Sandbox）。
+                    </p>
+                </div>
+            </header>
+
+            <section class="card">
+                <h2>
+                    <span class="material-icons" aria-hidden="true"
+                        >tips_and_updates</span
+                    >使用提示
+                </h2>
+                <ol class="guide">
+                    <li>
+                        请在非 iframe 的页面上直接访问，确保 App Switch
+                        正常跳转。
+                    </li>
+                    <li>
+                        使用 PayPal 测试 App 并登录
+                        <strong>p-test-us-v6-2025@test.com</strong>
+                        账号验证体验。
+                    </li>
+                    <li>
+                        创建订单走Order V2 API（Sample
+                        backend），捕获阶段直接命中 PayPal Orders Capture。
+                    </li>
+                    <li>
+                        如从 PayPal App 返回本页，脚本会自动检测并调用
+                        <code>buttons.resume()</code> 完成流程。
+                    </li>
+                </ol>
+            </section>
+
+            <section class="card">
+                <h2>
+                    <span class="material-icons" aria-hidden="true"
+                        >storage</span
+                    >沙箱信息
+                </h2>
+                <div class="grid-two">
+                    <div class="info-row">
+                        <span class="material-icons" aria-hidden="true"
+                            >vpn_key</span
+                        >
+                        <div class="info-row-content">
+                            <strong>Client ID:</strong>
+                            Aa9Fj_yJs0Ylv2ZxdwWd-5ATa8vNqnn8ykMXksfwk5TRR0zvu1XoTZRhrAvI5YtnyaIJrFSanfQUq-9O
+                        </div>
+                    </div>
+                    <div class="info-row">
+                        <span class="material-icons" aria-hidden="true"
+                            >link</span
+                        >
+                        <div class="info-row-content">
+                            <strong>Create API:</strong>
+                            paypal-backend-api-vercel.vercel.app/api/checkout/orders/create-with-sample-data
+                        </div>
+                    </div>
+                    <div class="info-row">
+                        <span class="material-icons" aria-hidden="true"
+                            >link</span
+                        >
+                        <div class="info-row-content">
+                            <strong>Capture API:</strong>
+                            paypal-backend-api-vercel.vercel.app/api/checkout/orders/{id}/capture
+                        </div>
+                    </div>
+                    <div class="info-row">
+                        <span class="material-icons" aria-hidden="true"
+                            >smartphone</span
+                        >
+                        <div class="info-row-content">
+                            <strong>App Switch:</strong>
+                            presentationMode = direct-app-switch（JS SDK v6）
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="card button-panel">
+                <div class="chip">
+                    <span class="material-icons" aria-hidden="true"
+                        >play_circle</span
+                    >实时测试
+                </div>
+                <paypal-button
+                    id="paypal-button"
+                    type="pay"
+                    hidden
+                ></paypal-button>
+                <div class="status" id="status-chip" data-tone="pending">
+                    <span class="material-icons" aria-hidden="true"
+                        >hourglass_top</span
+                    >
+                    <span>等待操作...</span>
+                </div>
+                <div>
+                    <h3>
+                        <span class="material-icons" aria-hidden="true"
+                            >terminal</span
+                        >事件日志
+                    </h3>
+                    <div class="log-pane" id="event-log">
+                        App Switch Demo 准备就绪。
+                    </div>
+                </div>
+            </section>
+
+            <footer>
+                PayPal App Switch JS SDK Demo · Sandbox Only · 无需额外框架
+            </footer>
+        </div>
+
+        <script
+            src="https://www.sandbox.paypal.com/web-sdk/v6/core"
+            async
+            onload="onPayPalWebSdkLoaded()"
+        ></script>
+        <script>
+            // const CREATE_ENDPOINT =
+            //     "https://paypal-backend-api-vercel.vercel.app/api/checkout/orders/create-order-with-sample-data-app-switch-jsv6-sdk";
+
+            const CREATE_ENDPOINT =
+                "https://paypal-backend-api-vercel.vercel.app/api/checkout/orders/create";
+
+            const CAPTURE_ENDPOINT = (orderId) =>
+                `https://paypal-backend-api-vercel.vercel.app/api/checkout/orders/${orderId}/capture`;
+
+            const AUTH_ENDPOINT =
+                "https://paypal-backend-api-vercel.vercel.app/api/auth/sandbox-browser-safe-client-token";
+
+            const logPane = document.getElementById("event-log");
+            const statusChip = document.getElementById("status-chip");
+
+            const updateStatus = (
+                text,
+                tone = "pending",
+                icon = "hourglass_top"
+            ) => {
+                statusChip.dataset.tone = tone;
+                statusChip.querySelector("span.material-icons").textContent =
+                    icon;
+                statusChip.querySelector("span:last-child").textContent = text;
+            };
+
+            const appendLog = (message, meta) => {
+                const timestamp = new Date().toLocaleTimeString();
+                let entry = `[${timestamp}] ${message}`;
+                if (meta) {
+                    entry += `\n${
+                        typeof meta === "string"
+                            ? meta
+                            : JSON.stringify(meta, null, 2)
+                    }`;
+                }
+                logPane.textContent =
+                    `${entry}\n\n${logPane.textContent}`.trim();
+            };
+
+            const getCanonicalUrl = () => {
+                const url = new URL(window.location.href);
+                url.hash = "";
+                return url.toString();
+            };
+
+            const buildOrderRequest = () => ({
+                returnUrl: getCanonicalUrl(),
+                cancelUrl: getCanonicalUrl(),
+            });
+
+            async function onPayPalWebSdkLoaded() {
+                try {
+                    const clientToken = await getBrowserSafeClientToken();
+                    const sdkInstance = await window.paypal.createInstance({
+                        clientToken,
+                        components: ["paypal-payments"],
+                        pageType: "checkout",
+                    });
+                    const paypalPaymentSession =
+                        sdkInstance.createPayPalOneTimePaymentSession(
+                            paymentSessionOptions
+                        );
+
+                    if (paypalPaymentSession.hasReturned()) {
+                        appendLog(
+                            "检测到来自 PayPal App 的回跳，调用 resume()..."
+                        );
+                        await paypalPaymentSession.resume().catch((err) => {
+                            appendLog("resume 失败", err);
+                            updateStatus(
+                                "resume 失败，请重新点击按钮",
+                                "error",
+                                "error_outline"
+                            );
+                        });
+                    } else {
+                        setupPayPalButton(paypalPaymentSession);
+                    }
+                } catch (error) {
+                    console.error(error);
+                }
+            }
+
+            const paymentSessionOptions = {
+                async onApprove(data) {
+                    appendLog("买家已批准，开始 capture", data);
+                    updateStatus("捕获中...", "pending", "sync");
+                    // debugger;
+
+                    const response = await fetch(
+                        CAPTURE_ENDPOINT(data.orderId),
+                        {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                        }
+                    );
+
+                    if (!response.ok) {
+                        const text = await response.text();
+                        appendLog("捕获失败", text);
+                        updateStatus("捕获失败", "error", "error_outline");
+                        throw new Error(`Capture failed: ${response.status}`);
+                    }
+
+                    const captureData = await response.json();
+                    appendLog("捕获成功", captureData);
+                    updateStatus("订单已成功捕获", "success", "check_circle");
+                    return captureData;
+                },
+
+                onCancel: (data) => {
+                    appendLog("买家取消了流程", data);
+                    updateStatus("买家已取消", "pending", "do_not_disturb_on");
+                },
+
+                onError: (error) => {
+                    appendLog("SDK 报错", { message: error.message });
+                    updateStatus(
+                        "出现错误，详见日志",
+                        "error",
+                        "report_problem"
+                    );
+                },
+            };
+
+            async function setupPayPalButton(paypalPaymentSession) {
+                const paypalButton = document.querySelector("#paypal-button");
+                paypalButton.removeAttribute("hidden");
+
+                paypalButton.addEventListener("click", async () => {
+                    const createRedirectOrderPromise = createRedirectOrder();
+                    const presentationModesToTry = [
+                        "direct-app-switch",
+                        "popup",
+                        "modal",
+                    ];
+
+                    for (const presentationMode of presentationModesToTry) {
+                        try {
+                            await paypalPaymentSession.start(
+                                { presentationMode },
+                                createRedirectOrderPromise
+                            );
+                            // exit early when start() successfully resolves
+                            break;
+                        } catch (error) {
+                            console.log(
+                                `Error with presentation mode "${presentationMode}":`,
+                                error
+                            );
+
+                            // try another presentationMode for a recoverable error
+                            if (error.isRecoverable) {
+                                continue;
+                            }
+                            throw error;
+                        }
+                    }
+                });
+            }
+
+            async function getBrowserSafeClientToken() {
+                const response = await fetch(AUTH_ENDPOINT, {
+                    method: "GET",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                });
+                const { accessToken } = await response.json();
+
+                return accessToken;
+            }
+
+            async function createRedirectOrder() {
+                const orderPayload = {
+                    intent: "CAPTURE",
+                    paymentSource: {
+                        paypal: {
+                            experienceContext: {
+                                shippingPreference: "NO_SHIPPING",
+                                userAction: "CONTINUE",
+                                returnUrl: window.location.href,
+                                cancelUrl: window.location.href,
+                            },
+                        },
+                    },
+                    purchaseUnits: [
+                        {
+                            amount: {
+                                currencyCode: "USD",
+                                value: "10.00",
+                                breakdown: {
+                                    itemTotal: {
+                                        currencyCode: "USD",
+                                        value: "10.00",
+                                    },
+                                },
+                            },
+                        },
+                    ],
+                };
+
+                const response = await fetch(CREATE_ENDPOINT, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify(orderPayload),
+                });
+                const res = await response.json();
+                console.log(JSON.stringify(res, null, "  "));
+
+                return { orderId: res.id };
+            }
+
+            //  ==============================
+        </script>
+    </body>
+</html>

@@ -28,6 +28,12 @@ export const navData = [
                         url: "PayLater/JSV6-PLM/jsv6-cross-border-msg.html",
                         text: "jsv6-cross-border-msg",
                     },
+                    {
+                        description:
+                            "JS SDK (v6) APP Switch:",
+                        url: "appSwitch/app-switch-jsv6.html",
+                        text: "查看APP Switch在JSv6中的表现",
+                    },
                 ],
             },
         ],
