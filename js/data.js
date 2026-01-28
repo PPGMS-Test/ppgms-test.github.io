@@ -62,6 +62,12 @@ export const navData = [
                         url: "vault-BNPL-conflict",
                         text: "查看conflict",
                     },
+                    {
+                        description:
+                            "JS SDK (v5) APP Switch:",
+                        url: "appSwitch/app-switch-jsv5.html",
+                        text: "查看APP Switch在JSv5中的表现",
+                    },
                 ],
             },
             {
