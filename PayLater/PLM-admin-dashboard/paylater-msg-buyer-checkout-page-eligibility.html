@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>模拟结算页 - PayPal Pay Later Eligibility Check</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f7fa;
+            color: #333;
+            margin: 0;
+            padding: 40px 20px;
+        }
+        .checkout-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            padding: 30px;
+        }
+        h1, h2 {
+            margin-top: 0;
+            color: #111;
+        }
+        .order-summary {
+            background: #f9f9f9;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+            border: 1px solid #eee;
+        }
+        .order-summary .item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+        .order-summary .total {
+            display: flex;
+            justify-content: space-between;
+            font-weight: bold;
+            font-size: 1.2em;
+            border-top: 2px solid #ddd;
+            padding-top: 10px;
+        }
+        .form-group {
+            margin-bottom: 25px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+        select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 1em;
+        }
+        .payment-wall {
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .payment-option {
+            padding: 15px;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .payment-option:last-child {
+            border-bottom: none;
+        }
+        .payment-option:hover {
+            background: #fdfdfd;
+        }
+        .payment-option input[type="radio"] {
+            margin-right: 15px;
+            transform: scale(1.2);
+        }
+        .payment-option.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            background: #fafafa;
+        }
+        .eligibility-msg {
+            margin-top: 10px;
+            font-size: 0.9em;
+            font-weight: bold;
+        }
+        .paylater-experience {
+            display: none;
+            padding: 0 15px 20px 15px;
+            gap: 12px;
+            flex-direction: column;
+            align-items: stretch;
+        }
+        #paypal-button-container,
+        #paypal-message-container {
+            width: 100%;
+        }
+        #paypal-message-container {
+            font-size: 0.9em;
+            color: #555;
+        }
+    </style>
+</head>
+<body>
+
+<div class="checkout-container">
+    <h1>模拟结算页</h1>
+    
+    <div class="order-summary">
+        <h2>订单摘要</h2>
+        <div class="item">
+            <span>高级机械键盘</span>
+            <span>$150.00</span>
+        </div>
+        <div class="item">
+            <span>运费</span>
+            <span>$10.00</span>
+        </div>
+        <div class="total">
+            <span>总计</span>
+            <span>$160.00</span>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label for="buyerCountry">请选择您的国家/地区 (Buyer Country):</label>
+        <select id="buyerCountry" onchange="loadPayPalSDK()">
+            <option value="US" selected>🇺🇸 美国 (United States) - 支持</option>
+            <option value="ES">🇪🇸 西班牙 (Spain) - 支持</option>
+            <option value="DE">🇩🇪 德国 (Germany) - 支持</option>
+            <option value="FR">🇫🇷 法国 (France) - 支持</option>
+            <option value="AU">🇦🇺 澳大利亚 (Australia) - 支持</option>
+            <option value="CN">🇨🇳 中国 (China) - 不支持</option>
+            <option value="JP">🇯🇵 日本 (Japan) - 不支持</option>
+        </select>
+    </div>
+
+    <h2>支付方式</h2>
+    <div class="payment-wall">
+        
+        <label class="payment-option" onclick="togglePaypalButton(false)">
+            <input type="radio" name="paymentMethod" id="radio-cod" value="cod" checked>
+            <div>
+                <strong>Cash on Delivery (货到付款)</strong>
+                <div style="font-size: 0.85em; color: #666;">收到商品时使用现金支付。</div>
+            </div>
+        </label>
+
+        <label class="payment-option" id="paylater-container" onclick="togglePaypalButton(true)">
+            <input type="radio" name="paymentMethod" id="radio-paylater" value="paylater">
+            <div style="width: 100%;">
+                <strong>PayPal Pay Later (先买后付)</strong>
+                <div id="eligibility-msg" class="eligibility-msg" style="color: #f39c12;">
+                    正在检测 Pay Later 资格...
+                </div>
+            </div>
+        </label>
+
+        <div id="paylater-experience" class="paylater-experience">
+            <div id="paypal-message-container"></div>
+            <div id="paypal-button-container"></div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    const clientId = 'AaB-X2CM2jf9k-DU-sWSaNbpfKnHeRLHa84MppXHdBpv36uWUqGui9ldOk6SeET9Os5Hc4J5puUTetXo';
+    const SDK_SCRIPT_ID = 'paypal-js-sdk';
+    let isPayLaterEligible = false;
+    // 下面几个变量用于跟踪“当前加载的 SDK”实例，避免残留的旧实例干扰新实例
+    let paypalSDK = null;            // 指向当前 namespace 下的 paypal SDK
+    let currentNamespace = null;     // 记录本轮加载脚本时设置的 namespace
+    let activeButtonsInstance = null;// 保存已渲染的 Buttons 组件，便于在切换国家时销毁
+
+    // 切换按钮显示逻辑
+    function togglePaypalButton(isPayLaterSelected) {
+        const experienceWrapper = document.getElementById('paylater-experience');
+        const payLaterRadio = document.getElementById('radio-paylater');
+        
+        // 如果用户点击了 Pay Later 但它不可用，强制选中 COD
+        if (isPayLaterSelected && payLaterRadio.disabled) {
+            document.getElementById('radio-cod').checked = true;
+            return;
+        }
+        
+        if (isPayLaterSelected && isPayLaterEligible) {
+            experienceWrapper.style.display = 'flex';
+        } else {
+            experienceWrapper.style.display = 'none';
+        }
+    }
+
+    // 清理旧的 SDK 与按钮，避免重复注册监听器导致的 zoid 报错
+    function cleanupPayPalSDK() {
+        if (activeButtonsInstance && typeof activeButtonsInstance.close === 'function') {
+            try {
+                activeButtonsInstance.close();
+            } catch (err) {
+                console.warn('关闭旧的 PayPal Buttons 时出错:', err);
+            }
+            activeButtonsInstance = null;
+        }
+
+        const existingScript = document.getElementById(SDK_SCRIPT_ID);
+        if (existingScript) {
+            existingScript.remove();
+        }
+
+        document.getElementById('paypal-button-container').innerHTML = '';
+        document.getElementById('paypal-message-container').innerHTML = '';
+        document.getElementById('paylater-experience').style.display = 'none';
+
+        if (currentNamespace && window[currentNamespace]) {
+            // namespace 对应 window.paypal = window[namespace]，删除后可防止旧实例残留
+            delete window[currentNamespace];
+        }
+
+        // PayPal SDK 会往全局挂多个引用，这里逐个删除，确保下一次加载是全新实例
+        delete window.paypal;
+        delete window.paypalLoadScript;
+        delete window.__paypal;
+        delete window.__paypal_sdk__;
+
+        paypalSDK = null;
+    }
+
+    // 动态加载 PayPal JS SDK
+    function loadPayPalSDK() {
+        const countryCode = document.getElementById('buyerCountry').value;
+        const msgEl = document.getElementById('eligibility-msg');
+        
+        msgEl.innerText = "⏳ 正在检测 Pay Later 资格...";
+        msgEl.style.color = '#f39c12';
+        
+        cleanupPayPalSDK();
+        
+        // 创建新的 script 标签
+        const script = document.createElement('script');
+        // 通过唯一 namespace 隔离每次脚本实例，防止多个国家切换时共用同一 window.paypal
+        const namespace = `paypal_${countryCode.toLowerCase()}_${Date.now()}`;
+        currentNamespace = namespace;
+        script.id = SDK_SCRIPT_ID;
+        script.setAttribute('data-namespace', namespace);
+        // 使用动态的 buyer-country 加载 SDK
+        script.src = `https://www.paypal.com/sdk/js?client-id=${clientId}&buyer-country=${countryCode}&enable-funding=paylater&currency=USD&components=funding-eligibility,buttons,messages`;
+        script.onload = () => {
+            if (namespace !== currentNamespace) {
+                // 如果加载完成时 namespace 已被后续操作覆盖，说明已有更新的脚本，无需重复执行
+                return;
+            }
+
+            paypalSDK = window[currentNamespace] || window.paypal;
+
+            if (!paypalSDK) {
+                msgEl.innerText = "❌ SDK 初始化失败，请稍后重试。";
+                msgEl.style.color = '#e74c3c';
+                return;
+            }
+
+            checkEligibility();
+        };
+        script.onerror = () => {
+            msgEl.innerText = "❌ SDK 加载失败，请检查网络或 Client ID。";
+            msgEl.style.color = '#e74c3c';
+        };
+        
+        document.head.appendChild(script);
+    }
+
+    // 核心检测逻辑：使用 SDK 提供的能力检查当前国家是否支持 Pay Later
+    function checkEligibility() {
+        if (!paypalSDK) return;
+
+        const msgEl = document.getElementById('eligibility-msg');
+        const payLaterContainer = document.getElementById('paylater-container');
+        const payLaterRadio = document.getElementById('radio-paylater');
+
+        // 检查 paylater 是否存在于支持列表中
+        isPayLaterEligible = paypalSDK.isFundingEligible(paypalSDK.FUNDING.PAYLATER);
+
+        if (isPayLaterEligible) {
+            // 支持 Pay Later 时的处理
+            msgEl.innerText = "✅ 您的国家支持 PayPal Pay Later！";
+            msgEl.style.color = '#27ae60';
+            payLaterContainer.classList.remove('disabled');
+            payLaterRadio.disabled = false;
+
+            // 渲染 Pay Later 专属按钮
+            if (activeButtonsInstance && typeof activeButtonsInstance.close === 'function') {
+                // 同一个容器只能挂一个 Buttons 实例，否则会出现多个 iframe 和重复监听
+                activeButtonsInstance.close();
+            }
+
+            activeButtonsInstance = paypalSDK.Buttons({
+                fundingSource: paypalSDK.FUNDING.PAYLATER,
+                createOrder: function(data, actions) {
+                    return actions.order.create({
+                        purchase_units: [{"amount": {"currency_code": "USD", "value": "160.00"}}]
+                    });
+                },
+                onApprove: function(data, actions) {
+                    return actions.order.capture().then(function(details) {
+                        alert('模拟支付成功！感谢您, ' + details.payer.name.given_name);
+                    });
+                }
+            });
+
+            activeButtonsInstance.render('#paypal-button-container');
+
+            renderPayLaterMessage();
+
+            // 如果当前已经选中了 Pay Later 选项，立刻显示按钮
+            if (payLaterRadio.checked) {
+                togglePaypalButton(true);
+            }
+
+        } else {
+            // 不支持 Pay Later 时的处理
+            msgEl.innerText = "❌ 当前选择的国家/地区不支持 PayPal Pay Later。";
+            msgEl.style.color = '#e74c3c';
+            payLaterContainer.classList.add('disabled');
+            payLaterRadio.disabled = true;
+            document.getElementById('paylater-experience').style.display = 'none';
+            document.getElementById('paypal-message-container').innerHTML = '';
+
+            if (activeButtonsInstance && typeof activeButtonsInstance.close === 'function') {
+                activeButtonsInstance.close();
+                activeButtonsInstance = null;
+            }
+
+            // 如果用户之前选中了 Pay Later，现在国家变了不支持了，将选项切回货到付款
+            if (payLaterRadio.checked) {
+                document.getElementById('radio-cod').checked = true;
+            }
+        }
+    }
+
+    function renderPayLaterMessage() {
+        const messageContainer = document.getElementById('paypal-message-container');
+        if (!paypalSDK || !messageContainer) return;
+
+        messageContainer.innerHTML = '';
+
+        // Pay Later message 会根据金额/货币输出分期方案文案
+        paypalSDK.Messages({
+            amount: '160.00',
+            placement: 'checkout',
+            style: {
+                layout: 'text',
+                logo: { position: 'left' },
+                text: { size: 14 }
+            }
+        }).render('#paypal-message-container');
+    }
+
+    // 页面加载完成后，基于默认的国家（US）初始化一次
+    window.onload = () => {
+        loadPayPalSDK();
+    };
+</script>
+
+</body>
+</html>

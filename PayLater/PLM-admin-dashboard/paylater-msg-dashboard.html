@@ -1,0 +1,649 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>PayPal Pay Later Message Eligibility Tester</title>
+        <!-- Lucide Icons -->
+        <script src="https://cdn.jsdelivr.net/npm/lucide@0.321.0/dist/umd/lucide.min.js"></script>
+        <!-- Tailwind CSS (用于快速实现Material风格) -->
+        <script src="https://cdn.tailwindcss.com"></script>
+        <!-- 自定义Tailwind配置 (Material科技灰主题) -->
+        <script>
+            tailwind.config = {
+                theme: {
+                    extend: {
+                        colors: {
+                            primary: "#6200ee", // Material主色
+                            surface: "#f5f5f5", // 浅灰背景
+                            "surface-dark": "#e0e0e0", // 深灰
+                            success: "#388e3c", // 成功绿
+                            error: "#d32f2f", // 错误红
+                            neutral: "#616161", // 中性灰
+                        },
+                        fontFamily: {
+                            roboto: ["Roboto", "sans-serif"], // Material默认字体
+                        },
+                    },
+                },
+            };
+        </script>
+        <!-- 自定义样式 -->
+        <style type="text/tailwindcss">
+            @layer utilities {
+                .material-shadow {
+                    box-shadow:
+                        0 2px 4px rgba(0, 0, 0, 0.12),
+                        0 1px 2px rgba(0, 0, 0, 0.24);
+                }
+                .material-shadow-hover {
+                    box-shadow:
+                        0 3px 6px rgba(0, 0, 0, 0.16),
+                        0 3px 6px rgba(0, 0, 0, 0.23);
+                }
+                .mask-overlay {
+                    background-color: rgba(255, 255, 255, 0.7);
+                    backdrop-filter: blur(2px);
+                }
+            }
+        </style>
+        <!-- 引入Roboto字体 -->
+        <link
+            href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap"
+            rel="stylesheet"
+        />
+    </head>
+    <body class="font-roboto bg-surface min-h-screen p-4 md:p-8">
+        <div class="max-w-4xl mx-auto">
+            <!-- 页面标题 -->
+            <div class="mb-8 text-center">
+                <h1
+                    class="text-[clamp(1.5rem,3vw,2.5rem)] font-bold text-neutral mb-2"
+                >
+                    PayPal Pay Later Message Eligibility Tester
+                </h1>
+                <p class="text-neutral/70">
+                    Test your PayPal Client ID for Pay Later Message eligibility
+                    across different countries
+                </p>
+            </div>
+
+            <!-- 配置区域 -->
+            <div class="bg-white rounded-lg material-shadow p-6 mb-8">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                    <!-- Client ID输入框 -->
+                    <div class="col-span-1 md:col-span-3">
+                        <label
+                            for="clientId"
+                            class="block text-neutral font-medium mb-2"
+                            >PayPal Client ID</label
+                        >
+                        <input
+                            type="text"
+                            id="clientId"
+                            class="w-full px-4 py-2 border border-surface-dark rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
+                            placeholder="Enter your PayPal Client ID (sandbox default: 'test')"
+                            value="test"
+                        />
+                    </div>
+
+                    <!-- 国家选择 -->
+                    <div>
+                        <label
+                            for="siteCountry"
+                            class="block text-neutral font-medium mb-2"
+                            >Site Country</label
+                        >
+                        <select
+                            id="siteCountry"
+                            class="w-full px-4 py-2 border border-surface-dark rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all bg-white"
+                        >
+                            <option value="US">US - United States</option>
+                            <option value="GB">GB - United Kingdom</option>
+                            <option value="DE">DE - Germany</option>
+                            <option value="FR">FR - France</option>
+                            <option value="IT">IT - Italy</option>
+                            <option value="ES">ES - Spain</option>
+                            <option value="AU">AU - Australia</option>
+                            <option value="CA">CA - Canada</option>
+                        </select>
+                    </div>
+
+                    <!-- 货币选择 -->
+                    <div>
+                        <label
+                            for="currency"
+                            class="block text-neutral font-medium mb-2"
+                            >Currency</label
+                        >
+                        <select
+                            id="currency"
+                            class="w-full px-4 py-2 border border-surface-dark rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all bg-white"
+                        >
+                            <option value="USD">USD - US Dollar</option>
+                            <option value="GBP">GBP - British Pound</option>
+                            <option value="EUR">EUR - Euro</option>
+                            <option value="AUD">AUD - Australian Dollar</option>
+                            <option value="CAD">CAD - Canadian Dollar</option>
+                        </select>
+                    </div>
+
+                    <!-- 语言选择 -->
+                    <div>
+                        <label
+                            for="language"
+                            class="block text-neutral font-medium mb-2"
+                            >Language</label
+                        >
+                        <select
+                            id="language"
+                            class="w-full px-4 py-2 border border-surface-dark rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all bg-white"
+                        >
+                            <option value="en">English</option>
+                            <option value="de">German</option>
+                            <option value="fr">French</option>
+                            <option value="it">Italian</option>
+                            <option value="es">Spanish</option>
+                        </select>
+                    </div>
+
+                    <!-- 环境切换 -->
+                    <div>
+                        <label
+                            for="environment"
+                            class="block text-neutral font-medium mb-2"
+                            >PayPal Environment</label
+                        >
+                        <select
+                            id="environment"
+                            class="w-full px-4 py-2 border border-surface-dark rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all bg-white"
+                        >
+                            <option value="sandbox" selected>
+                                Sandbox (Test)
+                            </option>
+                            <option value="live">Live (Production)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- 确认按钮 -->
+                <button
+                    id="confirmSettings"
+                    class="bg-primary text-white px-6 py-3 rounded-md material-shadow hover:material-shadow-hover transition-all flex items-center gap-2 mx-auto"
+                    disabled
+                >
+                    <i data-lucide="save"></i>
+                    Loading PayPal SDK...
+                </button>
+            </div>
+
+            <!-- 结果展示区域 -->
+            <div
+                class="bg-white rounded-lg material-shadow p-6 relative overflow-hidden"
+            >
+                <!-- 加载遮罩层 (默认隐藏) -->
+                <div
+                    id="loadingMask"
+                    class="absolute inset-0 mask-overlay flex items-center justify-center z-10 hidden"
+                >
+                    <div class="text-center">
+                        <div
+                            class="inline-block animate-spin mr-2"
+                            data-lucide="loader"
+                            size="32"
+                        ></div>
+                        <p class="text-neutral font-medium mt-2">
+                            Testing eligibility... Please wait
+                        </p>
+                    </div>
+                </div>
+
+                <!-- 刷新按钮 -->
+                <div class="flex justify-end mb-6">
+                    <button
+                        id="refreshBtn"
+                        class="p-2 rounded-full hover:bg-surface transition-all text-neutral"
+                        title="Refresh Results"
+                        disabled
+                    >
+                        <i data-lucide="refresh-cw"></i>
+                    </button>
+                </div>
+
+                <!-- 结果标题 -->
+                <h2 class="text-xl font-bold text-neutral mb-6">
+                    Eligibility Status
+                </h2>
+
+                <!-- 结果网格 -->
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <!-- 国家结果卡片 (动态生成) -->
+                    <div
+                        id="resultsContainer"
+                        class="col-span-2 md:col-span-4 grid grid-cols-2 md:grid-cols-4 gap-4"
+                    >
+                        <!-- 示例卡片 (会被动态替换) -->
+                        <div class="bg-surface rounded-lg p-4 text-center">
+                            <p class="font-medium mb-2">US</p>
+                            <i data-lucide="circle" class="text-neutral/50"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 详细日志区域 -->
+                <div class="mt-8">
+                    <h3 class="text-lg font-medium text-neutral mb-2">
+                        Test Logs
+                    </h3>
+                    <div
+                        id="logsContainer"
+                        class="bg-surface rounded-md p-4 h-32 overflow-auto text-sm text-neutral/80 font-mono"
+                    >
+                        Loading PayPal SDK...
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 隐藏的测试容器 -->
+        <div id="test-containers" class="hidden"></div>
+
+        <script>
+            // 初始化Lucide图标
+            document.addEventListener("DOMContentLoaded", () => {
+                lucide.createIcons();
+
+                // 全局变量
+                let paypalSDKLoaded = false;
+                // 国家列表
+                const countryList = [
+                    "US",
+                    "GB",
+                    "DE",
+                    "FR",
+                    "IT",
+                    "ES",
+                    "AU",
+                    "CA",
+                ];
+
+                // DOM元素
+                const clientIdInput = document.getElementById("clientId");
+                const siteCountrySelect =
+                    document.getElementById("siteCountry");
+                const currencySelect = document.getElementById("currency");
+                const languageSelect = document.getElementById("language");
+                const environmentSelect =
+                    document.getElementById("environment");
+                const confirmBtn = document.getElementById("confirmSettings");
+                const refreshBtn = document.getElementById("refreshBtn");
+                const loadingMask = document.getElementById("loadingMask");
+                const resultsContainer =
+                    document.getElementById("resultsContainer");
+                const logsContainer = document.getElementById("logsContainer");
+                const testContainers =
+                    document.getElementById("test-containers");
+
+                let lastLoadedClientId = null;
+                let lastLoadedEnvironment = null;
+                let logsInitialized = false;
+
+                // 记录日志
+                function logMessage(message) {
+                    const timestamp = new Date().toLocaleTimeString();
+                    if (!logsInitialized) {
+                        logsContainer.innerHTML = "";
+                        logsInitialized = true;
+                    }
+                    const logEntry = document.createElement("div");
+                    logEntry.textContent = `[${timestamp}] ${message}`;
+                    logsContainer.appendChild(logEntry);
+                    logsContainer.scrollTop = logsContainer.scrollHeight;
+                }
+
+                function setConfirmButtonState(state = "default") {
+                    confirmBtn.classList.remove("bg-primary", "bg-success");
+                    if (state === "success") {
+                        confirmBtn.classList.add("bg-success");
+                    } else {
+                        confirmBtn.classList.add("bg-primary");
+                    }
+                }
+
+                function markSettingsDirty() {
+                    setConfirmButtonState("default");
+                }
+
+                function resetSdkTracking() {
+                    paypalSDKLoaded = false;
+                    lastLoadedClientId = null;
+                    lastLoadedEnvironment = null;
+                }
+
+                // 动态加载PayPal SDK
+                function loadPayPalSDK(clientId = "test", environment = "sandbox") {
+                    return new Promise((resolve, reject) => {
+                        // 先移除已存在的SDK脚本
+                        const existingScript = document.querySelector(
+                            'script[data-paypal-sdk="true"]',
+                        );
+                        if (existingScript) {
+                            existingScript.remove();
+                        }
+
+                        const baseUrl =
+                            environment === "live"
+                                ? "https://www.paypal.com"
+                                : "https://www.sandbox.paypal.com";
+                        const envLabel =
+                            environment === "live" ? "live" : "sandbox";
+                        const maskedClientId = clientId
+                            ? clientId.substring(0, 10)
+                            : "N/A";
+                        logMessage(
+                            `Loading PayPal SDK (${envLabel}) with Client ID: ${maskedClientId}...`,
+                        );
+
+                        // 创建新的script标签
+                        const script = document.createElement("script");
+                        script.src = `${baseUrl}/sdk/js?client-id=${encodeURIComponent(clientId)}&components=messages`;
+                        script.type = "text/javascript";
+                        script.setAttribute("data-paypal-sdk", "true");
+
+                        // 加载成功回调
+                        script.onload = () => {
+                            logMessage("PayPal SDK loaded successfully");
+                            paypalSDKLoaded = true;
+                            lastLoadedClientId = clientId;
+                            lastLoadedEnvironment = environment;
+                            resolve();
+                        };
+
+                        // 加载失败回调
+                        script.onerror = (error) => {
+                            logMessage(
+                                `Failed to load PayPal SDK: ${error.message}`,
+                            );
+                            reject(error);
+                        };
+
+                        // 将脚本添加到body末尾
+                        document.body.appendChild(script);
+                    });
+                }
+
+                // 初始化结果卡片
+                function initResultCards() {
+                    resultsContainer.innerHTML = "";
+                    countryList.forEach((country) => {
+                        const card = document.createElement("div");
+                        card.className =
+                            "bg-surface rounded-lg p-4 text-center material-shadow hover:material-shadow-hover transition-all";
+                        card.id = `country-${country}`;
+                        card.innerHTML = `
+                        <p class="font-medium mb-2">${country}</p>
+                        <i data-lucide="circle" class="text-neutral/50" id="icon-${country}"></i>
+                        <p class="text-xs mt-2 text-neutral/60 hidden" id="reason-${country}">-</p>
+                    `;
+                        resultsContainer.appendChild(card);
+                    });
+                    lucide.createIcons(); // 重新渲染图标
+                }
+
+                // 检测单个国家的PayLater Message渲染能力
+                function checkCountry(country, clientId) {
+                    return new Promise((resolve) => {
+                        // 1. 动态创建容器
+                        const containerId = `pp-msg-${country}`;
+                        const div = document.createElement("div");
+                        div.id = containerId;
+                        testContainers.appendChild(div);
+
+                        let isResolved = false;
+
+                        // 3. 调用SDK渲染
+                        try {
+                            if (!window.paypal || !window.paypal.Messages) {
+                                throw new Error("SDK not ready");
+                            }
+
+                            paypal
+                                .Messages({
+                                    buyerCountry: country,
+                                    placement: "product",
+                                   
+                                    onRender: () => {
+                                        if (!isResolved) {
+                                            isResolved = true;
+                                            // 渲染成功
+                                            resolve({
+                                                country,
+                                                success: true,
+                                                reason: "Rendered successfully",
+                                            });
+                                        }
+                                    },
+                                })
+
+                                .render(`#${containerId}`)
+                                .catch((err) => {
+                                    // SDK明确报错
+                                    if (!isResolved) {
+                                        isResolved = true;
+                                        resolve({
+                                            country,
+                                            success: false,
+                                            reason:
+                                                err.message || "Render Error",
+                                        });
+                                    }
+                                });
+                        } catch (e) {
+                            // 代码执行错误
+                            if (!isResolved) {
+                                isResolved = true;
+                                resolve({
+                                    country,
+                                    success: false,
+                                    reason: e.message || "Script Error",
+                                });
+                            }
+                        }
+
+                        // 超时处理 (10秒)
+                        setTimeout(() => {
+                            if (!isResolved) {
+                                isResolved = true;
+                                resolve({
+                                    country,
+                                    success: false,
+                                    reason: "Timeout - SDK did not respond",
+                                });
+                            }
+                        }, 10000);
+                    }).finally(() => {
+                        // 清理容器
+                        const container = document.getElementById(
+                            `pp-msg-${country}`,
+                        );
+                        if (container) container.remove();
+                    });
+                }
+
+                // 运行测试
+                async function runTests() {
+                    // 清空日志
+                    logsContainer.innerHTML = "";
+                    logsInitialized = false;
+                    logMessage("Starting eligibility tests...");
+
+                    // 显示加载遮罩
+                    loadingMask.classList.remove("hidden");
+
+                    // 禁用按钮
+                    confirmBtn.disabled = true;
+                    refreshBtn.disabled = true;
+                    confirmBtn.innerHTML =
+                        '<i data-lucide="save"></i> Testing...';
+                    lucide.createIcons(confirmBtn);
+
+                    // 重置所有结果卡片
+                    initResultCards();
+
+                    // 获取Client ID
+                    const environment = environmentSelect.value;
+                    const clientId =
+                        clientIdInput.value.trim() ||
+                        (environment === "sandbox" ? "test" : "");
+
+                    if (environment === "live" && !clientId) {
+                        logMessage(
+                            "Live environment requires a valid Client ID. Please enter it before running tests.",
+                        );
+                        loadingMask.classList.add("hidden");
+                        confirmBtn.disabled = false;
+                        refreshBtn.disabled = false;
+                        confirmBtn.innerHTML =
+                            '<i data-lucide="save"></i> Confirm Settings & Run Test';
+                        lucide.createIcons(confirmBtn);
+                        return;
+                    }
+
+                    try {
+                        // 确保SDK已加载 (如果未加载或Client ID变更，重新加载)
+                        if (
+                            !paypalSDKLoaded ||
+                            lastLoadedClientId !== clientId ||
+                            lastLoadedEnvironment !== environment
+                        ) {
+                            await loadPayPalSDK(clientId, environment);
+                        }
+
+                        // 检查PayPal SDK是否加载
+                        if (!window.paypal || !window.paypal.Messages) {
+                            throw new Error("PayPal SDK not loaded properly");
+                        }
+
+                        // 并行测试所有国家
+                        const results = await Promise.all(
+                            countryList.map((country) =>
+                                checkCountry(country, clientId),
+                            ),
+                        );
+
+                        // 更新结果展示
+                        results.forEach((result) => {
+                            const countryCard = document.getElementById(
+                                `country-${result.country}`,
+                            );
+                            const iconEl = document.getElementById(
+                                `icon-${result.country}`,
+                            );
+                            const reasonEl = document.getElementById(
+                                `reason-${result.country}`,
+                            );
+
+                            // 更新图标
+                            if (iconEl) iconEl.remove();
+                            const newIcon = document.createElement("i");
+                            newIcon.id = `icon-${result.country}`;
+
+                            if (result.success) {
+                                newIcon.setAttribute(
+                                    "data-lucide",
+                                    "check-circle",
+                                );
+                                newIcon.className = "text-success text-xl";
+                            } else {
+                                newIcon.setAttribute("data-lucide", "x-circle");
+                                newIcon.className = "text-error text-xl";
+                            }
+
+                            countryCard.querySelector("p").after(newIcon);
+                            lucide.createIcons(newIcon); // 渲染单个图标
+
+                            // 显示原因
+                            reasonEl.textContent = result.reason;
+                            reasonEl.classList.remove("hidden");
+
+                            // 记录日志
+                            logMessage(
+                                `${result.country}: ${result.success ? "SUCCESS" : "FAILED"} - ${result.reason}`,
+                            );
+                        });
+
+                        logMessage("All tests completed!");
+                    } catch (error) {
+                        logMessage(`Test suite error: ${error.message}`);
+                    } finally {
+                        // 隐藏加载遮罩
+                        loadingMask.classList.add("hidden");
+                        // 启用按钮
+                        confirmBtn.disabled = false;
+                        refreshBtn.disabled = false;
+                        confirmBtn.innerHTML =
+                            '<i data-lucide="save"></i> Confirm Settings & Run Test';
+                        setConfirmButtonState("success");
+                        lucide.createIcons(confirmBtn);
+                    }
+                }
+
+                // 初始化函数
+                async function init() {
+                    // 初始化结果卡片
+                    initResultCards();
+                    logMessage("Initializing...");
+
+                    try {
+                        // 先加载默认的SDK
+                        await loadPayPalSDK("test", "sandbox");
+                        // 启用按钮
+                        confirmBtn.disabled = false;
+                        refreshBtn.disabled = false;
+                        confirmBtn.innerHTML =
+                            '<i data-lucide="save"></i> Confirm Settings & Run Test';
+                        setConfirmButtonState("default");
+                        lucide.createIcons(confirmBtn);
+                        logMessage("Ready to run tests...");
+                    } catch (error) {
+                        logMessage(`Initialization failed: ${error.message}`);
+                        logMessage(
+                            "Please check your internet connection and try again.",
+                        );
+                    }
+                }
+
+                // 事件监听
+                confirmBtn.addEventListener("click", runTests);
+                refreshBtn.addEventListener("click", runTests);
+
+                // 监听Client ID变化，标记需要重新加载SDK
+                clientIdInput.addEventListener("change", () => {
+                    resetSdkTracking();
+                });
+
+                environmentSelect.addEventListener("change", () => {
+                    resetSdkTracking();
+                    if (environmentSelect.value === "live") {
+                        clientIdInput.value = "";
+                    } else if (!clientIdInput.value.trim()) {
+                        clientIdInput.value = "test";
+                    }
+                    markSettingsDirty();
+                });
+
+                [siteCountrySelect, currencySelect, languageSelect].forEach(
+                    (dropdown) => {
+                        dropdown.addEventListener("change", markSettingsDirty);
+                    },
+                );
+
+                // 默认保持蓝色提示
+                setConfirmButtonState("default");
+
+                // 启动初始化
+                init();
+            });
+        </script>
+    </body>
+</html>
