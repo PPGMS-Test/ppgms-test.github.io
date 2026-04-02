@@ -1,0 +1,603 @@
+<!doctype html>
+<html lang="zh-CN">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>PayPal Google Pay 集成测试原型 (Mock Backend)</title>
+        <link rel="stylesheet" href="style.css" />
+        <!-- 将所有的 CSS 和 JS 逻辑都包含在这里以便单文件运行 -->
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <h1>SandBox 支付测试</h1>
+            </div>
+
+            <div class="product-summary">
+                <div class="product-item">
+                    <span class="product-name">测试商品 (Subtotal)</span>
+                    <span class="product-price">$100.00</span>
+                </div>
+                <div class="product-item">
+                    <span class="product-name">税费 (Tax)</span>
+                    <span class="product-price">$10.00</span>
+                </div>
+                <div class="total-row product-item">
+                    <span>总计 (Total)</span>
+                    <span class="product-price">$110.00</span>
+                </div>
+            </div>
+
+            <div class="payment-area">
+                <!-- Google Pay 按钮容器 -->
+                <div id="google-pay-button-container"></div>
+
+                <div id="message" class="status-message"></div>
+            </div>
+        </div>
+
+        <script>
+            // ==========================================
+            // 1. 全局配置 (Configuration)
+            // ==========================================
+            const CONFIG = {
+                // 使用您提供的 Sandbox Client ID
+                clientId:
+                    "AecNl_qaDuLKXRGAviRbvQ5773SJLW15PrxuOShudJbS3QCaBH8tTX6Wi1mJ8aByWaQx2FeRIVZ7KCg0",
+                // 使用您提供的 Sandbox Secret (注意：在生产环境中，Secret 绝不能暴露在前端代码中！)
+                clientSecret:
+                    "EFuRYH2pDANYlrpybQulVCq6sc706zEw37ffiMKvpw4vzPJEpNk9NeORWS4l4rMtAbzLWqssRb_ny_Mj",
+                // 指定 Merchant ID，确保资金流向正确
+                merchantId: "CMHAMMNAXCMGA",
+                currency: "USD",
+            };
+
+            const baseRequest = {
+                apiVersion: 2,
+                apiVersionMinor: 0,
+            };
+
+            let paymentsClient = null;
+            let allowedPaymentMethods = null;
+            let merchantInfo = null;
+
+            /**
+             * 辅助函数：显示状态信息
+             */
+            function showMessage(text, isError = false) {
+                const el = document.getElementById("message");
+                el.innerHTML = text; // 使用 innerHTML 允许换行
+                el.style.color = isError ? "#d32f2f" : "#2e7d32"; // 成功用绿色，失败用红色
+                console.log(`[UI Message] ${text}`);
+            }
+
+            // ==========================================
+            // 2. 脚本加载逻辑
+            // ==========================================
+            function loadScripts() {
+                console.log("[Init] 开始加载 SDK...");
+
+                // 1. 加载 PayPal SDK
+                const paypalScript = document.createElement("script");
+                // 注意: merchant-id 参数对于 Platform 模式或特定测试账号很重要
+                // buyer-country=US 确保显示正确的支付选项
+                paypalScript.src = `https://www.paypal.com/sdk/js?client-id=${CONFIG.clientId}&currency=${CONFIG.currency}&components=googlepay&merchant-id=${CONFIG.merchantId}&buyer-country=US`;
+
+                paypalScript.onload = () => {
+                    console.log("[Init] PayPal SDK Loaded");
+
+                    // 2. 加载 Google Pay SDK
+                    const googleScript = document.createElement("script");
+                    googleScript.src = "https://pay.google.com/gp/p/js/pay.js";
+                    googleScript.onload = () => {
+                        console.log("[Init] Google Pay SDK Loaded");
+                        // 确保两个库都加载完毕后初始化
+                        if (
+                            window.google &&
+                            window.paypal &&
+                            window.paypal.Googlepay
+                        ) {
+                            onGooglePayLoaded();
+                        } else {
+                            showMessage("SDK 加载不完整，请刷新重试", true);
+                        }
+                    };
+                    document.head.appendChild(googleScript);
+                };
+
+                paypalScript.onerror = () =>
+                    showMessage(
+                        "无法加载 PayPal SDK，可能是网络问题或 Client ID 错误",
+                        true,
+                    );
+                document.head.appendChild(paypalScript);
+            }
+
+            // ==========================================
+            // 3. Google Pay 初始化流程
+            // ==========================================
+            async function onGooglePayLoaded() {
+                try {
+                    // [Step 1] 获取 PayPal 的 Google Pay 配置
+                    console.log("[1] 获取 PayPal Google Pay 配置...");
+                    const googlePayConfig = await paypal.Googlepay().config();
+
+                    allowedPaymentMethods =
+                        googlePayConfig.allowedPaymentMethods;
+                    merchantInfo = googlePayConfig.merchantInfo;
+
+                    merchantInfo["merchantName"] = "My Merchant Name"
+
+                    
+
+                    console.log("[1.1] Config Received:", googlePayConfig);
+
+                    // [Step 2] 初始化 Google Payments Client
+                    const client = getGooglePaymentsClient();
+
+                    // [Step 3] 检查是否支持 (isReadyToPay)
+                    console.log("[2] 检查 isReadyToPay...");
+                    const isReadyRequest = Object.assign({}, baseRequest, {
+                        allowedPaymentMethods: allowedPaymentMethods,
+                    });
+
+                    client
+                        .isReadyToPay(isReadyRequest)
+                        .then(function (response) {
+                            if (response.result) {
+                                console.log("[3] Google Pay 可用，添加按钮");
+                                addGooglePayButton();
+                            } else {
+                                console.warn("isReadyToPay 返回 false");
+                                showMessage(
+                                    "当前环境不支持 Google Pay (可能是浏览器或账号问题)",
+                                    true,
+                                );
+                            }
+                        })
+                        .catch(function (err) {
+                            console.error("isReadyToPay Error:", err);
+                        });
+                } catch (err) {
+                    console.error("初始化错误:", err);
+                    showMessage("初始化失败: " + err.message, true);
+                }
+            }
+
+            function getGooglePaymentsClient() {
+                if (paymentsClient === null) {
+                    paymentsClient = new google.payments.api.PaymentsClient({
+                        environment: "TEST",
+                        paymentDataCallbacks: {
+                            onPaymentAuthorized: onPaymentAuthorized,
+                            onPaymentDataChanged: onPaymentDataChanged,
+                        },
+                    });
+                }
+                return paymentsClient;
+            }
+
+            function addGooglePayButton() {
+                const button = getGooglePaymentsClient().createButton({
+                    onClick: onGooglePaymentButtonClicked,
+                    buttonColor: "black",
+                    buttonType: "buy", // 可选: "short", "plain"
+                });
+                document
+                    .getElementById("google-pay-button-container")
+                    .appendChild(button);
+            }
+
+            async function onGooglePaymentButtonClicked() {
+                console.log("[Click] Google Pay 按钮点击");
+                try {
+                    // 构建支付请求数据
+                    const paymentDataRequest = Object.assign({}, baseRequest);
+                    paymentDataRequest.allowedPaymentMethods =
+                        allowedPaymentMethods;
+                    paymentDataRequest.merchantInfo = merchantInfo;
+                    paymentDataRequest.transactionInfo =
+                        getGoogleTransactionInfo();
+                    // paymentDataRequest.callbackIntents = [
+                    //     "PAYMENT_AUTHORIZATION",
+                    // ];
+
+                    paymentDataRequest.callbackIntents = ["SHIPPING_OPTION","PAYMENT_AUTHORIZATION"];
+
+                    paymentDataRequest.shippingAddressRequired = true;
+                    paymentDataRequest.shippingAddressParameters = {
+                        allowedCountryCodes: ["US"],
+                        phoneNumberRequired: true,
+                    };
+                    paymentDataRequest.shippingOptionRequired = true;
+                    paymentDataRequest.shippingOptionParameters = {
+                        shippingOptions: [
+                            {
+                                id: "shipping-001",
+                                label: "$0.00: Free shipping",
+                                description:
+                                    "Free Shipping delivered in 5 business days.",
+                            },
+                            {
+                                id: "shipping-002",
+                                label: "$1.99: Standard shipping",
+                                description:
+                                    "Standard shipping delivered in 3 business days.",
+                            },
+                            {
+                                id: "shipping-003",
+                                label: "$15.00: Express shipping",
+                                description:
+                                    "Express shipping delivered in 1 business day.",
+                            },
+                        ],
+                    };
+
+                    // 加载支付数据 (弹出 Google Pay 窗口)
+                    console.log("[Load] 调用 loadPaymentData...");
+                    getGooglePaymentsClient().loadPaymentData(
+                        paymentDataRequest,
+                    );
+                } catch (err) {
+                    console.error("按钮点击处理错误:", err);
+                }
+            }
+
+            function getGoogleTransactionInfo() {
+                return {
+                    displayItems: [
+                        {
+                            label: "Subtotal",
+                            type: "SUBTOTAL",
+                            price: "100.00",
+                        },
+                        { label: "Tax", type: "TAX", price: "10.00" },
+                    ],
+                    countryCode: "US",
+                    currencyCode: CONFIG.currency,
+                    totalPriceStatus: "FINAL",
+                    totalPrice: "110.00",
+                    totalPriceLabel: "Total",
+                };
+            }
+
+            // ==========================================
+            // 5. 动态价格更新 (Shipping & Options)
+            // ==========================================
+
+            /**
+             * 当用户在支付表格中更改配送地址或配送选项时触发
+             * 用于重新计算运费和总价
+             */
+            function onPaymentDataChanged(intermediatePaymentData) {
+                return new Promise(function (resolve, reject) {
+                    console.log(
+                        "[PaymentDataChanged] 收到变更:",
+                        intermediatePaymentData,
+                    );
+
+                    let shippingAddress =
+                        intermediatePaymentData.shippingAddress;
+                    let shippingOptionData =
+                        intermediatePaymentData.shippingOptionData;
+                    let paymentDataRequestUpdate = {};
+                    console.log(paymentDataRequestUpdate);
+
+                    // 1. 初始化或地址变更 (INITIALIZE, SHIPPING_ADDRESS)
+                    //    在这里设置支持的配送选项列表，并选中默认项
+                    if (
+                        intermediatePaymentData.callbackTrigger ==
+                            "INITIALIZE" ||
+                        intermediatePaymentData.callbackTrigger ==
+                            "SHIPPING_ADDRESS"
+                    ) {
+                        // 可以在这里校验地址是否在服务范围内 (示例中略过)
+                        // console.log("User Address State:", shippingAddress.administrativeArea);
+
+                        paymentDataRequestUpdate.newShippingOptionParameters = {
+                            defaultSelectedOptionId: "shipping-001",
+                            shippingOptions: [
+                                {
+                                    id: "shipping-001",
+                                    label: "Free: Standard shipping",
+                                    description:
+                                        "Delivered in 5 business days.",
+                                },
+                                {
+                                    id: "shipping-002",
+                                    label: "$1.99: Standard shipping",
+                                    description:
+                                        "Delivered in 3 business days.",
+                                },
+                                {
+                                    id: "shipping-003",
+                                    label: "$10.00: Express shipping",
+                                    description: "Delivered in 1 business day.",
+                                },
+                            ],
+                        };
+
+                        // 计算新的总价（基于默认选项）
+                        let selectedOptionId =
+                            paymentDataRequestUpdate.newShippingOptionParameters
+                                .defaultSelectedOptionId;
+                        paymentDataRequestUpdate.newTransactionInfo =
+                            calculateNewTransactionInfo(selectedOptionId);
+                    }
+
+                    // 2. 用户更改配送选项 (SHIPPING_OPTION)
+                    //    根据用户新选择的 ID 重新计算总价
+                    else if (
+                        intermediatePaymentData.callbackTrigger ==
+                        "SHIPPING_OPTION"
+                    ) {
+                        paymentDataRequestUpdate.newTransactionInfo =
+                            calculateNewTransactionInfo(shippingOptionData.id);
+                    }
+
+                    resolve(paymentDataRequestUpdate);
+                });
+            }
+
+            /**
+             * 辅助函数：根据选中的配送选项 ID 计算新的交易信息 (总价)
+             */
+            function calculateNewTransactionInfo(shippingOptionId) {
+                let subtotal = 100.0;
+                let tax = 10.0;
+
+                // 定义不同的运费
+                let shippingCost = 0.0;
+                let shippingLabel = "Free Shipping";
+
+                switch (shippingOptionId) {
+                    case "shipping-001":
+                        shippingCost = 0.0;
+                        shippingLabel = "Free Shipping";
+                        break;
+                    case "shipping-002":
+                        shippingCost = 1.99;
+                        shippingLabel = "Standard Shipping";
+                        break;
+                    case "shipping-003":
+                        shippingCost = 15.0;
+                        shippingLabel = "Express Shipping";
+                        break;
+                    default:
+                        shippingCost = 0.0;
+                }
+
+                let totalPrice = (subtotal + tax + shippingCost).toFixed(2);
+                console.log(
+                    `[Calc] Option: ${shippingOptionId}, Cost: ${shippingCost}, Total: ${totalPrice}`,
+                );
+
+                return {
+                    countryCode: "US",
+                    currencyCode: CONFIG.currency,
+                    totalPriceStatus: "FINAL",
+                    totalPrice: totalPrice,
+                    totalPriceLabel: "Total",
+                    displayItems: [
+                        {
+                            label: "Subtotal",
+                            type: "SUBTOTAL",
+                            price: subtotal.toFixed(2),
+                        },
+                        {
+                            label: "Tax",
+                            type: "TAX",
+                            price: tax.toFixed(2),
+                        },
+                        {
+                            label: shippingLabel,
+                            type: "LINE_ITEM",
+                            price: shippingCost.toFixed(2),
+                            status: "FINAL",
+                        },
+                    ],
+                };
+            }
+
+            // ==========================================
+            // 4. 支付处理核心逻辑 (Callbacks)
+            // ==========================================
+
+            /**
+             * 当用户在 Google Pay 界面点击“支付”并授权后触发
+             */
+            function onPaymentAuthorized(paymentData) {
+                return new Promise(function (resolve, reject) {
+                    console.log("[Authorized] 用户已授权，开始处理后端逻辑...");
+                    showMessage("用户已授权，正在处理订单...");
+
+                    processPayment(paymentData)
+                        .then(function (result) {
+                            resolve(result);
+                        })
+                        .catch(function (err) {
+                            console.error("Process Payment Error:", err);
+                            resolve({ transactionState: "ERROR" });
+                        });
+                });
+            }
+
+            /**
+             * 完整的支付处理流程：
+             * 1. 生成 Access Token (模拟后端)
+             * 2. 创建 PayPal Order (模拟后端)
+             * 3. 确认 PayPal Order (前端 SDK)
+             * 4. 捕获 PayPal Order (模拟后端)
+             */
+            async function processPayment(paymentData) {
+                try {
+                    // 1. 获取 Access Token
+                    const accessToken = await generateAccessToken();
+                    // 确保 Token 有效
+                    if (!accessToken) throw new Error("无法获取 Access Token");
+
+                    // 2. 创建订单 (Create Order)
+                    console.log("[Process] 创建 PayPal 订单...");
+                    // 使用 Sandbox API 创建订单
+                    const createOrderUrl =
+                        "https://api.sandbox.paypal.com/v2/checkout/orders";
+                    const orderPayload = {
+                        intent: "CAPTURE",
+                        purchase_units: [
+                            {
+                                amount: {
+                                    currency_code: CONFIG.currency,
+                                    value: "110.00",
+                                },
+                                // 重要：必须包含 merchant_id，否则可能归属到调用者账号下
+                                payee: {
+                                    merchant_id: CONFIG.merchantId,
+                                },
+                            },
+                        ],
+                    };
+
+                    const orderRes = await fetch(createOrderUrl, {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            Authorization: `Bearer ${accessToken}`,
+                        },
+                        body: JSON.stringify(orderPayload),
+                    });
+
+                    const orderData = await orderRes.json();
+
+                    if (!orderRes.ok) {
+                        throw new Error(
+                            "创建订单失败: " + JSON.stringify(orderData),
+                        );
+                    }
+
+                    const orderId = orderData.id;
+                    console.log("[Process] 订单创建成功, ID:", orderId);
+                    showMessage(`订单创建成功 (${orderId}), 正在确认...`);
+
+                    // 3. 确认订单 (Confirm Order - SDK)
+                    console.log(
+                        "[Process] 正在关联 PayPal 与 Google Pay 数据...",
+                    );
+
+                    // 这里将 paymentData 里的 paymentMethodData 传递给 PayPal
+                    const confirmRes = await paypal.Googlepay().confirmOrder({
+                        orderId: orderId,
+                        paymentMethodData: paymentData.paymentMethodData,
+                    });
+
+                    console.log("[Process] Confirm 结果:", confirmRes);
+
+                    if (confirmRes.status === "APPROVED") {
+                        // 4. 捕获资金 (Capture Order)
+                        console.log("[Process] 订单已批准，正在捕获资金...");
+                        showMessage("订单已批准，正在扣款...");
+
+                        const captureUrl = `https://api.sandbox.paypal.com/v2/checkout/orders/${orderId}/capture`;
+                        const captureRes = await fetch(captureUrl, {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json",
+                                Authorization: `Bearer ${accessToken}`,
+                            },
+                        });
+
+                        const captureData = await captureRes.json();
+
+                        // 注意：capture 可能会返回 201 Created，也可能是 200 OK
+                        if (!captureRes.ok) {
+                            throw new Error(
+                                "捕获失败: " + JSON.stringify(captureData),
+                            );
+                        }
+
+                        // 检查 capture 状态
+                        const captureStatus =
+                            captureData.status ||
+                            (captureData.purchase_units &&
+                                captureData.purchase_units[0].payments
+                                    .captures[0].status);
+
+                        console.log("[Process] 捕获成功:", captureData);
+                        showMessage(
+                            `支付成功！<br>状态: ${captureStatus}<br>订单ID: ${orderId}`,
+                        );
+                        return { transactionState: "SUCCESS" };
+                    } else if (confirmRes.status === "PAYER_ACTION_REQUIRED") {
+                        // 处理 3DS 情况 (简化版，未完全实现)
+                        console.log("[Process] 需要额外的用户验证 (3DS)");
+                        showMessage("需要额外的 3DS 验证...");
+
+                        // 调用 initiatePayerAction (如果实现了)
+                        /*
+                    await paypal.Googlepay().initiatePayerAction({ orderId: orderId });
+                    // ... 之后再次检查状态并 capture
+                    */
+
+                        return {
+                            transactionState: "ERROR",
+                            error: {
+                                message:
+                                    "需要 3DS 验证，此 Demo 未完全实现该流程",
+                            },
+                        };
+                    } else {
+                        showMessage(
+                            "支付未能完成，状态: " + confirmRes.status,
+                            true,
+                        );
+                        return { transactionState: "ERROR" };
+                    }
+                } catch (err) {
+                    console.error("[Process Error]", err);
+                    showMessage("处理失败: " + err.message, true);
+                    return { transactionState: "ERROR" };
+                }
+            }
+
+            // ==========================================
+            // 5. Access Token Util
+            // ==========================================
+
+            /**
+             * 生成 PayPal Access Token (CLIENT CREDENTIALS)
+             * Warn: 此操作在前端暴露了 Secret，Only for Demo Use.
+             */
+            async function generateAccessToken() {
+                const url = "https://api.sandbox.paypal.com/v1/oauth2/token";
+                // 使用 btoa 进行 base64 编码 user:pass
+                const auth = btoa(`${CONFIG.clientId}:${CONFIG.clientSecret}`);
+
+                try {
+                    const response = await fetch(url, {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/x-www-form-urlencoded",
+                            Authorization: `Basic ${auth}`,
+                        },
+                        body: "grant_type=client_credentials",
+                    });
+
+                    const data = await response.json();
+                    if (data.access_token) {
+                        console.log("[Token] 获取 Access Token 成功");
+                        return data.access_token;
+                    } else {
+                        throw new Error(
+                            "未获取到 Token: " + JSON.stringify(data),
+                        );
+                    }
+                } catch (err) {
+                    console.error("Token 获取失败", err);
+                    return null;
+                }
+            }
+
+            // 启动
+            loadScripts();
+        </script>
+    </body>
+</html>

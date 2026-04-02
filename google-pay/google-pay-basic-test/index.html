@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Google Pay</title>
+        <script src="./script.js"></script>
+
+        <link rel="shortcut icon" href="#" />
+    </head>
+    <body>
+        <main>
+            <section class="container">
+                <a
+                    href="https://developers.google.com/pay/api/web/guides/resources/test-card-suite"
+                    >Enable/Disable Google Test Card Suite</a
+                >
+            </section>
+            <section class="container">
+                <div id="button-container"></div>
+            </section>
+        </main>
+
+        <style>
+            .container {
+                height: 200px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+        </style>
+
+        <script
+            src="https://www.paypal.com/sdk/js?client-id=AU-UWB28NzHNevqfR8m-JocXahBne7M4w6PrNG2_6_GFiX9k_7n9hfnumfDJ8hv_iKW58Q7KsModmOgN&buyer-country=US&currency=USD&components=googlepay"
+            onload="console.log('PayPal SPB Script Loaded')"
+        ></script>
+
+        <script
+            src="https://pay.google.com/gp/p/js/pay.js"
+            onload="console.log('Google Pay Script Loaded')"
+        ></script>
+
+        <script>
+            //vault-test-merchant-c2@cctest.com
+
+            // const client_id =
+            //     "Aam3QqDEU73XYwbfy8iyKe2p2G9k6eiIMpsekTwwS2WVGANpv1dJiL8QNXAqDZWcj9MnI4dUJ_5D4_4M";
+            // const secret_key =
+            //     "EK8A7skgsj-ad33Xc8xYnxpJo7hT2C8j6eomGXruze6Gbk708hR3O8Mg_ft2wPjzmh-5sEcEFYfqRzRw";
+
+            const client_id =
+                "AU-UWB28NzHNevqfR8m-JocXahBne7M4w6PrNG2_6_GFiX9k_7n9hfnumfDJ8hv_iKW58Q7KsModmOgN";
+            const secret_key =
+                "EDjhkXtxdkqVNVnYBhhGXOJH57g5p5x3lVNit9TjSOd1NCJLz2OhM5bHsPeaM_9gxIEww8DPlrfX6Hg8";
+
+            document.addEventListener("DOMContentLoaded", (event) => {
+                if (google && paypal.Googlepay) {
+                    onGooglePayLoaded().catch(console.log);
+                }
+            });
+        </script>
+    </body>
+</html>
