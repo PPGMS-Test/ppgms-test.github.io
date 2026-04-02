@@ -74,7 +74,9 @@ export default defineConfig({
           const url = req.url.split('?')[0]
           // 只处理 HTML 文件请求，且排除 noshow
           if (url.includes('.html') && !isNoShow(url)) {
-            const filePath = resolve(__dirname, 'src', 'pages', url)
+            // 去掉开头的 / 使路径相对于 src/pages
+            const cleanUrl = url.replace(/^\//, '')
+            const filePath = resolve(__dirname, 'src', 'pages', cleanUrl)
             if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
               res.setHeader('Content-Type', 'text/html')
               res.end(fs.readFileSync(filePath))
