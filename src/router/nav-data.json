@@ -157,23 +157,6 @@
     ]
   },
   {
-    "title": "thank-you",
-    "icon": "folder",
-    "groups": [
-      {
-        "title": "thank-you",
-        "icon": "folder",
-        "items": [
-          {
-            "description": "",
-            "url": "thank-you/thankyou-page.html",
-            "text": "thankyou-page"
-          }
-        ]
-      }
-    ]
-  },
-  {
     "title": "vault-BNPL-conflict",
     "icon": "folder",
     "groups": [

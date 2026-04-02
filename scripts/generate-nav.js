@@ -35,11 +35,10 @@ function scanDir(dir, basePath = '') {
 
   for (const entry of entries) {
     if (entry.isDirectory()) {
-      // noshow- 完全排除，hidden- 只排除在导航外
-      if (EXCLUDED_DIRS.includes(entry.name) || isNoShow(entry.name)) continue
+      // noshow- 完全排除（不复制也不显示），hidden- 只排除在导航外（复制到dist但不显示）
+      if (EXCLUDED_DIRS.includes(entry.name) || isNoShow(entry.name) || isHidden(entry.name)) continue
       const childPath = basePath ? `${basePath}/${entry.name}` : entry.name
       const child = scanDir(path.join(dir, entry.name), childPath)
-      // 如果是 hidden- 子文件夹，添加到 children 但不显示在导航（通过标记处理）
       // 如果子文件夹有内容才添加
       if (child.children.length > 0 || child.files.length > 0) {
         result.children.push(child)
