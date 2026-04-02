@@ -70,11 +70,6 @@
     "filePath": "PayLater/PLM-admin-dashboard/paylater-msg-dashboard.html"
   },
   {
-    "name": "thankyou-page",
-    "path": "thank-you/thankyou-page.html",
-    "filePath": "thank-you/thankyou-page.html"
-  },
-  {
     "name": "index",
     "path": "vault-BNPL-conflict",
     "filePath": "vault-BNPL-conflict/index.html"
