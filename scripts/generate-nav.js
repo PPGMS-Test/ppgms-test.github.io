@@ -10,8 +10,11 @@ const pagesDir = path.resolve(rootDir, 'src', 'pages')
 // 排除的文件夹
 const EXCLUDED_DIRS = ['.git', '.vscode', 'node_modules', 'dist', '.well-known', 'css', 'js', 'scripts', 'public']
 
-// 排除以 noshow 开头的文件夹和文件
-const isNoShow = (name) => name.toLowerCase().startsWith('noshow')
+// 排除以 noshow 开头的文件夹和文件（不复制也不显示）
+const isNoShow = (name) => name.toLowerCase().startsWith('noshow-')
+
+// 排除以 hidden 开头的文件夹和文件（复制但不显示）
+const isHidden = (name) => name.toLowerCase().startsWith('hidden-')
 
 function normalizePath(p) {
   return p.replace(/\\/g, '/')
@@ -32,14 +35,16 @@ function scanDir(dir, basePath = '') {
 
   for (const entry of entries) {
     if (entry.isDirectory()) {
+      // noshow- 完全排除，hidden- 只排除在导航外
       if (EXCLUDED_DIRS.includes(entry.name) || isNoShow(entry.name)) continue
       const childPath = basePath ? `${basePath}/${entry.name}` : entry.name
       const child = scanDir(path.join(dir, entry.name), childPath)
+      // 如果是 hidden- 子文件夹，添加到 children 但不显示在导航（通过标记处理）
       // 如果子文件夹有内容才添加
       if (child.children.length > 0 || child.files.length > 0) {
         result.children.push(child)
       }
-    } else if (entry.name.endsWith('.html') && !isNoShow(entry.name)) {
+    } else if (entry.name.endsWith('.html') && !isNoShow(entry.name) && !isHidden(entry.name)) {
       const filePath = basePath ? `${basePath}/${entry.name}` : entry.name
       result.files.push({
         name: entry.name.replace('.html', ''),

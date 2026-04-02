@@ -13,8 +13,8 @@ function navGenerator() {
   }
 }
 
-// 排除以 noshow 开头的文件夹和文件
-const isNoShow = (name) => name.toLowerCase().startsWith('noshow')
+// 排除以 noshow 开头的文件夹和文件（不复制也不显示）
+const isNoShow = (name) => name.toLowerCase().startsWith('noshow-')
 
 // 复制 pages 目录到 dist 的插件
 function copyPages() {
@@ -31,6 +31,7 @@ function copyPages() {
         }
         const entries = fs.readdirSync(src, { withFileTypes: true })
         for (const entry of entries) {
+          // noshow- 完全不复制，hidden- 会复制
           if (isNoShow(entry.name)) continue
           const srcPath = resolve(src, entry.name)
           const destPath = resolve(dest, entry.name)
