@@ -1,0 +1,224 @@
+[
+  {
+    "title": "ACDC",
+    "icon": "folder",
+    "groups": [
+      {
+        "title": "ACDC",
+        "icon": "folder",
+        "items": [
+          {
+            "description": "",
+            "url": "ACDC/ACDC-Sample.html",
+            "text": "ACDC-Sample"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "title": "applePay",
+    "icon": "folder",
+    "groups": [
+      {
+        "title": "applePay",
+        "icon": "folder",
+        "items": [
+          {
+            "description": "",
+            "url": "applePay/applepay-test.html",
+            "text": "applepay-test"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "title": "appSwitch",
+    "icon": "folder",
+    "groups": [
+      {
+        "title": "appSwitch",
+        "icon": "folder",
+        "items": [
+          {
+            "description": "",
+            "url": "appSwitch/app-switch-jsv5.html",
+            "text": "app-switch-jsv5"
+          },
+          {
+            "description": "",
+            "url": "appSwitch/app-switch-jsv6.html",
+            "text": "app-switch-jsv6"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "title": "BCDC",
+    "icon": "folder",
+    "groups": [
+      {
+        "title": "BCDC",
+        "icon": "folder",
+        "items": [
+          {
+            "description": "",
+            "url": "BCDC",
+            "text": "BCDC"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "title": "google-pay",
+    "icon": "folder",
+    "groups": [
+      {
+        "title": "google-pay-basic-test",
+        "icon": "folder",
+        "items": [
+          {
+            "description": "",
+            "url": "google-pay/google-pay-basic-test",
+            "text": "google-pay-basic-test",
+            "isFolder": false
+          }
+        ]
+      },
+      {
+        "title": "googlePayWithShipping",
+        "icon": "folder",
+        "items": [
+          {
+            "description": "",
+            "url": "google-pay/googlePayWithShipping",
+            "text": "googlePayWithShipping",
+            "isFolder": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "title": "jsv6-test",
+    "icon": "folder",
+    "groups": [
+      {
+        "title": "jsv6-jsv5-comparison",
+        "icon": "folder",
+        "items": [
+          {
+            "description": "",
+            "url": "jsv6-test/jsv6-jsv5-comparison/jsv6-jsv5-comparison.html",
+            "text": "jsv6-jsv5-comparison",
+            "isFolder": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "title": "PayLater",
+    "icon": "folder",
+    "groups": [
+      {
+        "title": "JSV6-PLM",
+        "icon": "folder",
+        "items": [
+          {
+            "description": "",
+            "url": "PayLater/JSV6-PLM/jsv6-cross-border-msg.html",
+            "text": "jsv6-cross-border-msg",
+            "isFolder": false
+          }
+        ]
+      },
+      {
+        "title": "PLM-admin-dashboard",
+        "icon": "folder",
+        "items": [
+          {
+            "description": "",
+            "url": "PayLater/PLM-admin-dashboard/paylater-msg-buyer-checkout-page-eligibility.html",
+            "text": "paylater-msg-buyer-checkout-page-eligibility",
+            "isFolder": false
+          },
+          {
+            "description": "",
+            "url": "PayLater/PLM-admin-dashboard/paylater-msg-dashboard.html",
+            "text": "paylater-msg-dashboard",
+            "isFolder": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "title": "thank-you",
+    "icon": "folder",
+    "groups": [
+      {
+        "title": "thank-you",
+        "icon": "folder",
+        "items": [
+          {
+            "description": "",
+            "url": "thank-you/thankyou-page.html",
+            "text": "thankyou-page"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "title": "vault-BNPL-conflict",
+    "icon": "folder",
+    "groups": [
+      {
+        "title": "各种情况",
+        "icon": "folder",
+        "items": [
+          {
+            "description": "",
+            "url": "vault-BNPL-conflict/各种情况/PayLater-Vault冲突 - 按钮渲染加入vaultable参数.html",
+            "text": "PayLater-Vault冲突 - 按钮渲染加入vaultable参数",
+            "isFolder": false
+          },
+          {
+            "description": "",
+            "url": "vault-BNPL-conflict/各种情况/PayLater-Vault冲突 - 单独的PayLater按钮.html",
+            "text": "PayLater-Vault冲突 - 单独的PayLater按钮",
+            "isFolder": false
+          },
+          {
+            "description": "",
+            "url": "vault-BNPL-conflict/各种情况/PayLater-Vault冲突 - 展示Paylater - basic.html",
+            "text": "PayLater-Vault冲突 - 展示Paylater - basic",
+            "isFolder": false
+          },
+          {
+            "description": "",
+            "url": "vault-BNPL-conflict/各种情况/PayLater-Vault冲突 - 展示Paylater - returning buyer.html",
+            "text": "PayLater-Vault冲突 - 展示Paylater - returning buyer",
+            "isFolder": false
+          },
+          {
+            "description": "",
+            "url": "vault-BNPL-conflict/各种情况/PayLater-Vault冲突 - 展示Paylater - vault with purchase.html",
+            "text": "PayLater-Vault冲突 - 展示Paylater - vault with purchase",
+            "isFolder": false
+          },
+          {
+            "description": "",
+            "url": "vault-BNPL-conflict/各种情况/PayLater-Vault冲突 - JSSDK加入vault参数.html",
+            "text": "PayLater-Vault冲突 - JSSDK加入vault参数",
+            "isFolder": false
+          }
+        ]
+      }
+    ]
+  }
+]

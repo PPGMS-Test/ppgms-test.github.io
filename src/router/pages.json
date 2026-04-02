@@ -1,0 +1,112 @@
+[
+  {
+    "name": "ACDC-Sample",
+    "path": "ACDC/ACDC-Sample.html",
+    "filePath": "ACDC/ACDC-Sample.html"
+  },
+  {
+    "name": "applepay-test",
+    "path": "applePay/applepay-test.html",
+    "filePath": "applePay/applepay-test.html"
+  },
+  {
+    "name": "app-switch-jsv5",
+    "path": "appSwitch/app-switch-jsv5.html",
+    "filePath": "appSwitch/app-switch-jsv5.html"
+  },
+  {
+    "name": "app-switch-jsv6",
+    "path": "appSwitch/app-switch-jsv6.html",
+    "filePath": "appSwitch/app-switch-jsv6.html"
+  },
+  {
+    "name": "index",
+    "path": "BCDC",
+    "filePath": "BCDC/index.html"
+  },
+  {
+    "name": "index",
+    "path": "google-pay/google-pay-basic-test",
+    "filePath": "google-pay/google-pay-basic-test/index.html"
+  },
+  {
+    "name": "index",
+    "path": "google-pay/googlePayWithShipping",
+    "filePath": "google-pay/googlePayWithShipping/index.html"
+  },
+  {
+    "name": "appswitch-test-vercel-backend",
+    "path": "jsv6-test/appswitch-test-vercel-backend.html",
+    "filePath": "jsv6-test/appswitch-test-vercel-backend.html"
+  },
+  {
+    "name": "iframe-hostpage",
+    "path": "jsv6-test/iframe-hostpage.html",
+    "filePath": "jsv6-test/iframe-hostpage.html"
+  },
+  {
+    "name": "redirect-test-vercel-backend",
+    "path": "jsv6-test/redirect-test-vercel-backend.html",
+    "filePath": "jsv6-test/redirect-test-vercel-backend.html"
+  },
+  {
+    "name": "jsv6-jsv5-comparison",
+    "path": "jsv6-test/jsv6-jsv5-comparison/jsv6-jsv5-comparison.html",
+    "filePath": "jsv6-test/jsv6-jsv5-comparison/jsv6-jsv5-comparison.html"
+  },
+  {
+    "name": "jsv6-cross-border-msg",
+    "path": "PayLater/JSV6-PLM/jsv6-cross-border-msg.html",
+    "filePath": "PayLater/JSV6-PLM/jsv6-cross-border-msg.html"
+  },
+  {
+    "name": "paylater-msg-buyer-checkout-page-eligibility",
+    "path": "PayLater/PLM-admin-dashboard/paylater-msg-buyer-checkout-page-eligibility.html",
+    "filePath": "PayLater/PLM-admin-dashboard/paylater-msg-buyer-checkout-page-eligibility.html"
+  },
+  {
+    "name": "paylater-msg-dashboard",
+    "path": "PayLater/PLM-admin-dashboard/paylater-msg-dashboard.html",
+    "filePath": "PayLater/PLM-admin-dashboard/paylater-msg-dashboard.html"
+  },
+  {
+    "name": "thankyou-page",
+    "path": "thank-you/thankyou-page.html",
+    "filePath": "thank-you/thankyou-page.html"
+  },
+  {
+    "name": "index",
+    "path": "vault-BNPL-conflict",
+    "filePath": "vault-BNPL-conflict/index.html"
+  },
+  {
+    "name": "PayLater-Vault冲突 - 按钮渲染加入vaultable参数",
+    "path": "vault-BNPL-conflict/各种情况/PayLater-Vault冲突 - 按钮渲染加入vaultable参数.html",
+    "filePath": "vault-BNPL-conflict/各种情况/PayLater-Vault冲突 - 按钮渲染加入vaultable参数.html"
+  },
+  {
+    "name": "PayLater-Vault冲突 - 单独的PayLater按钮",
+    "path": "vault-BNPL-conflict/各种情况/PayLater-Vault冲突 - 单独的PayLater按钮.html",
+    "filePath": "vault-BNPL-conflict/各种情况/PayLater-Vault冲突 - 单独的PayLater按钮.html"
+  },
+  {
+    "name": "PayLater-Vault冲突 - 展示Paylater - basic",
+    "path": "vault-BNPL-conflict/各种情况/PayLater-Vault冲突 - 展示Paylater - basic.html",
+    "filePath": "vault-BNPL-conflict/各种情况/PayLater-Vault冲突 - 展示Paylater - basic.html"
+  },
+  {
+    "name": "PayLater-Vault冲突 - 展示Paylater - returning buyer",
+    "path": "vault-BNPL-conflict/各种情况/PayLater-Vault冲突 - 展示Paylater - returning buyer.html",
+    "filePath": "vault-BNPL-conflict/各种情况/PayLater-Vault冲突 - 展示Paylater - returning buyer.html"
+  },
+  {
+    "name": "PayLater-Vault冲突 - 展示Paylater - vault with purchase",
+    "path": "vault-BNPL-conflict/各种情况/PayLater-Vault冲突 - 展示Paylater - vault with purchase.html",
+    "filePath": "vault-BNPL-conflict/各种情况/PayLater-Vault冲突 - 展示Paylater - vault with purchase.html"
+  },
+  {
+    "name": "PayLater-Vault冲突 - JSSDK加入vault参数",
+    "path": "vault-BNPL-conflict/各种情况/PayLater-Vault冲突 - JSSDK加入vault参数.html",
+    "filePath": "vault-BNPL-conflict/各种情况/PayLater-Vault冲突 - JSSDK加入vault参数.html"
+  }
+]
