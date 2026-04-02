@@ -12,6 +12,8 @@
   --text-color: #333;
   --border-color: #e0e0e0;
   --hover-bg: #f0f0f0;
+  --icon-color: #757575;
+  --link-color: #1976d2;
 }
 
 .dark-mode {
@@ -21,6 +23,8 @@
   --text-color: #e0e0e0;
   --border-color: #333;
   --hover-bg: #2a2a2a;
+  --icon-color: #b0b0b0;
+  --link-color: #64b5f6;
 }
 
 body {
@@ -149,7 +153,7 @@ main {
 
 .nav-item .material-icons {
   font-size: 16px;
-  color: #757575;
+  color: var(--icon-color, #757575);
 }
 
 .nav-item > .material-icons:first-child {
@@ -192,7 +196,7 @@ main {
 
 /* Link styles */
 .link-url {
-  color: var(--primary-color);
+  color: var(--link-color, var(--primary-color));
   text-decoration: none;
   font-size: 14px;
   word-break: break-all;
