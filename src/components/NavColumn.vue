@@ -93,7 +93,7 @@ const isExpanded = (key) => {
             <div v-if="isExpanded(`g-${gIndex}-i-${iIndex}`)" class="item-children">
               <div v-for="(child, ci) in item.children" :key="ci" class="nav-item child-item child-link-row">
                 <span class="material-icons">subdirectory_arrow_right</span>
-                <a :href="child.url" target="_blank" class="link-url">{{ child.text }}</a>
+                <a :href="child.url" target="_blank" rel="noopener noreferrer" class="link-url">{{ child.text }}</a>
               </div>
 
               <!-- Sub-groups (3rd level) -->
@@ -106,7 +106,7 @@ const isExpanded = (key) => {
                 <div v-if="isExpanded(`g-${gIndex}-i-${iIndex}-sg-${sgi}`)" class="item-children">
                   <div v-for="(sgChild, sgci) in subGroup.children" :key="sgci" class="nav-item child-item child-link-row">
                     <span class="material-icons">subdirectory_arrow_right</span>
-                    <a :href="sgChild.url" target="_blank" class="link-url">{{ sgChild.text }}</a>
+                    <a :href="sgChild.url" target="_blank" rel="noopener noreferrer" class="link-url">{{ sgChild.text }}</a>
                   </div>
                 </div>
               </div>
@@ -117,7 +117,7 @@ const isExpanded = (key) => {
             <!-- Folder without children - just show as link -->
             <div class="item-header folder-item">
               <span class="material-icons">folder</span>
-              <a :href="item.url" target="_blank" class="link-url">{{ item.description || item.text }}</a>
+              <a :href="item.url" target="_blank" rel="noopener noreferrer" class="link-url">{{ item.description || item.text }}</a>
             </div>
           </template>
 
@@ -125,7 +125,7 @@ const isExpanded = (key) => {
             <!-- Regular file link -->
             <div class="item-link-row">
               <span class="material-icons">chevron_right</span>
-              <a :href="item.url" target="_blank" class="link-url">{{ item.description || item.text }}</a>
+              <a :href="item.url" target="_blank" rel="noopener noreferrer" class="link-url">{{ item.description || item.text }}</a>
             </div>
           </template>
         </div>

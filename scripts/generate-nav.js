@@ -78,6 +78,23 @@ function scanDir(dir, basePath = '') {
         title: entry.name === 'index.html' ? (config?.name || name) : entry.name.replace('.html', ''),
         isIndex: entry.name === 'index.html'
       })
+    } else if (entry.name.startsWith('link-') && entry.name.endsWith('.json') && !isNoShow(entry.name) && !isHidden(entry.name)) {
+      // link-xxx.json 文件作为外部链接处理
+      const linkPath = path.join(dir, entry.name)
+      try {
+        const linkData = JSON.parse(fs.readFileSync(linkPath, 'utf-8'))
+        const filePath = basePath ? `${basePath}/${entry.name}` : entry.name
+        result.files.push({
+          name: linkData.name || entry.name.replace('.json', ''),
+          path: normalizePath(filePath),
+          title: linkData.name || entry.name.replace('.json', ''),
+          isIndex: false,
+          isExternal: true,
+          href: linkData.href
+        })
+      } catch (e) {
+        console.warn(`[nav-generator] Failed to parse link file: ${linkPath}`)
+      }
     }
   }
 
@@ -93,10 +110,11 @@ function generateNavData(tree) {
   return tree.children.map(panel => {
     const directFiles = panel.files.map(f => ({
       description: '',
-      url: normalizePath(f.path),
+      url: f.isExternal ? f.href : normalizePath(f.path),
       text: f.title,
       isFolder: false,
-      hasChildren: false
+      hasChildren: false,
+      isExternal: f.isExternal || false
     }))
 
     // 过滤掉 hiddenFromNav 的子文件夹（父级有 index.html）
@@ -104,10 +122,11 @@ function generateNavData(tree) {
     const groups = visibleGroups.map(group => {
       const groupFiles = group.files.map(f => ({
         description: '',
-        url: normalizePath(f.path),
+        url: f.isExternal ? f.href : normalizePath(f.path),
         text: f.title,
         isFolder: false,
-        hasChildren: false
+        hasChildren: false,
+        isExternal: f.isExternal || false
       }))
 
       const subGroups = group.children
@@ -115,10 +134,11 @@ function generateNavData(tree) {
         .map(sub => {
         const subFiles = sub.files.map(f => ({
           description: '',
-          url: normalizePath(f.path),
+          url: f.isExternal ? f.href : normalizePath(f.path),
           text: f.title,
           isFolder: false,
-          hasChildren: false
+          hasChildren: false,
+          isExternal: f.isExternal || false
         }))
 
         const subSubGroups = sub.children
@@ -126,10 +146,11 @@ function generateNavData(tree) {
         .map(subsub => {
           const subsubFiles = subsub.files.map(f => ({
             description: '',
-            url: normalizePath(f.path),
+            url: f.isExternal ? f.href : normalizePath(f.path),
             text: f.title,
             isFolder: false,
-            hasChildren: false
+            hasChildren: false,
+            isExternal: f.isExternal || false
           }))
 
           return {
@@ -149,10 +170,11 @@ function generateNavData(tree) {
               hasChildren: g.children.length > 0 || g.files.length > 0,
               children: g.files.map(f => ({
                 description: '',
-                url: normalizePath(f.path),
+                url: f.isExternal ? f.href : normalizePath(f.path),
                 text: f.title,
                 isFolder: false,
-                hasChildren: false
+                hasChildren: false,
+                isExternal: f.isExternal || false
               }))
             }))
           }

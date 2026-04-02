@@ -14,7 +14,8 @@
             "url": "applePay/applepay-test.html",
             "text": "applepay-test",
             "isFolder": false,
-            "hasChildren": false
+            "hasChildren": false,
+            "isExternal": false
           }
         ]
       }
@@ -35,14 +36,16 @@
             "url": "appSwitch/app-switch-jsv5.html",
             "text": "app-switch-jsv5",
             "isFolder": false,
-            "hasChildren": false
+            "hasChildren": false,
+            "isExternal": false
           },
           {
             "description": "",
             "url": "appSwitch/app-switch-jsv6.html",
             "text": "app-switch-jsv6",
             "isFolder": false,
-            "hasChildren": false
+            "hasChildren": false,
+            "isExternal": false
           }
         ]
       }
@@ -63,7 +66,8 @@
             "url": "google-pay/google-pay-basic-test/index.html",
             "text": "google-pay-basic-test",
             "isFolder": false,
-            "hasChildren": false
+            "hasChildren": false,
+            "isExternal": false
           }
         ]
       },
@@ -77,7 +81,8 @@
             "url": "google-pay/googlePayWithShipping/index.html",
             "text": "googlePayWithShipping",
             "isFolder": false,
-            "hasChildren": false
+            "hasChildren": false,
+            "isExternal": false
           }
         ]
       }
@@ -98,7 +103,8 @@
             "url": "jsv5-test/ACDC/ACDC-Sample.html",
             "text": "ACDC-Sample",
             "isFolder": false,
-            "hasChildren": false
+            "hasChildren": false,
+            "isExternal": false
           }
         ]
       },
@@ -112,7 +118,8 @@
             "url": "jsv5-test/BCDC/index.html",
             "text": "BCDC",
             "isFolder": false,
-            "hasChildren": false
+            "hasChildren": false,
+            "isExternal": false
           }
         ]
       }
@@ -133,21 +140,32 @@
             "url": "jsv6-test/appswitch-test-vercel-backend.html",
             "text": "appswitch-test-vercel-backend",
             "isFolder": false,
-            "hasChildren": false
+            "hasChildren": false,
+            "isExternal": false
           },
           {
             "description": "",
             "url": "jsv6-test/iframe-hostpage.html",
             "text": "iframe-hostpage",
             "isFolder": false,
-            "hasChildren": false
+            "hasChildren": false,
+            "isExternal": false
+          },
+          {
+            "description": "",
+            "url": "https://jsv6-test.pages.dev/",
+            "text": "JSv6主测试站",
+            "isFolder": false,
+            "hasChildren": false,
+            "isExternal": true
           },
           {
             "description": "",
             "url": "jsv6-test/redirect-test-vercel-backend.html",
             "text": "redirect-test-vercel-backend",
             "isFolder": false,
-            "hasChildren": false
+            "hasChildren": false,
+            "isExternal": false
           }
         ]
       },
@@ -161,7 +179,8 @@
             "url": "jsv6-test/jsv6-jsv5-comparison/jsv6-jsv5-comparison.html",
             "text": "jsv6-jsv5-comparison",
             "isFolder": false,
-            "hasChildren": false
+            "hasChildren": false,
+            "isExternal": false
           }
         ]
       }
@@ -182,7 +201,8 @@
             "url": "PayLater/JSV6-PLM/jsv6-cross-border-msg.html",
             "text": "jsv6-cross-border-msg",
             "isFolder": false,
-            "hasChildren": false
+            "hasChildren": false,
+            "isExternal": false
           }
         ]
       },
@@ -196,14 +216,16 @@
             "url": "PayLater/PLM-admin-dashboard/paylater-msg-buyer-checkout-page-eligibility.html",
             "text": "paylater-msg-buyer-checkout-page-eligibility",
             "isFolder": false,
-            "hasChildren": false
+            "hasChildren": false,
+            "isExternal": false
           },
           {
             "description": "",
             "url": "PayLater/PLM-admin-dashboard/paylater-msg-dashboard.html",
             "text": "paylater-msg-dashboard",
             "isFolder": false,
-            "hasChildren": false
+            "hasChildren": false,
+            "isExternal": false
           }
         ]
       }
@@ -224,7 +246,8 @@
             "url": "vault-BNPL-conflict/index.html",
             "text": "vault-BNPL-conflict",
             "isFolder": false,
-            "hasChildren": false
+            "hasChildren": false,
+            "isExternal": false
           }
         ]
       }

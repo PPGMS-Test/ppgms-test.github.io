@@ -45,6 +45,11 @@
     "filePath": "jsv6-test/iframe-hostpage.html"
   },
   {
+    "name": "JSv6主测试站",
+    "path": "jsv6-test/link-jsv6-test.json",
+    "filePath": "jsv6-test/link-jsv6-test.json"
+  },
+  {
     "name": "redirect-test-vercel-backend",
     "path": "jsv6-test/redirect-test-vercel-backend.html",
     "filePath": "jsv6-test/redirect-test-vercel-backend.html"
