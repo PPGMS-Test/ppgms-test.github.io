@@ -1,11 +1,11 @@
 import fs from 'fs'
-import path from 'path'
+import path, { resolve } from 'path'
 import { fileURLToPath } from 'url'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 const rootDir = path.resolve(__dirname, '..')
-const pagesDir = path.resolve(rootDir, 'src', 'pages')
+const pagesDir = resolve(rootDir, 'src', 'pages')
 
 // 排除的文件夹
 const EXCLUDED_DIRS = ['.git', '.vscode', 'node_modules', 'dist', '.well-known', 'css', 'js', 'scripts', 'public']
@@ -20,19 +20,34 @@ function normalizePath(p) {
   return p.replace(/\\/g, '/')
 }
 
+// 读取目录下的 config.json 配置文件
+function readConfig(dir) {
+  const configPath = path.join(dir, 'config.json')
+  if (fs.existsSync(configPath)) {
+    try {
+      return JSON.parse(fs.readFileSync(configPath, 'utf-8'))
+    } catch (e) {
+      console.warn(`[nav-generator] Failed to parse config.json in ${dir}`)
+    }
+  }
+  return null
+}
+
 // 扫描目录，返回树结构
-// 每个节点: { type: 'dir'|'file', name, path, title, icon, children: [], files: [], hasIndex: bool }
 function scanDir(dir, basePath = '') {
   const name = path.basename(dir)
+  const config = readConfig(dir)
+
   const result = {
     type: 'dir',
     name: name,
     path: basePath,
-    title: name,
-    icon: 'folder',
-    children: [],   // 子文件夹
-    files: [],       // 直接的 HTML 文件
-    hasIndex: false  // 是否有 index.html
+    title: config?.name || name,  // config.json 的 name 优先
+    icon: config?.icon || 'folder',
+    expanded: config?.expanded !== false,  // 默认 true (展开)，config.expanded: false 则默认折叠
+    children: [],
+    files: [],
+    hasIndex: false
   }
 
   const entries = fs.readdirSync(dir, { withFileTypes: true })
@@ -56,7 +71,7 @@ function scanDir(dir, basePath = '') {
       result.files.push({
         name: entry.name.replace('.html', ''),
         path: normalizePath(filePath),
-        title: entry.name === 'index.html' ? name : entry.name.replace('.html', ''),
+        title: entry.name === 'index.html' ? (config?.name || name) : entry.name.replace('.html', ''),
         isIndex: entry.name === 'index.html'
       })
     }
@@ -70,11 +85,8 @@ function scanDir(dir, basePath = '') {
 }
 
 // 生成导航数据
-// 结构: panel -> groups -> items (可折叠)
-// 如果 panel 有直接文件，创建一个默认 group
 function generateNavData(tree) {
   return tree.children.map(panel => {
-    // panel 下的直接文件（如果有的话）
     const directFiles = panel.files.map(f => ({
       description: '',
       url: normalizePath(f.isIndex ? panel.path : f.path),
@@ -83,9 +95,7 @@ function generateNavData(tree) {
       hasChildren: false
     }))
 
-    // 子文件夹变成 group
     const groups = panel.children.map(group => {
-      // group 下的直接文件
       const groupFiles = group.files.map(f => ({
         description: '',
         url: normalizePath(f.isIndex ? group.path : f.path),
@@ -94,9 +104,7 @@ function generateNavData(tree) {
         hasChildren: false
       }))
 
-      // group 的子文件夹 -> 第3层
       const subGroups = group.children.map(sub => {
-        // sub 下的直接文件
         const subFiles = sub.files.map(f => ({
           description: '',
           url: normalizePath(f.isIndex ? sub.path : f.path),
@@ -105,7 +113,6 @@ function generateNavData(tree) {
           hasChildren: false
         }))
 
-        // sub 的子文件夹 -> 第4层
         const subSubGroups = sub.children.map(subsub => {
           const subsubFiles = subsub.files.map(f => ({
             description: '',
@@ -120,6 +127,7 @@ function generateNavData(tree) {
             url: normalizePath(subsub.files[0]?.path || subsub.path),
             text: subsub.title,
             isFolder: true,
+            expanded: subsub.expanded,
             hasChildren: subsub.children.length > 0 || subsub.files.length > 0,
             children: subsubFiles,
             subGroups: subsub.children.map(g => ({
@@ -127,6 +135,7 @@ function generateNavData(tree) {
               url: normalizePath(g.files[0]?.path || g.path),
               text: g.title,
               isFolder: true,
+              expanded: g.expanded,
               hasChildren: g.children.length > 0 || g.files.length > 0,
               children: g.files.map(f => ({
                 description: '',
@@ -144,6 +153,7 @@ function generateNavData(tree) {
           url: normalizePath(sub.files[0]?.path || sub.path),
           text: sub.title,
           isFolder: true,
+          expanded: sub.expanded,
           hasChildren: sub.children.length > 0 || sub.files.length > 0,
           children: subFiles,
           subGroups: subSubGroups
@@ -153,32 +163,34 @@ function generateNavData(tree) {
       return {
         title: group.title,
         icon: group.icon,
+        expanded: group.expanded,
         items: [...groupFiles, ...subGroups]
       }
     })
 
-    // 如果 panel 直接有文件但没有子文件夹，创建默认 group
     if (groups.length === 0 && directFiles.length > 0) {
       return {
         title: panel.title,
         icon: panel.icon,
+        expanded: panel.expanded,
         groups: [{
           title: panel.title,
           icon: panel.icon,
+          expanded: panel.expanded,
           items: directFiles
         }]
       }
     }
 
-    // 如果 panel 同时有直接文件和子文件夹，都显示
     if (directFiles.length > 0 && groups.length > 0) {
-      // 直接文件作为第一个 group
       return {
         title: panel.title,
         icon: panel.icon,
+        expanded: panel.expanded,
         groups: [{
           title: panel.title,
           icon: panel.icon,
+          expanded: panel.expanded,
           items: directFiles
         }, ...groups]
       }
@@ -187,6 +199,7 @@ function generateNavData(tree) {
     return {
       title: panel.title,
       icon: panel.icon,
+      expanded: panel.expanded,
       groups: groups
     }
   }).filter(col => col.groups.length > 0)
@@ -195,13 +208,13 @@ function generateNavData(tree) {
 // 主流程
 const tree = scanDir(pagesDir)
 const navData = generateNavData(tree)
-const outputPath = path.resolve(rootDir, 'src', 'router', 'nav-data.json')
+const outputPath = resolve(rootDir, 'src', 'router', 'nav-data.json')
 
 fs.mkdirSync(path.dirname(outputPath), { recursive: true })
 fs.writeFileSync(outputPath, JSON.stringify(navData, null, 2))
 console.log(`[nav-generator] Navigation data generated: ${outputPath}`)
 
-// 生成文件列表（排除 noshow 和 hidden）
+// 生成文件列表
 const allFiles = []
 function collectFiles(node) {
   for (const file of node.files) {
@@ -217,7 +230,7 @@ function collectFiles(node) {
 }
 collectFiles(tree)
 
-const routerOutputPath = path.resolve(rootDir, 'src', 'router', 'pages.json')
+const routerOutputPath = resolve(rootDir, 'src', 'router', 'pages.json')
 fs.writeFileSync(routerOutputPath, JSON.stringify(allFiles, null, 2))
 console.log(`[nav-generator] Pages list generated: ${routerOutputPath}`)
 console.log(`[nav-generator] Total files: ${allFiles.length}`)

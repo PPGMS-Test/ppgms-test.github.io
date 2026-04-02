@@ -1,15 +1,56 @@
 <script setup>
 import { ref } from 'vue'
 
-defineProps({
+const props = defineProps({
   column: {
     type: Object,
     required: true
+  },
+  cIndex: {
+    type: Number,
+    default: 0
   }
 })
 
 // 每层级的展开状态: { 'level1-groupIdx': true, 'level2-itemIdx': true, ... }
+// 初始化时从 nav-data 的 expanded 属性读取默认值
 const expanded = ref({})
+
+// 初始化展开状态
+const initExpanded = () => {
+  // column 层级
+  if (props.column.expanded === false) {
+    // column 默认折叠
+  }
+
+  // group 层级
+  props.column.groups?.forEach((group, gIndex) => {
+    const gKey = `g-${gIndex}`
+    if (group.expanded === false) {
+      expanded.value[gKey] = false
+    }
+
+    // folder item 层级
+    group.items?.forEach((item, iIndex) => {
+      if (item.isFolder && item.hasChildren) {
+        const iKey = `g-${gIndex}-i-${iIndex}`
+        if (item.expanded === false) {
+          expanded.value[iKey] = false
+        }
+
+        // subGroup 层级
+        item.subGroups?.forEach((sg, sgIndex) => {
+          const sgKey = `g-${gIndex}-i-${iIndex}-sg-${sgIndex}`
+          if (sg.expanded === false) {
+            expanded.value[sgKey] = false
+          }
+        })
+      }
+    })
+  })
+}
+
+initExpanded()
 
 const toggle = (key) => {
   expanded.value[key] = expanded.value[key] === false ? true : false

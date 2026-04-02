@@ -2,10 +2,12 @@
   {
     "title": "ACDC",
     "icon": "folder",
+    "expanded": true,
     "groups": [
       {
         "title": "ACDC",
         "icon": "folder",
+        "expanded": true,
         "items": [
           {
             "description": "",
@@ -21,10 +23,12 @@
   {
     "title": "applePay",
     "icon": "folder",
+    "expanded": true,
     "groups": [
       {
         "title": "applePay",
         "icon": "folder",
+        "expanded": true,
         "items": [
           {
             "description": "",
@@ -40,10 +44,12 @@
   {
     "title": "appSwitch",
     "icon": "folder",
+    "expanded": true,
     "groups": [
       {
         "title": "appSwitch",
         "icon": "folder",
+        "expanded": true,
         "items": [
           {
             "description": "",
@@ -66,10 +72,12 @@
   {
     "title": "BCDC",
     "icon": "folder",
+    "expanded": true,
     "groups": [
       {
         "title": "BCDC",
         "icon": "folder",
+        "expanded": true,
         "items": [
           {
             "description": "",
@@ -85,10 +93,12 @@
   {
     "title": "google-pay",
     "icon": "folder",
+    "expanded": true,
     "groups": [
       {
         "title": "google-pay-basic-test",
         "icon": "folder",
+        "expanded": true,
         "items": [
           {
             "description": "",
@@ -102,6 +112,7 @@
       {
         "title": "googlePayWithShipping",
         "icon": "folder",
+        "expanded": true,
         "items": [
           {
             "description": "",
@@ -115,12 +126,14 @@
     ]
   },
   {
-    "title": "jsv6-test",
+    "title": "JSv6 Test",
     "icon": "folder",
+    "expanded": true,
     "groups": [
       {
-        "title": "jsv6-test",
+        "title": "JSv6 Test",
         "icon": "folder",
+        "expanded": true,
         "items": [
           {
             "description": "",
@@ -148,6 +161,7 @@
       {
         "title": "jsv6-jsv5-comparison",
         "icon": "folder",
+        "expanded": true,
         "items": [
           {
             "description": "",
@@ -163,10 +177,12 @@
   {
     "title": "PayLater",
     "icon": "folder",
+    "expanded": true,
     "groups": [
       {
         "title": "JSV6-PLM",
         "icon": "folder",
+        "expanded": true,
         "items": [
           {
             "description": "",
@@ -180,6 +196,7 @@
       {
         "title": "PLM-admin-dashboard",
         "icon": "folder",
+        "expanded": true,
         "items": [
           {
             "description": "",
@@ -202,10 +219,12 @@
   {
     "title": "vault-BNPL-conflict",
     "icon": "folder",
+    "expanded": true,
     "groups": [
       {
         "title": "vault-BNPL-conflict",
         "icon": "folder",
+        "expanded": true,
         "items": [
           {
             "description": "",
@@ -219,6 +238,7 @@
       {
         "title": "各种情况",
         "icon": "folder",
+        "expanded": true,
         "items": [
           {
             "description": "",
