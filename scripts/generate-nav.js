@@ -61,6 +61,10 @@ function scanDir(dir, basePath = '') {
       if (EXCLUDED_DIRS.includes(entry.name) || isNoShow(entry.name) || isHidden(entry.name)) continue
       const childPath = basePath ? `${basePath}/${entry.name}` : entry.name
       const child = scanDir(path.join(dir, entry.name), childPath)
+      // 如果当前目录有 index.html，子文件夹在 nav 中隐藏（但仍复制到 dist）
+      if (result.hasIndex) {
+        child.hiddenFromNav = true
+      }
       if (child.children.length > 0 || child.files.length > 0 || child.hasIndex) {
         result.children.push(child)
       }
@@ -89,34 +93,40 @@ function generateNavData(tree) {
   return tree.children.map(panel => {
     const directFiles = panel.files.map(f => ({
       description: '',
-      url: normalizePath(f.isIndex ? panel.path : f.path),
+      url: normalizePath(f.path),
       text: f.title,
       isFolder: false,
       hasChildren: false
     }))
 
-    const groups = panel.children.map(group => {
+    // 过滤掉 hiddenFromNav 的子文件夹（父级有 index.html）
+    const visibleGroups = panel.children.filter(g => !g.hiddenFromNav)
+    const groups = visibleGroups.map(group => {
       const groupFiles = group.files.map(f => ({
         description: '',
-        url: normalizePath(f.isIndex ? group.path : f.path),
+        url: normalizePath(f.path),
         text: f.title,
         isFolder: false,
         hasChildren: false
       }))
 
-      const subGroups = group.children.map(sub => {
+      const subGroups = group.children
+        .filter(sub => !sub.hiddenFromNav)
+        .map(sub => {
         const subFiles = sub.files.map(f => ({
           description: '',
-          url: normalizePath(f.isIndex ? sub.path : f.path),
+          url: normalizePath(f.path),
           text: f.title,
           isFolder: false,
           hasChildren: false
         }))
 
-        const subSubGroups = sub.children.map(subsub => {
+        const subSubGroups = sub.children
+        .filter(subsub => !subsub.hiddenFromNav)
+        .map(subsub => {
           const subsubFiles = subsub.files.map(f => ({
             description: '',
-            url: normalizePath(f.isIndex ? subsub.path : f.path),
+            url: normalizePath(f.path),
             text: f.title,
             isFolder: false,
             hasChildren: false
@@ -139,7 +149,7 @@ function generateNavData(tree) {
               hasChildren: g.children.length > 0 || g.files.length > 0,
               children: g.files.map(f => ({
                 description: '',
-                url: normalizePath(f.isIndex ? g.path : f.path),
+                url: normalizePath(f.path),
                 text: f.title,
                 isFolder: false,
                 hasChildren: false

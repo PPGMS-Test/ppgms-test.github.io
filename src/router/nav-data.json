@@ -1,26 +1,5 @@
 [
   {
-    "title": "ACDC",
-    "icon": "folder",
-    "expanded": true,
-    "groups": [
-      {
-        "title": "ACDC",
-        "icon": "folder",
-        "expanded": true,
-        "items": [
-          {
-            "description": "",
-            "url": "ACDC/ACDC-Sample.html",
-            "text": "ACDC-Sample",
-            "isFolder": false,
-            "hasChildren": false
-          }
-        ]
-      }
-    ]
-  },
-  {
     "title": "applePay",
     "icon": "folder",
     "expanded": true,
@@ -70,27 +49,6 @@
     ]
   },
   {
-    "title": "BCDC",
-    "icon": "folder",
-    "expanded": true,
-    "groups": [
-      {
-        "title": "BCDC",
-        "icon": "folder",
-        "expanded": true,
-        "items": [
-          {
-            "description": "",
-            "url": "BCDC",
-            "text": "BCDC",
-            "isFolder": false,
-            "hasChildren": false
-          }
-        ]
-      }
-    ]
-  },
-  {
     "title": "google-pay",
     "icon": "folder",
     "expanded": true,
@@ -102,7 +60,7 @@
         "items": [
           {
             "description": "",
-            "url": "google-pay/google-pay-basic-test",
+            "url": "google-pay/google-pay-basic-test/index.html",
             "text": "google-pay-basic-test",
             "isFolder": false,
             "hasChildren": false
@@ -116,8 +74,43 @@
         "items": [
           {
             "description": "",
-            "url": "google-pay/googlePayWithShipping",
+            "url": "google-pay/googlePayWithShipping/index.html",
             "text": "googlePayWithShipping",
+            "isFolder": false,
+            "hasChildren": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "title": "jsv5-test",
+    "icon": "folder",
+    "expanded": true,
+    "groups": [
+      {
+        "title": "ACDC",
+        "icon": "folder",
+        "expanded": true,
+        "items": [
+          {
+            "description": "",
+            "url": "jsv5-test/ACDC/ACDC-Sample.html",
+            "text": "ACDC-Sample",
+            "isFolder": false,
+            "hasChildren": false
+          }
+        ]
+      },
+      {
+        "title": "BCDC",
+        "icon": "folder",
+        "expanded": true,
+        "items": [
+          {
+            "description": "",
+            "url": "jsv5-test/BCDC/index.html",
+            "text": "BCDC",
             "isFolder": false,
             "hasChildren": false
           }
@@ -228,57 +221,8 @@
         "items": [
           {
             "description": "",
-            "url": "vault-BNPL-conflict",
+            "url": "vault-BNPL-conflict/index.html",
             "text": "vault-BNPL-conflict",
-            "isFolder": false,
-            "hasChildren": false
-          }
-        ]
-      },
-      {
-        "title": "各种情况",
-        "icon": "folder",
-        "expanded": true,
-        "items": [
-          {
-            "description": "",
-            "url": "vault-BNPL-conflict/各种情况/PayLater-Vault冲突 - 按钮渲染加入vaultable参数.html",
-            "text": "PayLater-Vault冲突 - 按钮渲染加入vaultable参数",
-            "isFolder": false,
-            "hasChildren": false
-          },
-          {
-            "description": "",
-            "url": "vault-BNPL-conflict/各种情况/PayLater-Vault冲突 - 单独的PayLater按钮.html",
-            "text": "PayLater-Vault冲突 - 单独的PayLater按钮",
-            "isFolder": false,
-            "hasChildren": false
-          },
-          {
-            "description": "",
-            "url": "vault-BNPL-conflict/各种情况/PayLater-Vault冲突 - 展示Paylater - basic.html",
-            "text": "PayLater-Vault冲突 - 展示Paylater - basic",
-            "isFolder": false,
-            "hasChildren": false
-          },
-          {
-            "description": "",
-            "url": "vault-BNPL-conflict/各种情况/PayLater-Vault冲突 - 展示Paylater - returning buyer.html",
-            "text": "PayLater-Vault冲突 - 展示Paylater - returning buyer",
-            "isFolder": false,
-            "hasChildren": false
-          },
-          {
-            "description": "",
-            "url": "vault-BNPL-conflict/各种情况/PayLater-Vault冲突 - 展示Paylater - vault with purchase.html",
-            "text": "PayLater-Vault冲突 - 展示Paylater - vault with purchase",
-            "isFolder": false,
-            "hasChildren": false
-          },
-          {
-            "description": "",
-            "url": "vault-BNPL-conflict/各种情况/PayLater-Vault冲突 - JSSDK加入vault参数.html",
-            "text": "PayLater-Vault冲突 - JSSDK加入vault参数",
             "isFolder": false,
             "hasChildren": false
           }

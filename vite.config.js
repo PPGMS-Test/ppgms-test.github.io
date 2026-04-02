@@ -71,7 +71,7 @@ export default defineConfig({
       name: 'serve-src-pages',
       configureServer(server) {
         server.middlewares.use((req, res, next) => {
-          const url = req.url.split('?')[0]
+          const url = decodeURIComponent(req.url.split('?')[0])
           // 只处理 HTML 文件请求，且排除 noshow
           if (url.includes('.html') && !isNoShow(url)) {
             // 去掉开头的 / 使路径相对于 src/pages

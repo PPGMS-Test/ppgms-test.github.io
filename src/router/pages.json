@@ -1,10 +1,5 @@
 [
   {
-    "name": "ACDC-Sample",
-    "path": "ACDC/ACDC-Sample.html",
-    "filePath": "ACDC/ACDC-Sample.html"
-  },
-  {
     "name": "applepay-test",
     "path": "applePay/applepay-test.html",
     "filePath": "applePay/applepay-test.html"
@@ -21,11 +16,6 @@
   },
   {
     "name": "index",
-    "path": "BCDC",
-    "filePath": "BCDC/index.html"
-  },
-  {
-    "name": "index",
     "path": "google-pay/google-pay-basic-test",
     "filePath": "google-pay/google-pay-basic-test/index.html"
   },
@@ -33,6 +23,16 @@
     "name": "index",
     "path": "google-pay/googlePayWithShipping",
     "filePath": "google-pay/googlePayWithShipping/index.html"
+  },
+  {
+    "name": "ACDC-Sample",
+    "path": "jsv5-test/ACDC/ACDC-Sample.html",
+    "filePath": "jsv5-test/ACDC/ACDC-Sample.html"
+  },
+  {
+    "name": "index",
+    "path": "jsv5-test/BCDC",
+    "filePath": "jsv5-test/BCDC/index.html"
   },
   {
     "name": "appswitch-test-vercel-backend",
