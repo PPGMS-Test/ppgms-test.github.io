@@ -1,35 +1,5 @@
 [
   {
-    "title": "appSwitch",
-    "icon": "folder",
-    "expanded": true,
-    "groups": [
-      {
-        "title": "appSwitch",
-        "icon": "folder",
-        "expanded": true,
-        "items": [
-          {
-            "description": "",
-            "url": "appSwitch/app-switch-jsv5.html",
-            "text": "app-switch-jsv5",
-            "isFolder": false,
-            "hasChildren": false,
-            "isExternal": false
-          },
-          {
-            "description": "",
-            "url": "appSwitch/app-switch-jsv6.html",
-            "text": "app-switch-jsv6",
-            "isFolder": false,
-            "hasChildren": false,
-            "isExternal": false
-          }
-        ]
-      }
-    ]
-  },
-  {
     "title": "jsv5-test",
     "icon": "folder",
     "expanded": true,
@@ -56,7 +26,7 @@
         "items": [
           {
             "description": "",
-            "url": "jsv5-test/ACDC/ACDC-Sample.html",
+            "url": "[1]-jsv5-test/ACDC/ACDC-Sample.html",
             "text": "ACDC-Sample",
             "isFolder": false,
             "hasChildren": false,
@@ -71,7 +41,7 @@
         "items": [
           {
             "description": "",
-            "url": "jsv5-test/ApplePay/applepay-test.html",
+            "url": "[1]-jsv5-test/ApplePay/applepay-test.html",
             "text": "applepay-test",
             "isFolder": false,
             "hasChildren": false,
@@ -86,7 +56,7 @@
         "items": [
           {
             "description": "",
-            "url": "jsv5-test/BCDC/index.html",
+            "url": "[1]-jsv5-test/BCDC/index.html",
             "text": "BCDC",
             "isFolder": false,
             "hasChildren": false,
@@ -101,7 +71,7 @@
         "items": [
           {
             "description": "google-pay-basic-test",
-            "url": "jsv5-test/google-pay/google-pay-basic-test/index.html",
+            "url": "[1]-jsv5-test/google-pay/google-pay-basic-test/index.html",
             "text": "google-pay-basic-test",
             "isFolder": true,
             "expanded": true,
@@ -109,7 +79,7 @@
             "children": [
               {
                 "description": "",
-                "url": "jsv5-test/google-pay/google-pay-basic-test/index.html",
+                "url": "[1]-jsv5-test/google-pay/google-pay-basic-test/index.html",
                 "text": "google-pay-basic-test",
                 "isFolder": false,
                 "hasChildren": false,
@@ -120,7 +90,7 @@
           },
           {
             "description": "google-pay-with-shipping",
-            "url": "jsv5-test/google-pay/google-pay-with-shipping/index.html",
+            "url": "[1]-jsv5-test/google-pay/google-pay-with-shipping/index.html",
             "text": "google-pay-with-shipping",
             "isFolder": true,
             "expanded": true,
@@ -128,7 +98,7 @@
             "children": [
               {
                 "description": "",
-                "url": "jsv5-test/google-pay/google-pay-with-shipping/index.html",
+                "url": "[1]-jsv5-test/google-pay/google-pay-with-shipping/index.html",
                 "text": "google-pay-with-shipping",
                 "isFolder": false,
                 "hasChildren": false,
@@ -153,7 +123,7 @@
         "items": [
           {
             "description": "",
-            "url": "jsv6-test/appswitch-test-vercel-backend.html",
+            "url": "[2]-jsv6-test/appswitch-test-vercel-backend.html",
             "text": "appswitch-test-vercel-backend",
             "isFolder": false,
             "hasChildren": false,
@@ -161,7 +131,7 @@
           },
           {
             "description": "",
-            "url": "jsv6-test/iframe-hostpage.html",
+            "url": "[2]-jsv6-test/iframe-hostpage.html",
             "text": "iframe-hostpage",
             "isFolder": false,
             "hasChildren": false,
@@ -177,7 +147,7 @@
           },
           {
             "description": "",
-            "url": "jsv6-test/redirect-test-vercel-backend.html",
+            "url": "[2]-jsv6-test/redirect-test-vercel-backend.html",
             "text": "redirect-test-vercel-backend",
             "isFolder": false,
             "hasChildren": false,
@@ -192,7 +162,7 @@
         "items": [
           {
             "description": "",
-            "url": "jsv6-test/jsv6-jsv5-comparison/jsv6-jsv5-comparison.html",
+            "url": "[2]-jsv6-test/jsv6-jsv5-comparison/jsv6-jsv5-comparison.html",
             "text": "jsv6-jsv5-comparison",
             "isFolder": false,
             "hasChildren": false,
@@ -214,7 +184,7 @@
         "items": [
           {
             "description": "",
-            "url": "paylater/JSV6-PLM/jsv6-cross-border-msg.html",
+            "url": "[3]-paylater/JSV6-PLM/jsv6-cross-border-msg.html",
             "text": "jsv6-cross-border-msg",
             "isFolder": false,
             "hasChildren": false,
@@ -229,7 +199,7 @@
         "items": [
           {
             "description": "",
-            "url": "paylater/PLM-admin-dashboard/paylater-msg-buyer-checkout-page-eligibility.html",
+            "url": "[3]-paylater/PLM-admin-dashboard/paylater-msg-buyer-checkout-page-eligibility.html",
             "text": "paylater-msg-buyer-checkout-page-eligibility",
             "isFolder": false,
             "hasChildren": false,
@@ -237,7 +207,7 @@
           },
           {
             "description": "",
-            "url": "paylater/PLM-admin-dashboard/paylater-msg-dashboard.html",
+            "url": "[3]-paylater/PLM-admin-dashboard/paylater-msg-dashboard.html",
             "text": "paylater-msg-dashboard",
             "isFolder": false,
             "hasChildren": false,
@@ -252,8 +222,38 @@
         "items": [
           {
             "description": "",
-            "url": "paylater/vault-BNPL-conflict/index.html",
+            "url": "[3]-paylater/vault-BNPL-conflict/index.html",
             "text": "Vault Pay-Later Conflict",
+            "isFolder": false,
+            "hasChildren": false,
+            "isExternal": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "title": "appSwitch",
+    "icon": "folder",
+    "expanded": true,
+    "groups": [
+      {
+        "title": "appSwitch",
+        "icon": "folder",
+        "expanded": true,
+        "items": [
+          {
+            "description": "",
+            "url": "[4]-appSwitch/app-switch-jsv5.html",
+            "text": "app-switch-jsv5",
+            "isFolder": false,
+            "hasChildren": false,
+            "isExternal": false
+          },
+          {
+            "description": "",
+            "url": "[4]-appSwitch/app-switch-jsv6.html",
+            "text": "app-switch-jsv6",
             "isFolder": false,
             "hasChildren": false,
             "isExternal": false
