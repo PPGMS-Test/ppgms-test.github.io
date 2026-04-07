@@ -18,9 +18,22 @@ export function normalizePath(p) {
 }
 
 /**
- * 读取目录下的 config.json 配置文件
- * 可以用于配置该目录在导航中的名称(name)、图标(icon)和是否默认展开(expanded)
+ * 解析带有排序标记的名称，例如: "[1]-jsv5-test" -> { order: 1, cleanName: "jsv5-test" }
+ * 如果没有标记，返回默认极大值以排在后面
  */
+export function parseNameAndOrder(name) {
+  const match = name.match(/^\[(\d+)\]-(.+)$/)
+  if (match) {
+    return {
+      order: parseInt(match[1], 10),
+      cleanName: match[2]
+    }
+  }
+  return {
+    order: 999999,
+    cleanName: name
+  }
+}
 export function readConfig(dir) {
   const configPath = path.join(dir, 'config.json')
   if (fs.existsSync(configPath)) {

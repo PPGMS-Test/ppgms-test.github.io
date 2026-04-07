@@ -1,6 +1,6 @@
 import fs from 'fs'
 import path from 'path'
-import { EXCLUDED_DIRS, isNoShow, isHidden, normalizePath, readConfig } from './utils.js'
+import { EXCLUDED_DIRS, isNoShow, isHidden, normalizePath, readConfig, parseNameAndOrder } from './utils.js'
 
 /**
  * 递归扫描指定的目录并返回树形结构的节点信息
@@ -10,6 +10,7 @@ import { EXCLUDED_DIRS, isNoShow, isHidden, normalizePath, readConfig } from './
  * 1. 如果当前目录下存在 index.html，则其它同级的 .html 不会被加入 files 中，
  *    并且其子目录 child 会被标记为 hiddenFromNav = true (仅复制，不在导航中显示)
  * 2. 识别以 link- 开头、.json 结尾的文件，当作外部跳转链接处理
+ * 3. 识别类似 [1]-xxx 的文件名/目录名，提取 order 属性用于排序
  *
  * @param {string} dir - 要扫描的本地绝对物理路径
  * @param {string} basePath - 相对根目录的相对路径，用于生成访问 URL
@@ -18,14 +19,16 @@ import { EXCLUDED_DIRS, isNoShow, isHidden, normalizePath, readConfig } from './
 export function scanDir(dir, basePath = '') {
   const name = path.basename(dir)
   const config = readConfig(dir)
+  const parsed = parseNameAndOrder(name)
 
   const result = {
     type: 'dir',
     name: name,
     path: basePath,
-    title: config?.name || name,  // config.json 的 name 优先
+    title: config?.name || parsed.cleanName,  // config.json 的 name 优先，其次是去除排序前缀的名字
     icon: config?.icon || 'folder',
     expanded: config?.expanded !== false,  // 默认 true (展开)，config.expanded: false 则默认折叠
+    order: parsed.order,                   // 保存提取出的排序编号
     children: [],
     files: [],
     hasIndex: false
@@ -61,11 +64,15 @@ export function scanDir(dir, basePath = '') {
       if (result.hasIndex && entry.name !== 'index.html') continue
 
       const filePath = basePath ? `${basePath}/${entry.name}` : entry.name
+      const cleanEntryName = entry.name.replace('.html', '')
+      const parsedFile = parseNameAndOrder(cleanEntryName)
+
       result.files.push({
-        name: entry.name.replace('.html', ''),
+        name: cleanEntryName,
         path: normalizePath(filePath),
-        title: entry.name === 'index.html' ? (config?.name || name) : entry.name.replace('.html', ''),
-        isIndex: entry.name === 'index.html'
+        title: entry.name === 'index.html' ? (config?.name || parsed.cleanName) : parsedFile.cleanName,
+        isIndex: entry.name === 'index.html',
+        order: entry.name === 'index.html' ? -1 : parsedFile.order // index.html 最靠前
       })
     }
     else if (entry.name.startsWith('link-') && entry.name.endsWith('.json') && !isNoShow(entry.name) && !isHidden(entry.name)) {
@@ -74,13 +81,19 @@ export function scanDir(dir, basePath = '') {
       try {
         const linkData = JSON.parse(fs.readFileSync(linkPath, 'utf-8'))
         const filePath = basePath ? `${basePath}/${entry.name}` : entry.name
+        const cleanEntryName = entry.name.replace('.json', '')
+        // 由于有 'link-' 前缀，如果带括号排序，可能是 link-[1]-xxx，提取有些特殊，所以尽量使用 linkData 里面的设置或默认放到最后
+        // 或者支持 [1]-link-xxx 的格式
+        const parsedLink = parseNameAndOrder(cleanEntryName)
+
         result.files.push({
-          name: linkData.name || entry.name.replace('.json', ''),
+          name: linkData.name || parsedLink.cleanName,
           path: normalizePath(filePath),
-          title: linkData.name || entry.name.replace('.json', ''),
+          title: linkData.name || parsedLink.cleanName,
           isIndex: false,
           isExternal: true,       // 标记为外部链接
-          href: linkData.href     // 真实的外部跳转 URL
+          href: linkData.href,    // 真实的外部跳转 URL
+          order: parsedLink.order
         })
       } catch (e) {
         console.warn(`[nav-generator] Failed to parse link file: ${linkPath}`)
@@ -88,9 +101,16 @@ export function scanDir(dir, basePath = '') {
     }
   }
 
-  // 3. 结果排序（按照标题的字母顺序）
-  result.children.sort((a, b) => a.title.localeCompare(b.title))
-  result.files.sort((a, b) => a.title.localeCompare(b.title))
+  // 3. 结果排序（先按照 order 升序，如果 order 一样再按照标题字母顺序）
+  result.children.sort((a, b) => {
+    if (a.order !== b.order) return a.order - b.order
+    return a.title.localeCompare(b.title)
+  })
+
+  result.files.sort((a, b) => {
+    if (a.order !== b.order) return a.order - b.order
+    return a.title.localeCompare(b.title)
+  })
 
   return result
 }
