@@ -1,27 +1,5 @@
 [
   {
-    "title": "applePay",
-    "icon": "folder",
-    "expanded": true,
-    "groups": [
-      {
-        "title": "applePay",
-        "icon": "folder",
-        "expanded": true,
-        "items": [
-          {
-            "description": "",
-            "url": "applePay/applepay-test.html",
-            "text": "applepay-test",
-            "isFolder": false,
-            "hasChildren": false,
-            "isExternal": false
-          }
-        ]
-      }
-    ]
-  },
-  {
     "title": "appSwitch",
     "icon": "folder",
     "expanded": true,
@@ -52,51 +30,29 @@
     ]
   },
   {
-    "title": "google-pay",
-    "icon": "folder",
-    "expanded": true,
-    "groups": [
-      {
-        "title": "google-pay-basic-test",
-        "icon": "folder",
-        "expanded": true,
-        "items": [
-          {
-            "description": "",
-            "url": "google-pay/google-pay-basic-test/index.html",
-            "text": "google-pay-basic-test",
-            "isFolder": false,
-            "hasChildren": false,
-            "isExternal": false
-          }
-        ]
-      },
-      {
-        "title": "googlePayWithShipping",
-        "icon": "folder",
-        "expanded": true,
-        "items": [
-          {
-            "description": "",
-            "url": "google-pay/googlePayWithShipping/index.html",
-            "text": "googlePayWithShipping",
-            "isFolder": false,
-            "hasChildren": false,
-            "isExternal": false
-          }
-        ]
-      }
-    ]
-  },
-  {
     "title": "jsv5-test",
     "icon": "folder",
     "expanded": true,
     "groups": [
       {
-        "title": "ACDC",
+        "title": "jsv5-test",
         "icon": "folder",
         "expanded": true,
+        "items": [
+          {
+            "description": "",
+            "url": "https://gmsshanghai.github.io",
+            "text": "JSv5主测试站",
+            "isFolder": false,
+            "hasChildren": false,
+            "isExternal": true
+          }
+        ]
+      },
+      {
+        "title": "ACDC Basic",
+        "icon": "folder",
+        "expanded": false,
         "items": [
           {
             "description": "",
@@ -109,9 +65,24 @@
         ]
       },
       {
-        "title": "BCDC",
+        "title": "ApplePay",
         "icon": "folder",
         "expanded": true,
+        "items": [
+          {
+            "description": "",
+            "url": "jsv5-test/ApplePay/applepay-test.html",
+            "text": "applepay-test",
+            "isFolder": false,
+            "hasChildren": false,
+            "isExternal": false
+          }
+        ]
+      },
+      {
+        "title": "BCDC",
+        "icon": "folder",
+        "expanded": false,
         "items": [
           {
             "description": "",
@@ -120,6 +91,51 @@
             "isFolder": false,
             "hasChildren": false,
             "isExternal": false
+          }
+        ]
+      },
+      {
+        "title": "Google Pay Test",
+        "icon": "folder",
+        "expanded": false,
+        "items": [
+          {
+            "description": "google-pay-basic-test",
+            "url": "jsv5-test/google-pay/google-pay-basic-test/index.html",
+            "text": "google-pay-basic-test",
+            "isFolder": true,
+            "expanded": true,
+            "hasChildren": true,
+            "children": [
+              {
+                "description": "",
+                "url": "jsv5-test/google-pay/google-pay-basic-test/index.html",
+                "text": "google-pay-basic-test",
+                "isFolder": false,
+                "hasChildren": false,
+                "isExternal": false
+              }
+            ],
+            "subGroups": []
+          },
+          {
+            "description": "google-pay-with-shipping",
+            "url": "jsv5-test/google-pay/google-pay-with-shipping/index.html",
+            "text": "google-pay-with-shipping",
+            "isFolder": true,
+            "expanded": true,
+            "hasChildren": true,
+            "children": [
+              {
+                "description": "",
+                "url": "jsv5-test/google-pay/google-pay-with-shipping/index.html",
+                "text": "google-pay-with-shipping",
+                "isFolder": false,
+                "hasChildren": false,
+                "isExternal": false
+              }
+            ],
+            "subGroups": []
           }
         ]
       }
@@ -187,9 +203,9 @@
     ]
   },
   {
-    "title": "PayLater",
+    "title": "Pay Later",
     "icon": "folder",
-    "expanded": true,
+    "expanded": false,
     "groups": [
       {
         "title": "JSV6-PLM",
@@ -198,7 +214,7 @@
         "items": [
           {
             "description": "",
-            "url": "PayLater/JSV6-PLM/jsv6-cross-border-msg.html",
+            "url": "paylater/JSV6-PLM/jsv6-cross-border-msg.html",
             "text": "jsv6-cross-border-msg",
             "isFolder": false,
             "hasChildren": false,
@@ -213,7 +229,7 @@
         "items": [
           {
             "description": "",
-            "url": "PayLater/PLM-admin-dashboard/paylater-msg-buyer-checkout-page-eligibility.html",
+            "url": "paylater/PLM-admin-dashboard/paylater-msg-buyer-checkout-page-eligibility.html",
             "text": "paylater-msg-buyer-checkout-page-eligibility",
             "isFolder": false,
             "hasChildren": false,
@@ -221,30 +237,23 @@
           },
           {
             "description": "",
-            "url": "PayLater/PLM-admin-dashboard/paylater-msg-dashboard.html",
+            "url": "paylater/PLM-admin-dashboard/paylater-msg-dashboard.html",
             "text": "paylater-msg-dashboard",
             "isFolder": false,
             "hasChildren": false,
             "isExternal": false
           }
         ]
-      }
-    ]
-  },
-  {
-    "title": "vault-BNPL-conflict",
-    "icon": "folder",
-    "expanded": true,
-    "groups": [
+      },
       {
-        "title": "vault-BNPL-conflict",
+        "title": "Vault Pay-Later Conflict",
         "icon": "folder",
-        "expanded": true,
+        "expanded": false,
         "items": [
           {
             "description": "",
-            "url": "vault-BNPL-conflict/index.html",
-            "text": "vault-BNPL-conflict",
+            "url": "paylater/vault-BNPL-conflict/index.html",
+            "text": "Vault Pay-Later Conflict",
             "isFolder": false,
             "hasChildren": false,
             "isExternal": false
