@@ -69,7 +69,10 @@
       "Bash(git commit -m ':*)",
       "Bash(node -e \"const fs = require\\('fs'\\); const path = require\\('path'\\); const p = 'z:/04_code/ppgms-test.github.io/src/pages/vault-BNPL-conflict/各种情况/PayLater-Vault冲突 - 展示Paylater - basic.html'; console.log\\('exists:', fs.existsSync\\(p\\)\\); console.log\\('isFile:', fs.existsSync\\(p\\) && fs.statSync\\(p\\).isFile\\(\\)\\);\")",
       "Bash(git commit:*)",
-      "Bash(curl -s http://localhost:3006/)"
+      "Bash(curl -s http://localhost:3006/)",
+      "Read(//c/Users/yqiang/Desktop/test/**)",
+      "Bash(npx create-next-app@latest paylater-check --ts --tailwind --eslint --app --src-dir --no-turbopack --yes)",
+      "Bash(npm install:*)"
     ]
   }
 }

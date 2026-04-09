@@ -160,6 +160,15 @@
                             <option value="live" selected>Live (Production)</option>
                         </select>
                     </div>
+
+                    <!-- 后端节点切换 -->
+                    <div>
+                        <label for="backendProvider" class="block text-neutral font-medium mb-2">Backend API Node</label>
+                        <select id="backendProvider" class="w-full px-4 py-2 border border-surface-dark rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all bg-white">
+                            <option value="cloudflare" selected>Cloudflare Workers</option>
+                            <option value="vercel">Vercel</option>
+                        </select>
+                    </div>
                 </div>
 
                 <!-- 按钮 -->
@@ -273,9 +282,15 @@
                     reasonEl.classList.remove("hidden");
                 }
 
-                const PROXY_API = "https://paypal-backend-api-vercel.vercel.app/api/paylater/eligibility/check";
+                const PROXY_APIS = {
+                    cloudflare: "https://paypal-backend.browser-sync-cityofwind.workers.dev/api/paylater-check",
+                    vercel: "https://paypal-backend-api-vercel.vercel.app/api/paylater/eligibility/check",
+                };
+
+                const backendProviderSelect = document.getElementById("backendProvider");
 
                 async function checkCountryViaApi(country, clientId, environment) {
+                    const PROXY_API = PROXY_APIS[backendProviderSelect.value] ?? PROXY_APIS.cloudflare;
                     const url = `${PROXY_API}?` + new URLSearchParams({
                         buyer_country: country,
                         client_id: clientId,
