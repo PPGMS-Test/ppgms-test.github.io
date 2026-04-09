@@ -101,7 +101,10 @@
         }
         #paypal-button-container,
         #paypal-message-container {
-            width: 100%;
+            width: 80%;
+        }
+        #paypal-button-container {
+            padding: 8px 12px;
         }
         #paypal-message-container {
             font-size: 0.9em;
@@ -133,11 +136,14 @@
     <div class="form-group">
         <label for="buyerCountry">请选择您的国家/地区 (Buyer Country):</label>
         <select id="buyerCountry" onchange="loadPayPalSDK()">
-            <option value="US" selected>🇺🇸 美国 (United States) - 支持</option>
-            <option value="ES">🇪🇸 西班牙 (Spain) - 支持</option>
-            <option value="DE">🇩🇪 德国 (Germany) - 支持</option>
-            <option value="FR">🇫🇷 法国 (France) - 支持</option>
-            <option value="AU">🇦🇺 澳大利亚 (Australia) - 支持</option>
+            <option value="US" selected>🇺🇸 美国 (United States) - USD</option>
+            <option value="GB">🇬🇧 英国 (United Kingdom) - GBP</option>
+            <option value="DE">🇩🇪 德国 (Germany) - EUR</option>
+            <option value="FR">🇫🇷 法国 (France) - EUR</option>
+            <option value="IT">🇮🇹 意大利 (Italy) - EUR</option>
+            <option value="ES">🇪🇸 西班牙 (Spain) - EUR</option>
+            <option value="AU">🇦🇺 澳大利亚 (Australia) - AUD</option>
+            <option value="CA">🇨🇦 加拿大 (Canada) - CAD</option>
             <option value="CN">🇨🇳 中国 (China) - 不支持</option>
             <option value="JP">🇯🇵 日本 (Japan) - 不支持</option>
         </select>
@@ -175,6 +181,21 @@
 <script>
     const clientId = 'AaB-X2CM2jf9k-DU-sWSaNbpfKnHeRLHa84MppXHdBpv36uWUqGui9ldOk6SeET9Os5Hc4J5puUTetXo';
     const SDK_SCRIPT_ID = 'paypal-js-sdk';
+
+    const COUNTRY_CURRENCY = {
+        US: 'USD', GB: 'GBP',
+        DE: 'EUR', FR: 'EUR', IT: 'EUR', ES: 'EUR', NL: 'EUR', BE: 'EUR', PT: 'EUR',
+        AU: 'AUD', CA: 'CAD',
+        PL: 'PLN', SE: 'SEK', NO: 'NOK', DK: 'DKK',
+    };
+
+    function getCurrency() {
+        
+        const country = document.getElementById('buyerCountry').value;
+        const currency =  COUNTRY_CURRENCY[country] || 'USD';
+        console.log("CURRENCY:",currency)
+        return currency
+    }
     let isPayLaterEligible = false;
     // 下面几个变量用于跟踪“当前加载的 SDK”实例，避免残留的旧实例干扰新实例
     let paypalSDK = null;            // 指向当前 namespace 下的 paypal SDK
@@ -251,7 +272,8 @@
         script.id = SDK_SCRIPT_ID;
         script.setAttribute('data-namespace', namespace);
         // 使用动态的 buyer-country 加载 SDK
-        script.src = `https://www.paypal.com/sdk/js?client-id=${clientId}&buyer-country=${countryCode}&enable-funding=paylater&currency=USD&components=funding-eligibility,buttons,messages`;
+        const currency = getCurrency();
+        script.src = `https://www.paypal.com/sdk/js?client-id=${clientId}&buyer-country=${countryCode}&enable-funding=paylater&currency=${currency}&components=funding-eligibility,buttons,messages`;
         script.onload = () => {
             if (namespace !== currentNamespace) {
                 // 如果加载完成时 namespace 已被后续操作覆盖，说明已有更新的脚本，无需重复执行
@@ -304,7 +326,7 @@
                 fundingSource: paypalSDK.FUNDING.PAYLATER,
                 createOrder: function(data, actions) {
                     return actions.order.create({
-                        purchase_units: [{"amount": {"currency_code": "USD", "value": "160.00"}}]
+                        purchase_units: [{"amount": {"currency_code": getCurrency(), "value": "160.00"}}]
                     });
                 },
                 onApprove: function(data, actions) {
@@ -350,10 +372,16 @@
 
         messageContainer.innerHTML = '';
 
+        const countryCode = document.getElementById('buyerCountry').value;
+        console.log("Country Code:",countryCode)
+
         // Pay Later message 会根据金额/货币输出分期方案文案
         paypalSDK.Messages({
             amount: '160.00',
+            // currency: getCurrency(),
             placement: 'checkout',
+            buyerCountry: countryCode,
+
             style: {
                 layout: 'text',
                 logo: { position: 'left' },

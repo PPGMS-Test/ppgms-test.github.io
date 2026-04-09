@@ -1,0 +1,376 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>PayPal Pay Later Eligibility Tester (API)</title>
+        <!-- vConsole (移动端调试) -->
+        <script src="https://cdn.jsdelivr.net/npm/vconsole@3.15.1/dist/vconsole.min.js"></script>
+        <script>new VConsole();</script>
+        <!-- Lucide Icons -->
+        <script src="https://cdn.jsdelivr.net/npm/lucide@0.321.0/dist/umd/lucide.min.js"></script>
+        <!-- Tailwind CSS -->
+        <script src="https://cdn.tailwindcss.com"></script>
+        <script>
+            tailwind.config = {
+                theme: {
+                    extend: {
+                        colors: {
+                            primary: "#6200ee",
+                            surface: "#f5f5f5",
+                            "surface-dark": "#e0e0e0",
+                            success: "#388e3c",
+                            error: "#d32f2f",
+                            neutral: "#616161",
+                        },
+                        fontFamily: {
+                            roboto: ["Roboto", "sans-serif"],
+                        },
+                    },
+                },
+            };
+        </script>
+        <style type="text/tailwindcss">
+            @layer utilities {
+                .material-shadow {
+                    box-shadow: 0 2px 4px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+                }
+                .material-shadow-hover {
+                    box-shadow: 0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23);
+                }
+                .mask-overlay {
+                    background-color: rgba(255,255,255,0.7);
+                    backdrop-filter: blur(2px);
+                }
+                .tooltip-anchor {
+                    position: relative;
+                    display: inline-flex;
+                }
+                .tooltip-anchor::after {
+                    content: attr(data-tip);
+                    position: absolute;
+                    bottom: calc(100% + 6px);
+                    left: 50%;
+                    transform: translateX(-50%);
+                    background: #424242;
+                    color: #fff;
+                    font-size: 0.75rem;
+                    font-weight: 400;
+                    line-height: 1.5;
+                    padding: 6px 10px;
+                    border-radius: 4px;
+                    width: 260px;
+                    white-space: normal;
+                    pointer-events: none;
+                    opacity: 0;
+                    transition: opacity 150ms ease;
+                    z-index: 50;
+                }
+                .tooltip-anchor:hover::after { opacity: 1; }
+            }
+        </style>
+        <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet" />
+    </head>
+    <body class="font-roboto bg-surface min-h-screen p-4 md:p-8">
+        <div class="max-w-4xl mx-auto">
+            <!-- 页面标题 -->
+            <div class="mb-8 text-center">
+                <h1 class="text-[clamp(1.5rem,3vw,2.5rem)] font-bold text-neutral mb-2">
+                    PayPal Pay Later Eligibility Tester
+                </h1>
+                <p class="text-neutral/70">
+                    直接通过 API 请求检测各国家的 Pay Later Message 资格，无需加载 SDK
+                </p>
+            </div>
+
+            <!-- 配置区域 -->
+            <div class="bg-white rounded-lg material-shadow p-6 mb-8">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                    <!-- Client ID -->
+                    <div class="col-span-1 md:col-span-3">
+                        <label for="clientId" class="block text-neutral font-medium mb-2">PayPal Client ID</label>
+                        <input
+                            type="text"
+                            id="clientId"
+                            class="w-full px-4 py-2 border border-surface-dark rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
+                            placeholder="Enter your PayPal Client ID (sandbox default: 'test')"
+                            value="test"
+                        />
+                    </div>
+
+                    <!-- 国家选择 -->
+                    <div>
+                        <label for="siteCountry" class="flex items-center gap-1 text-neutral font-medium mb-2">
+                            Site Country
+                            <span class="tooltip-anchor" data-tip="需要确认站点所展示的货币和语言与展示message的国家是一致的，PayPal PayLater Message本身并不依赖Currency与Language进行校验">
+                                <i data-lucide="info" class="w-4 h-4 text-neutral/40 cursor-default"></i>
+                            </span>
+                        </label>
+                        <select id="siteCountry" class="w-full px-4 py-2 border border-surface-dark rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all bg-white">
+                            <option value="US">US - United States</option>
+                            <option value="GB">GB - United Kingdom</option>
+                            <option value="DE">DE - Germany</option>
+                            <option value="FR">FR - France</option>
+                            <option value="IT">IT - Italy</option>
+                            <option value="ES">ES - Spain</option>
+                            <option value="AU">AU - Australia</option>
+                            <option value="CA">CA - Canada</option>
+                        </select>
+                    </div>
+
+                    <!-- 货币选择 -->
+                    <div>
+                        <label for="currency" class="flex items-center gap-1 text-neutral font-medium mb-2">
+                            Currency
+                            <span class="tooltip-anchor" data-tip="需要确认站点所展示的货币和语言与展示message的国家是一致的，PayPal PayLater Message本身并不依赖Currency与Language进行校验">
+                                <i data-lucide="info" class="w-4 h-4 text-neutral/40 cursor-default"></i>
+                            </span>
+                        </label>
+                        <select id="currency" class="w-full px-4 py-2 border border-surface-dark rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all bg-white">
+                            <option value="USD">USD - US Dollar</option>
+                            <option value="GBP">GBP - British Pound</option>
+                            <option value="EUR">EUR - Euro</option>
+                            <option value="AUD">AUD - Australian Dollar</option>
+                            <option value="CAD">CAD - Canadian Dollar</option>
+                        </select>
+                    </div>
+
+                    <!-- 语言选择 -->
+                    <div>
+                        <label for="language" class="flex items-center gap-1 text-neutral font-medium mb-2">
+                            Language
+                            <span class="tooltip-anchor" data-tip="需要确认站点所展示的货币和语言与展示message的国家是一致的，PayPal PayLater Message本身并不依赖Currency与Language进行校验">
+                                <i data-lucide="info" class="w-4 h-4 text-neutral/40 cursor-default"></i>
+                            </span>
+                        </label>
+                        <select id="language" class="w-full px-4 py-2 border border-surface-dark rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all bg-white">
+                            <option value="en">English</option>
+                            <option value="de">German</option>
+                            <option value="fr">French</option>
+                            <option value="it">Italian</option>
+                            <option value="es">Spanish</option>
+                        </select>
+                    </div>
+
+                    <!-- 环境切换 -->
+                    <div>
+                        <label for="environment" class="block text-neutral font-medium mb-2">PayPal Environment</label>
+                        <select id="environment" class="w-full px-4 py-2 border border-surface-dark rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all bg-white">
+                            <option value="sandbox">Sandbox (Test)</option>
+                            <option value="live" selected>Live (Production)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- 按钮 -->
+                <button
+                    id="confirmSettings"
+                    class="bg-primary text-white px-6 py-3 rounded-md material-shadow hover:material-shadow-hover transition-all flex items-center gap-2 mx-auto"
+                >
+                    <i data-lucide="zap"></i>
+                    Run Eligibility Check (API)
+                </button>
+            </div>
+
+            <!-- 结果展示区域 -->
+            <div class="bg-white rounded-lg material-shadow p-6 relative overflow-hidden">
+                <!-- 加载遮罩 -->
+                <div id="loadingMask" class="absolute inset-0 mask-overlay flex items-center justify-center z-10 hidden">
+                    <div class="text-center">
+                        <div class="inline-block animate-spin mr-2" data-lucide="loader" size="32"></div>
+                        <p class="text-neutral font-medium mt-2">Checking eligibility via API...</p>
+                    </div>
+                </div>
+
+                <!-- 刷新按钮 -->
+                <div class="flex justify-end mb-6">
+                    <button id="refreshBtn" class="p-2 rounded-full hover:bg-surface transition-all text-neutral" title="Refresh Results">
+                        <i data-lucide="refresh-cw"></i>
+                    </button>
+                </div>
+
+                <h2 class="text-xl font-bold text-neutral mb-6">Eligibility Status</h2>
+
+                <div id="resultsContainer" class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div class="bg-surface rounded-lg p-4 text-center">
+                        <p class="font-medium mb-2">US</p>
+                        <i data-lucide="circle" class="text-neutral/50"></i>
+                    </div>
+                </div>
+
+                <!-- 日志 -->
+                <div class="mt-8">
+                    <h3 class="text-lg font-medium text-neutral mb-2">Test Logs</h3>
+                    <div id="logsContainer" class="bg-surface rounded-md p-4 h-32 overflow-auto text-sm text-neutral/80 font-mono">
+                        Ready.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            document.addEventListener("DOMContentLoaded", () => {
+                lucide.createIcons();
+
+                const countryList = ["US", "GB", "DE", "FR", "IT", "ES", "AU", "CA"];
+
+                const clientIdInput   = document.getElementById("clientId");
+                const siteCountrySelect = document.getElementById("siteCountry");
+                const currencySelect  = document.getElementById("currency");
+                const languageSelect  = document.getElementById("language");
+                const environmentSelect = document.getElementById("environment");
+                const confirmBtn      = document.getElementById("confirmSettings");
+                const refreshBtn      = document.getElementById("refreshBtn");
+                const loadingMask     = document.getElementById("loadingMask");
+                const resultsContainer = document.getElementById("resultsContainer");
+                const logsContainer   = document.getElementById("logsContainer");
+
+                let logsInitialized = false;
+
+                function logMessage(message) {
+                    const timestamp = new Date().toLocaleTimeString();
+                    console.log(`[${timestamp}] ${message}`);
+                    if (!logsInitialized) {
+                        logsContainer.innerHTML = "";
+                        logsInitialized = true;
+                    }
+                    const entry = document.createElement("div");
+                    entry.textContent = `[${timestamp}] ${message}`;
+                    logsContainer.appendChild(entry);
+                    logsContainer.scrollTop = logsContainer.scrollHeight;
+                }
+
+                function initResultCards() {
+                    resultsContainer.innerHTML = "";
+                    countryList.forEach((country) => {
+                        const card = document.createElement("div");
+                        card.className = "bg-surface rounded-lg p-4 text-center material-shadow hover:material-shadow-hover transition-all";
+                        card.id = `country-${country}`;
+                        card.innerHTML = `
+                            <p class="font-medium mb-2">${country}</p>
+                            <i data-lucide="circle" class="text-neutral/50" id="icon-${country}"></i>
+                            <p class="text-xs mt-2 text-neutral/60 hidden" id="reason-${country}">-</p>
+                        `;
+                        resultsContainer.appendChild(card);
+                    });
+                    lucide.createIcons();
+                }
+
+                function updateCard(result) {
+                    const iconEl   = document.getElementById(`icon-${result.country}`);
+                    const reasonEl = document.getElementById(`reason-${result.country}`);
+
+                    if (iconEl) iconEl.remove();
+                    const newIcon = document.createElement("i");
+                    newIcon.id = `icon-${result.country}`;
+                    newIcon.setAttribute("data-lucide", result.success ? "check-circle" : "x-circle");
+                    newIcon.className = result.success ? "text-success text-xl" : "text-error text-xl";
+
+                    document.getElementById(`country-${result.country}`).querySelector("p").after(newIcon);
+                    lucide.createIcons(newIcon);
+
+                    reasonEl.textContent = result.reason;
+                    reasonEl.classList.remove("hidden");
+                }
+
+                const PROXY_API = "https://paypal-backend-api-vercel.vercel.app/api/paylater/eligibility/check";
+
+                async function checkCountryViaApi(country, clientId, environment) {
+                    const url = `${PROXY_API}?` + new URLSearchParams({
+                        buyer_country: country,
+                        client_id: clientId,
+                        environment,
+                    });
+
+                    const controller = new AbortController();
+                    const timeout = setTimeout(() => controller.abort(), 12000);
+
+                    try {
+                        const response = await fetch(url, { signal: controller.signal });
+                        clearTimeout(timeout);
+                        const data = await response.json();
+
+                        if (data.error === "timeout") {
+                            return { country, success: false, reason: "Timeout" };
+                        } else if (data.http_code === 200) {
+                            return { country, success: true, reason: "Eligible (HTTP 200)" };
+                        } else if (data.http_code === 403) {
+                            return { country, success: false, reason: "Not authorized (HTTP 403)" };
+                        } else if (data.http_code) {
+                            return { country, success: false, reason: `Unexpected status: HTTP ${data.http_code}` };
+                        } else {
+                            return { country, success: false, reason: `Error: ${data.error}` };
+                        }
+                    } catch (err) {
+                        clearTimeout(timeout);
+                        if (err.name === "AbortError") {
+                            return { country, success: false, reason: "Timeout (proxy no response)" };
+                        }
+                        return { country, success: false, reason: `Network error: ${err.message}` };
+                    }
+                }
+
+                async function runTests() {
+                    logsContainer.innerHTML = "";
+                    logsInitialized = false;
+                    logMessage("Starting API eligibility checks...");
+
+                    loadingMask.classList.remove("hidden");
+                    confirmBtn.disabled = true;
+                    refreshBtn.disabled = true;
+
+                    initResultCards();
+
+                    const environment = environmentSelect.value;
+                    const clientId = clientIdInput.value.trim() || (environment === "sandbox" ? "test" : "");
+
+                    if (environment === "live" && !clientId) {
+                        logMessage("Live environment requires a valid Client ID.");
+                        loadingMask.classList.add("hidden");
+                        confirmBtn.disabled = false;
+                        refreshBtn.disabled = false;
+                        return;
+                    }
+
+                    try {
+                        // 并发请求所有国家
+                        const results = await Promise.all(
+                            countryList.map((country) => checkCountryViaApi(country, clientId, environment))
+                        );
+
+                        results.forEach((result) => {
+                            updateCard(result);
+                            logMessage(`${result.country}: ${result.success ? "SUCCESS" : "FAILED"} - ${result.reason}`);
+                        });
+
+                        logMessage("All checks completed!");
+                    } catch (err) {
+                        logMessage(`Error: ${err.message}`);
+                    } finally {
+                        loadingMask.classList.add("hidden");
+                        confirmBtn.disabled = false;
+                        refreshBtn.disabled = false;
+                    }
+                }
+
+                initResultCards();
+
+                confirmBtn.addEventListener("click", runTests);
+                refreshBtn.addEventListener("click", runTests);
+
+                // 根据环境设置默认 client_id
+                function syncClientIdDefault() {
+                    if (environmentSelect.value === "live") {
+                        clientIdInput.value = "AWs8RlbWkvuJ1wctcg1XxhNpIOgAWfD5hXNPPpVvY0tCj_cm_dNwVrsPLkEqNxo99tLR2pLA0dgpABtO";
+                    } else {
+                        if (!clientIdInput.value.trim()) clientIdInput.value = "test";
+                        clientIdInput.placeholder = "Enter your PayPal Client ID (sandbox default: 'test')";
+                    }
+                }
+
+                environmentSelect.addEventListener("change", syncClientIdDefault);
+                syncClientIdDefault();
+            });
+        </script>
+    </body>
+</html>

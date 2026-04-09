@@ -6,7 +6,22 @@
         <title>PayPal Pay Later Message Eligibility Tester</title>
         <!-- vConsole (移动端调试) -->
         <script src="https://cdn.jsdelivr.net/npm/vconsole@3.15.1/dist/vconsole.min.js"></script>
-        <script>new VConsole();</script>
+        <script>
+            new VConsole();
+            
+            // 必须在 PayPal SDK 加载前拦截，否则 SDK 加载后就拦不到了
+            const _consoleErrorHandlers = [];
+            const _originalConsoleError = console.error;
+            const _originalConsoleWarn = console.warn;
+            console.error = function(...args) {
+                _originalConsoleError.apply(console, args);
+                _consoleErrorHandlers.forEach(fn => fn(args));
+            };
+            console.warn = function(...args) {
+                _originalConsoleWarn.apply(console, args);
+                _consoleErrorHandlers.forEach(fn => fn(args));
+            };
+        </script>
         <!-- Lucide Icons -->
         <script src="https://cdn.jsdelivr.net/npm/lucide@0.321.0/dist/umd/lucide.min.js"></script>
         <!-- Tailwind CSS (用于快速实现Material风格) -->
@@ -275,8 +290,26 @@
             </div>
         </div>
 
-        <!-- 隐藏的测试容器 -->
+        <!-- 隐藏的测试容器（用于checkCountry临时渲染，会被销毁） -->
         <div id="test-containers" class="hidden"></div>
+
+        <!-- 真实渲染预览区 -->
+        <div class="max-w-4xl mx-auto mt-6">
+            <div class="bg-white rounded-lg material-shadow">
+                <button
+                    id="previewToggle"
+                    class="w-full flex items-center justify-between px-6 py-4 text-neutral font-medium"
+                    onclick="document.getElementById('previewContent').classList.toggle('hidden'); this.querySelector('i').setAttribute('data-lucide', document.getElementById('previewContent').classList.contains('hidden') ? 'chevron-down' : 'chevron-up'); lucide.createIcons(this)"
+                >
+                    <span>Live Render Preview（各国家真实渲染结果）</span>
+                    <i data-lucide="chevron-down"></i>
+                </button>
+                <div id="previewContent" class="hidden px-6 pb-6">
+                    <p class="text-sm text-neutral/60 mb-4">以下为 PayPal Messages SDK 在各国家的真实渲染结果，有内容即为有权限。</p>
+                    <div id="previewGrid" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
+                </div>
+            </div>
+        </div>
 
         <script>
             // 初始化Lucide图标
@@ -318,7 +351,7 @@
                 let lastLoadedEnvironment = null;
                 let logsInitialized = false;
 
-                // 记录日志
+                // 记录日志（同步到 console，方便 vConsole 查看）
                 function logMessage(message) {
                     const timestamp = new Date().toLocaleTimeString();
                     console.log(`[${timestamp}] ${message}`);
@@ -435,9 +468,19 @@
                         function settle(result) {
                             if (!isResolved) {
                                 isResolved = true;
+                                _consoleErrorHandlers.splice(_consoleErrorHandlers.indexOf(onSdkConsoleError), 1);
                                 resolve(result);
                             }
                         }
+
+                        // 拦截 SDK 内部的 console.error（在 SDK 加载前已经替换过 console.error）
+                        const onSdkConsoleError = (args) => {
+                            const msg = args.map(a => typeof a === 'object' ? JSON.stringify(a) : String(a)).join(' ');
+                            if (msg.includes('buyer_country') || msg.includes('not_authorized')) {
+                                settle({ country, success: false, reason: "Not authorized (buyer country)" });
+                            }
+                        };
+                        _consoleErrorHandlers.push(onSdkConsoleError);
 
                         // 调用SDK渲染
                         try {
@@ -490,6 +533,44 @@
                         );
                         if (container) container.remove();
                     });
+                }
+
+                // 真实渲染预览：为每个国家创建持久容器，不销毁
+                function renderPreview(clientId) {
+                    const grid = document.getElementById('previewGrid');
+                    grid.innerHTML = '';
+
+                    countryList.forEach((country) => {
+                        const wrapper = document.createElement('div');
+                        wrapper.className = 'bg-surface rounded-lg p-4';
+
+                        const label = document.createElement('p');
+                        label.className = 'text-sm font-medium text-neutral mb-2';
+                        label.textContent = country;
+
+                        const msgContainer = document.createElement('div');
+                        msgContainer.id = `preview-pp-msg-${country}`;
+                        msgContainer.className = 'min-h-[60px]';
+
+                        wrapper.appendChild(label);
+                        wrapper.appendChild(msgContainer);
+                        grid.appendChild(wrapper);
+
+                        // 渲染但不销毁容器
+                        if (window.paypal && window.paypal.Messages) {
+                            paypal.Messages({
+                                buyerCountry: country,
+                                placement: 'product',
+                            }).render(`#preview-pp-msg-${country}`).catch(() => {});
+                        }
+                    });
+
+                    // 自动展开预览区
+                    const previewContent = document.getElementById('previewContent');
+                    previewContent.classList.remove('hidden');
+                    const toggleIcon = document.querySelector('#previewToggle i');
+                    toggleIcon.setAttribute('data-lucide', 'chevron-up');
+                    lucide.createIcons(document.getElementById('previewToggle'));
                 }
 
                 // 运行测试
@@ -599,6 +680,7 @@
                         });
 
                         logMessage("All tests completed!");
+                        renderPreview(clientId);
                     } catch (error) {
                         logMessage(`Test suite error: ${error.message}`);
                     } finally {

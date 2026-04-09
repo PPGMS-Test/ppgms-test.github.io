@@ -50,14 +50,19 @@
     "filePath": "[3]-paylater/JSV6-PLM/jsv6-cross-border-msg.html"
   },
   {
-    "name": "paylater-msg-buyer-checkout-page-eligibility",
-    "path": "[3]-paylater/PLM-admin-dashboard/paylater-msg-buyer-checkout-page-eligibility.html",
-    "filePath": "[3]-paylater/PLM-admin-dashboard/paylater-msg-buyer-checkout-page-eligibility.html"
+    "name": "[1]-paylater-eligibility-api",
+    "path": "[3]-paylater/PLM-admin-dashboard/[1]-paylater-eligibility-api.html",
+    "filePath": "[3]-paylater/PLM-admin-dashboard/[1]-paylater-eligibility-api.html"
   },
   {
-    "name": "paylater-msg-dashboard",
-    "path": "[3]-paylater/PLM-admin-dashboard/paylater-msg-dashboard.html",
-    "filePath": "[3]-paylater/PLM-admin-dashboard/paylater-msg-dashboard.html"
+    "name": "[2]-checkout-page-eligibility",
+    "path": "[3]-paylater/PLM-admin-dashboard/[2]-checkout-page-eligibility.html",
+    "filePath": "[3]-paylater/PLM-admin-dashboard/[2]-checkout-page-eligibility.html"
+  },
+  {
+    "name": "[3]-paylater-msg-dashboard",
+    "path": "[3]-paylater/PLM-admin-dashboard/[3]-paylater-msg-dashboard.html",
+    "filePath": "[3]-paylater/PLM-admin-dashboard/[3]-paylater-msg-dashboard.html"
   },
   {
     "name": "index",
@@ -65,9 +70,9 @@
     "filePath": "[3]-paylater/vault-BNPL-conflict/index.html"
   },
   {
-    "name": "PayLater-Vault冲突 - 按钮渲染加入vaultable参数",
-    "path": "[3]-paylater/vault-BNPL-conflict/各种情况/PayLater-Vault冲突 - 按钮渲染加入vaultable参数.html",
-    "filePath": "[3]-paylater/vault-BNPL-conflict/各种情况/PayLater-Vault冲突 - 按钮渲染加入vaultable参数.html"
+    "name": "PayLater-Vault冲突 - JSSDK加入vault参数",
+    "path": "[3]-paylater/vault-BNPL-conflict/各种情况/PayLater-Vault冲突 - JSSDK加入vault参数.html",
+    "filePath": "[3]-paylater/vault-BNPL-conflict/各种情况/PayLater-Vault冲突 - JSSDK加入vault参数.html"
   },
   {
     "name": "PayLater-Vault冲突 - 单独的PayLater按钮",
@@ -90,9 +95,9 @@
     "filePath": "[3]-paylater/vault-BNPL-conflict/各种情况/PayLater-Vault冲突 - 展示Paylater - vault with purchase.html"
   },
   {
-    "name": "PayLater-Vault冲突 - JSSDK加入vault参数",
-    "path": "[3]-paylater/vault-BNPL-conflict/各种情况/PayLater-Vault冲突 - JSSDK加入vault参数.html",
-    "filePath": "[3]-paylater/vault-BNPL-conflict/各种情况/PayLater-Vault冲突 - JSSDK加入vault参数.html"
+    "name": "PayLater-Vault冲突 - 按钮渲染加入vaultable参数",
+    "path": "[3]-paylater/vault-BNPL-conflict/各种情况/PayLater-Vault冲突 - 按钮渲染加入vaultable参数.html",
+    "filePath": "[3]-paylater/vault-BNPL-conflict/各种情况/PayLater-Vault冲突 - 按钮渲染加入vaultable参数.html"
   },
   {
     "name": "app-switch-jsv5",

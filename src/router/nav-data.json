@@ -1,11 +1,11 @@
 [
   {
-    "title": "jsv5-test",
+    "title": "JSv5 Test",
     "icon": "folder",
     "expanded": true,
     "groups": [
       {
-        "title": "jsv5-test",
+        "title": "JSv5 Test",
         "icon": "folder",
         "expanded": true,
         "items": [
@@ -199,15 +199,23 @@
         "items": [
           {
             "description": "",
-            "url": "[3]-paylater/PLM-admin-dashboard/paylater-msg-buyer-checkout-page-eligibility.html",
-            "text": "paylater-msg-buyer-checkout-page-eligibility",
+            "url": "[3]-paylater/PLM-admin-dashboard/[1]-paylater-eligibility-api.html",
+            "text": "paylater-eligibility-api",
             "isFolder": false,
             "hasChildren": false,
             "isExternal": false
           },
           {
             "description": "",
-            "url": "[3]-paylater/PLM-admin-dashboard/paylater-msg-dashboard.html",
+            "url": "[3]-paylater/PLM-admin-dashboard/[2]-checkout-page-eligibility.html",
+            "text": "checkout-page-eligibility",
+            "isFolder": false,
+            "hasChildren": false,
+            "isExternal": false
+          },
+          {
+            "description": "",
+            "url": "[3]-paylater/PLM-admin-dashboard/[3]-paylater-msg-dashboard.html",
             "text": "paylater-msg-dashboard",
             "isFolder": false,
             "hasChildren": false,
