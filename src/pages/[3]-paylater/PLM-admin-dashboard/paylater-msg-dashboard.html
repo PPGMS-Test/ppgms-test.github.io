@@ -45,6 +45,33 @@
                     background-color: rgba(255, 255, 255, 0.7);
                     backdrop-filter: blur(2px);
                 }
+                .tooltip-anchor {
+                    position: relative;
+                    display: inline-flex;
+                }
+                .tooltip-anchor::after {
+                    content: attr(data-tip);
+                    position: absolute;
+                    bottom: calc(100% + 6px);
+                    left: 50%;
+                    transform: translateX(-50%);
+                    background: #424242;
+                    color: #fff;
+                    font-size: 0.75rem;
+                    font-weight: 400;
+                    line-height: 1.5;
+                    padding: 6px 10px;
+                    border-radius: 4px;
+                    width: 260px;
+                    white-space: normal;
+                    pointer-events: none;
+                    opacity: 0;
+                    transition: opacity 150ms ease;
+                    z-index: 50;
+                }
+                .tooltip-anchor:hover::after {
+                    opacity: 1;
+                }
             }
         </style>
         <!-- 引入Roboto字体 -->
@@ -91,8 +118,8 @@
                     <div>
                         <label
                             for="siteCountry"
-                            class="block text-neutral font-medium mb-2"
-                            >Site Country</label
+                            class="flex items-center gap-1 text-neutral font-medium mb-2"
+                            >Site Country <span class="tooltip-anchor" data-tip="需要确认站点所展示的货币和语言与展示message的国家是一致的，PayPal PayLater Message本身并不依赖Currency与Language进行校验"><i data-lucide="info" class="w-4 h-4 text-neutral/40 cursor-default"></i></span></label
                         >
                         <select
                             id="siteCountry"
@@ -113,8 +140,8 @@
                     <div>
                         <label
                             for="currency"
-                            class="block text-neutral font-medium mb-2"
-                            >Currency</label
+                            class="flex items-center gap-1 text-neutral font-medium mb-2"
+                            >Currency <span class="tooltip-anchor" data-tip="需要确认站点所展示的货币和语言与展示message的国家是一致的，PayPal PayLater Message本身并不依赖Currency与Language进行校验"><i data-lucide="info" class="w-4 h-4 text-neutral/40 cursor-default"></i></span></label
                         >
                         <select
                             id="currency"
@@ -132,8 +159,8 @@
                     <div>
                         <label
                             for="language"
-                            class="block text-neutral font-medium mb-2"
-                            >Language</label
+                            class="flex items-center gap-1 text-neutral font-medium mb-2"
+                            >Language <span class="tooltip-anchor" data-tip="需要确认站点所展示的货币和语言与展示message的国家是一致的，PayPal PayLater Message本身并不依赖Currency与Language进行校验"><i data-lucide="info" class="w-4 h-4 text-neutral/40 cursor-default"></i></span></label
                         >
                         <select
                             id="language"
@@ -401,7 +428,14 @@
 
                         let isResolved = false;
 
-                        // 3. 调用SDK渲染
+                        function settle(result) {
+                            if (!isResolved) {
+                                isResolved = true;
+                                resolve(result);
+                            }
+                        }
+
+                        // 调用SDK渲染
                         try {
                             if (!window.paypal || !window.paypal.Messages) {
                                 throw new Error("SDK not ready");
@@ -411,56 +445,40 @@
                                 .Messages({
                                     buyerCountry: country,
                                     placement: "product",
-                                   
                                     onRender: () => {
-                                        if (!isResolved) {
-                                            isResolved = true;
-                                            // 渲染成功
-                                            resolve({
-                                                country,
-                                                success: true,
-                                                reason: "Rendered successfully",
-                                            });
-                                        }
+                                        settle({
+                                            country,
+                                            success: true,
+                                            reason: "Success",
+                                        });
                                     },
                                 })
-
                                 .render(`#${containerId}`)
                                 .catch((err) => {
-                                    // SDK明确报错
-                                    if (!isResolved) {
-                                        isResolved = true;
-                                        resolve({
-                                            country,
-                                            success: false,
-                                            reason:
-                                                err.message || "Render Error",
-                                        });
-                                    }
+                                    console.log(JSON.stringify(err, null, '  '))
+                                    settle({
+                                        country,
+                                        success: false,
+                                        reason: err?.description || err?.message || "Render Error",
+                                    });
                                 });
                         } catch (e) {
-                            // 代码执行错误
-                            if (!isResolved) {
-                                isResolved = true;
-                                resolve({
-                                    country,
-                                    success: false,
-                                    reason: e.message || "Script Error",
-                                });
-                            }
+                            settle({
+                                country,
+                                success: false,
+                                reason: e.message || "Script Error",
+                            });
                         }
 
-                        // 超时处理 (10秒)
+                        // 兜底超时 (8秒)，正常情况 onRender/onError 会先触发
                         setTimeout(() => {
-                            if (!isResolved) {
-                                isResolved = true;
-                                resolve({
-                                    country,
-                                    success: false,
-                                    reason: "Timeout - SDK did not respond",
-                                });
-                            }
-                        }, 10000);
+                            settle({
+                                country,
+                                success: false,
+                                // reason: "Timeout - SDK did not respond",
+                                reason: "Error",
+                            });
+                        }, 8000);
                     }).finally(() => {
                         // 清理容器
                         const container = document.getElementById(
@@ -524,14 +542,21 @@
                             throw new Error("PayPal SDK not loaded properly");
                         }
 
-                        // 并行测试所有国家
+                        // 并发测试所有国家，超时时自动重试一次，避免偶发性假超时
+                        async function checkCountryWithRetry(country) {
+                            const result = await checkCountry(country, clientId);
+                            if (result.reason === "Timeout - SDK did not respond") {
+                                // 第一次超时：仅记录日志，不显示结果，静默重试
+                                logMessage(`${country}: Timeout on first attempt, retrying...`);
+                                return await checkCountry(country, clientId);
+                            }
+                            return result;
+                        }
+
                         const results = await Promise.all(
-                            countryList.map((country) =>
-                                checkCountry(country, clientId),
-                            ),
+                            countryList.map((country) => checkCountryWithRetry(country))
                         );
 
-                        // 更新结果展示
                         results.forEach((result) => {
                             const countryCard = document.getElementById(
                                 `country-${result.country}`,
@@ -549,10 +574,7 @@
                             newIcon.id = `icon-${result.country}`;
 
                             if (result.success) {
-                                newIcon.setAttribute(
-                                    "data-lucide",
-                                    "check-circle",
-                                );
+                                newIcon.setAttribute("data-lucide", "check-circle");
                                 newIcon.className = "text-success text-xl";
                             } else {
                                 newIcon.setAttribute("data-lucide", "x-circle");
@@ -560,7 +582,7 @@
                             }
 
                             countryCard.querySelector("p").after(newIcon);
-                            lucide.createIcons(newIcon); // 渲染单个图标
+                            lucide.createIcons(newIcon);
 
                             // 显示原因
                             reasonEl.textContent = result.reason;
@@ -625,7 +647,9 @@
                 environmentSelect.addEventListener("change", () => {
                     resetSdkTracking();
                     if (environmentSelect.value === "live") {
-                        clientIdInput.value = "";
+
+                        //增加live环境下的默认值
+                        clientIdInput.value = "AWs8RlbWkvuJ1wctcg1XxhNpIOgAWfD5hXNPPpVvY0tCj_cm_dNwVrsPLkEqNxo99tLR2pLA0dgpABtO";
                     } else if (!clientIdInput.value.trim()) {
                         clientIdInput.value = "test";
                     }
