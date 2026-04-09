@@ -321,6 +321,7 @@
                 // 记录日志
                 function logMessage(message) {
                     const timestamp = new Date().toLocaleTimeString();
+                    console.log(`[${timestamp}] ${message}`);
                     if (!logsInitialized) {
                         logsContainer.innerHTML = "";
                         logsInitialized = true;
