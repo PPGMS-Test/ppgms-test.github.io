@@ -72,7 +72,11 @@
       "Bash(curl -s http://localhost:3006/)",
       "Read(//c/Users/yqiang/Desktop/test/**)",
       "Bash(npx create-next-app@latest paylater-check --ts --tailwind --eslint --app --src-dir --no-turbopack --yes)",
-      "Bash(npm install:*)"
+      "Bash(npm install:*)",
+      "Read(//c/Users/yqiang/.claude/session-data/**)"
+    ],
+    "additionalDirectories": [
+      "C:\\Users\\yqiang\\Desktop\\test\\paylater-check"
     ]
   }
 }
