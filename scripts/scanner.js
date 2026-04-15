@@ -75,15 +75,17 @@ export function scanDir(dir, basePath = '') {
         order: entry.name === 'index.html' ? -1 : parsedFile.order // index.html 最靠前
       })
     }
-    else if (entry.name.startsWith('link-') && entry.name.endsWith('.json') && !isNoShow(entry.name) && !isHidden(entry.name)) {
-      // 解析 link-xxx.json 文件，作为外部链接处理
+    else if (entry.name.endsWith('.json') && !isNoShow(entry.name) && !isHidden(entry.name)) {
+      // 解析 link-xxx.json 文件（支持 [数字]- 前缀，如 [1]-link-xxx.json 或 link-[1]-xxx.json）
       const linkPath = path.join(dir, entry.name)
+      const cleanEntryName = entry.name.replace('.json', '')
+      // 先去掉排序前缀，再检查是否以 link- 开头
+      const nameWithoutOrder = cleanEntryName.replace(/^\[\d+\]-/, '')
+      if (!nameWithoutOrder.startsWith('link-')) continue  // 不是 link 文件，跳过
+
       try {
         const linkData = JSON.parse(fs.readFileSync(linkPath, 'utf-8'))
         const filePath = basePath ? `${basePath}/${entry.name}` : entry.name
-        const cleanEntryName = entry.name.replace('.json', '')
-        // 由于有 'link-' 前缀，如果带括号排序，可能是 link-[1]-xxx，提取有些特殊，所以尽量使用 linkData 里面的设置或默认放到最后
-        // 或者支持 [1]-link-xxx 的格式
         const parsedLink = parseNameAndOrder(cleanEntryName)
 
         result.files.push({
