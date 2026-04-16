@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Google Pay</title>
+        <script src="./script.js"></script>
+
+        <link rel="shortcut icon" href="#" />
+    </head>
+    <body>
+        <main>
+            <section class="container">
+                <a
+                    href="https://developers.google.com/pay/api/web/guides/resources/test-card-suite"
+                    >Enable/Disable Google Test Card Suite</a
+                >
+            </section>
+            <section class="container">
+                <div id="button-container"></div>
+            </section>
+        </main>
+
+        <style>
+            .container {
+                height: 200px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+        </style>
+
+        <script
+            src="https://www.paypal.com/sdk/js?client-id=BAAjd-FbjPaIK5LkdyishsjJ0ink6PPbwUJYTMnZZAdNwIXaTN1tb8DuY-mOor8pzwPkeVGgPEBVTza1Bs&currency=USD&components=googlepay"
+            onload="console.log('PayPal SPB Script Loaded')"
+        ></script>
+
+        <script
+            src="https://pay.google.com/gp/p/js/pay.js"
+            onload="console.log('Google Pay Script Loaded')"
+        ></script>
+
+        <script>
+
+         
+
+            
+           
+            const client_id =
+                "BAAjd-FbjPaIK5LkdyishsjJ0ink6PPbwUJYTMnZZAdNwIXaTN1tb8DuY-mOor8pzwPkeVGgPEBVTza1Bs";
+            const secret_key =
+                "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx";
+
+            document.addEventListener("DOMContentLoaded", (event) => {
+                if (google && paypal.Googlepay) {
+                    onGooglePayLoaded().catch(console.log);
+                }
+            });
+        </script>
+    </body>
+</html>
