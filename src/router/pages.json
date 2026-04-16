@@ -16,11 +16,6 @@
   },
   {
     "name": "index",
-    "path": "[1]-jsv5-test/google-pay/[1]-google-pay-basic-livetest",
-    "filePath": "[1]-jsv5-test/google-pay/[1]-google-pay-basic-livetest/index.html"
-  },
-  {
-    "name": "index",
     "path": "[1]-jsv5-test/google-pay/[2]-google-pay-basic-test",
     "filePath": "[1]-jsv5-test/google-pay/[2]-google-pay-basic-test/index.html"
   },

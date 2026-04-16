@@ -70,25 +70,6 @@
         "expanded": false,
         "items": [
           {
-            "description": "google-pay-basic-livetest",
-            "url": "[1]-jsv5-test/google-pay/[1]-google-pay-basic-livetest/index.html",
-            "text": "google-pay-basic-livetest",
-            "isFolder": true,
-            "expanded": true,
-            "hasChildren": true,
-            "children": [
-              {
-                "description": "",
-                "url": "[1]-jsv5-test/google-pay/[1]-google-pay-basic-livetest/index.html",
-                "text": "google-pay-basic-livetest",
-                "isFolder": false,
-                "hasChildren": false,
-                "isExternal": false
-              }
-            ],
-            "subGroups": []
-          },
-          {
             "description": "google-pay-basic-test",
             "url": "[1]-jsv5-test/google-pay/[2]-google-pay-basic-test/index.html",
             "text": "google-pay-basic-test",
