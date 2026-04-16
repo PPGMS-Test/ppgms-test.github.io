@@ -16,13 +16,18 @@
   },
   {
     "name": "index",
-    "path": "[1]-jsv5-test/google-pay/google-pay-basic-test",
-    "filePath": "[1]-jsv5-test/google-pay/google-pay-basic-test/index.html"
+    "path": "[1]-jsv5-test/google-pay/[1]-google-pay-basic-livetest",
+    "filePath": "[1]-jsv5-test/google-pay/[1]-google-pay-basic-livetest/index.html"
   },
   {
     "name": "index",
-    "path": "[1]-jsv5-test/google-pay/google-pay-with-shipping",
-    "filePath": "[1]-jsv5-test/google-pay/google-pay-with-shipping/index.html"
+    "path": "[1]-jsv5-test/google-pay/[2]-google-pay-basic-test",
+    "filePath": "[1]-jsv5-test/google-pay/[2]-google-pay-basic-test/index.html"
+  },
+  {
+    "name": "index",
+    "path": "[1]-jsv5-test/google-pay/[3]-google-pay-with-shipping",
+    "filePath": "[1]-jsv5-test/google-pay/[3]-google-pay-with-shipping/index.html"
   },
   {
     "name": "appswitch-test-vercel-backend",

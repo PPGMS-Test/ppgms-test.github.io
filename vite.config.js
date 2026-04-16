@@ -3,6 +3,21 @@ import vue from '@vitejs/plugin-vue'
 import { resolve } from 'path'
 import fs from 'fs'
 
+const PAGE_ASSET_EXTENSIONS = new Set(['.html', '.css', '.js'])
+
+const MIME_BY_EXT = {
+  '.html': 'text/html; charset=utf-8',
+  '.css': 'text/css; charset=utf-8',
+  '.js': 'application/javascript; charset=utf-8'
+}
+
+const getExt = (name) => {
+  const dot = name.lastIndexOf('.')
+  return dot >= 0 ? name.slice(dot).toLowerCase() : ''
+}
+
+const isPageAsset = (name) => PAGE_ASSET_EXTENSIONS.has(getExt(name))
+
 // 导航生成插件
 function navGenerator() {
   return {
@@ -37,7 +52,7 @@ function copyPages() {
           const destPath = resolve(dest, entry.name)
           if (entry.isDirectory()) {
             copyDir(srcPath, destPath)
-          } else if (entry.name.endsWith('.html')) {
+          } else if (isPageAsset(entry.name)) {
             fs.copyFileSync(srcPath, destPath)
             console.log(`[copy-pages] Copied: ${destPath}`)
           }
@@ -72,13 +87,14 @@ export default defineConfig({
       configureServer(server) {
         server.middlewares.use((req, res, next) => {
           const url = decodeURIComponent(req.url.split('?')[0])
-          // 只处理 HTML 文件请求，且排除 noshow
-          if (url.includes('.html') && !isNoShow(url)) {
+          const ext = getExt(url)
+          // 处理 src/pages 下的 html/css/js 请求，且排除 noshow
+          if (PAGE_ASSET_EXTENSIONS.has(ext) && !isNoShow(url)) {
             // 去掉开头的 / 使路径相对于 src/pages
             const cleanUrl = url.replace(/^\//, '')
             const filePath = resolve(__dirname, 'src', 'pages', cleanUrl)
             if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
-              res.setHeader('Content-Type', 'text/html')
+              res.setHeader('Content-Type', MIME_BY_EXT[ext] || 'application/octet-stream')
               res.end(fs.readFileSync(filePath))
               return
             }

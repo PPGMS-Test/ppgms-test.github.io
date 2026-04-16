@@ -70,8 +70,27 @@
         "expanded": false,
         "items": [
           {
+            "description": "google-pay-basic-livetest",
+            "url": "[1]-jsv5-test/google-pay/[1]-google-pay-basic-livetest/index.html",
+            "text": "google-pay-basic-livetest",
+            "isFolder": true,
+            "expanded": true,
+            "hasChildren": true,
+            "children": [
+              {
+                "description": "",
+                "url": "[1]-jsv5-test/google-pay/[1]-google-pay-basic-livetest/index.html",
+                "text": "google-pay-basic-livetest",
+                "isFolder": false,
+                "hasChildren": false,
+                "isExternal": false
+              }
+            ],
+            "subGroups": []
+          },
+          {
             "description": "google-pay-basic-test",
-            "url": "[1]-jsv5-test/google-pay/google-pay-basic-test/index.html",
+            "url": "[1]-jsv5-test/google-pay/[2]-google-pay-basic-test/index.html",
             "text": "google-pay-basic-test",
             "isFolder": true,
             "expanded": true,
@@ -79,7 +98,7 @@
             "children": [
               {
                 "description": "",
-                "url": "[1]-jsv5-test/google-pay/google-pay-basic-test/index.html",
+                "url": "[1]-jsv5-test/google-pay/[2]-google-pay-basic-test/index.html",
                 "text": "google-pay-basic-test",
                 "isFolder": false,
                 "hasChildren": false,
@@ -90,7 +109,7 @@
           },
           {
             "description": "google-pay-with-shipping",
-            "url": "[1]-jsv5-test/google-pay/google-pay-with-shipping/index.html",
+            "url": "[1]-jsv5-test/google-pay/[3]-google-pay-with-shipping/index.html",
             "text": "google-pay-with-shipping",
             "isFolder": true,
             "expanded": true,
@@ -98,7 +117,7 @@
             "children": [
               {
                 "description": "",
-                "url": "[1]-jsv5-test/google-pay/google-pay-with-shipping/index.html",
+                "url": "[1]-jsv5-test/google-pay/[3]-google-pay-with-shipping/index.html",
                 "text": "google-pay-with-shipping",
                 "isFolder": false,
                 "hasChildren": false,
