@@ -18,27 +18,43 @@ export function normalizePath(p) {
 }
 
 /**
- * 解析带有排序标记的名称，例如: "[1]-jsv5-test" -> { order: 1, cleanName: "jsv5-test" }
- * 同时也支持在 link- 前缀之后的情况，如 "link-[1]-xxx" -> { order: 1, cleanName: "link-xxx" }
+ * 解析带有排序标记的名称，例如:
+ * - "[1]-jsv5-test" -> { order: 1, cleanName: "jsv5-test" }
+ * - "__1__-jsv5-test" -> { order: 1, cleanName: "jsv5-test" }
+ * 同时也支持在 link- 前缀之后的情况，如 "link-[1]-xxx" 或 "link-__1__-xxx"
  * 如果没有标记，返回默认极大值以排在后面
  */
 export function parseNameAndOrder(name) {
-  // 匹配最开头的 [数字]- 前缀
-  const match = name.match(/^\[(\d+)\]-(.+)$/)
-  if (match) {
-    return {
-      order: parseInt(match[1], 10),
-      cleanName: match[2]
+  const startPatterns = [
+    /^\[(\d+)\]-(.+)$/, 
+    /^__(\d+)__-(.+)$/
+  ]
+
+  for (const pattern of startPatterns) {
+    const match = name.match(pattern)
+    if (match) {
+      return {
+        order: parseInt(match[1], 10),
+        cleanName: match[2]
+      }
     }
   }
-  // 匹配中间位置的 [数字]- 前缀（如 link-[1]-xxx）
-  const midMatch = name.match(/^(.+?)\[(\d+)\]-(.+)$/)
-  if (midMatch) {
-    return {
-      order: parseInt(midMatch[2], 10),
-      cleanName: midMatch[1] + midMatch[3]  // 保留前缀部分，如 "link-" + "xxx" = "link-xxx"
+
+  const midPatterns = [
+    /^(.+?)\[(\d+)\]-(.+)$/, 
+    /^(.+?)__(\d+)__-(.+)$/
+  ]
+
+  for (const pattern of midPatterns) {
+    const midMatch = name.match(pattern)
+    if (midMatch) {
+      return {
+        order: parseInt(midMatch[2], 10),
+        cleanName: midMatch[1] + midMatch[3]  // 保留前缀部分，如 "link-" + "xxx" = "link-xxx"
+      }
     }
   }
+
   return {
     order: 999999,
     cleanName: name

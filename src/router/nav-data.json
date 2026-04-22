@@ -123,22 +123,6 @@
         "items": [
           {
             "description": "",
-            "url": "[2]-jsv6-test/appswitch-test-vercel-backend.html",
-            "text": "appswitch-test-vercel-backend",
-            "isFolder": false,
-            "hasChildren": false,
-            "isExternal": false
-          },
-          {
-            "description": "",
-            "url": "[2]-jsv6-test/iframe-hostpage.html",
-            "text": "iframe-hostpage",
-            "isFolder": false,
-            "hasChildren": false,
-            "isExternal": false
-          },
-          {
-            "description": "",
             "url": "https://jsv6-test.pages.dev/",
             "text": "JSv6主测试站",
             "isFolder": false,
@@ -147,8 +131,24 @@
           },
           {
             "description": "",
-            "url": "[2]-jsv6-test/redirect-test-vercel-backend.html",
+            "url": "[2]-jsv6-test/[2]-appswitch-test-vercel-backend.html",
+            "text": "appswitch-test-vercel-backend",
+            "isFolder": false,
+            "hasChildren": false,
+            "isExternal": false
+          },
+          {
+            "description": "",
+            "url": "[2]-jsv6-test/[3]-redirect-test-vercel-backend.html",
             "text": "redirect-test-vercel-backend",
+            "isFolder": false,
+            "hasChildren": false,
+            "isExternal": false
+          },
+          {
+            "description": "",
+            "url": "[2]-jsv6-test/[4]-iframe-hostpage.html",
+            "text": "iframe-hostpage",
             "isFolder": false,
             "hasChildren": false,
             "isExternal": false
@@ -244,7 +244,7 @@
         "items": [
           {
             "description": "",
-            "url": "[4]-appSwitch/app-switch-jsv5.html",
+            "url": "__4__-appSwitch/app-switch-jsv5.html",
             "text": "app-switch-jsv5",
             "isFolder": false,
             "hasChildren": false,
@@ -252,7 +252,7 @@
           },
           {
             "description": "",
-            "url": "[4]-appSwitch/app-switch-jsv6.html",
+            "url": "__4__-appSwitch/app-switch-jsv6.html",
             "text": "app-switch-jsv6",
             "isFolder": false,
             "hasChildren": false,

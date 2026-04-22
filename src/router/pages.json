@@ -25,19 +25,19 @@
     "filePath": "[1]-jsv5-test/google-pay/[3]-google-pay-with-shipping/index.html"
   },
   {
-    "name": "appswitch-test-vercel-backend",
-    "path": "[2]-jsv6-test/appswitch-test-vercel-backend.html",
-    "filePath": "[2]-jsv6-test/appswitch-test-vercel-backend.html"
+    "name": "[2]-appswitch-test-vercel-backend",
+    "path": "[2]-jsv6-test/[2]-appswitch-test-vercel-backend.html",
+    "filePath": "[2]-jsv6-test/[2]-appswitch-test-vercel-backend.html"
   },
   {
-    "name": "iframe-hostpage",
-    "path": "[2]-jsv6-test/iframe-hostpage.html",
-    "filePath": "[2]-jsv6-test/iframe-hostpage.html"
+    "name": "[3]-redirect-test-vercel-backend",
+    "path": "[2]-jsv6-test/[3]-redirect-test-vercel-backend.html",
+    "filePath": "[2]-jsv6-test/[3]-redirect-test-vercel-backend.html"
   },
   {
-    "name": "redirect-test-vercel-backend",
-    "path": "[2]-jsv6-test/redirect-test-vercel-backend.html",
-    "filePath": "[2]-jsv6-test/redirect-test-vercel-backend.html"
+    "name": "[4]-iframe-hostpage",
+    "path": "[2]-jsv6-test/[4]-iframe-hostpage.html",
+    "filePath": "[2]-jsv6-test/[4]-iframe-hostpage.html"
   },
   {
     "name": "jsv6-jsv5-comparison",
@@ -91,12 +91,12 @@
   },
   {
     "name": "app-switch-jsv5",
-    "path": "[4]-appSwitch/app-switch-jsv5.html",
-    "filePath": "[4]-appSwitch/app-switch-jsv5.html"
+    "path": "__4__-appSwitch/app-switch-jsv5.html",
+    "filePath": "__4__-appSwitch/app-switch-jsv5.html"
   },
   {
     "name": "app-switch-jsv6",
-    "path": "[4]-appSwitch/app-switch-jsv6.html",
-    "filePath": "[4]-appSwitch/app-switch-jsv6.html"
+    "path": "__4__-appSwitch/app-switch-jsv6.html",
+    "filePath": "__4__-appSwitch/app-switch-jsv6.html"
   }
 ]
