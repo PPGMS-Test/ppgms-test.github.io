@@ -123,6 +123,14 @@
         "items": [
           {
             "description": "",
+            "url": "https://jsv6-test.pages.dev/",
+            "text": "JSv6主测试站",
+            "isFolder": false,
+            "hasChildren": false,
+            "isExternal": true
+          },
+          {
+            "description": "",
             "url": "__2__-jsv6-test/__2__-appswitch-test-vercel-backend.html",
             "text": "appswitch-test-vercel-backend",
             "isFolder": false,
@@ -189,6 +197,14 @@
         "icon": "folder",
         "expanded": true,
         "items": [
+          {
+            "description": "",
+            "url": "https://paypal-paylater-message-jsv5-dashboard.pages.dev/",
+            "text": "PayPal PayLater Check",
+            "isFolder": false,
+            "hasChildren": false,
+            "isExternal": true
+          },
           {
             "description": "",
             "url": "__3__-paylater/PLM-admin-dashboard/__3__-paylater-msg-dashboard.html",

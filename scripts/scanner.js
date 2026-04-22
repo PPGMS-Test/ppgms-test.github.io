@@ -80,7 +80,7 @@ export function scanDir(dir, basePath = '') {
       const linkPath = path.join(dir, entry.name)
       const cleanEntryName = entry.name.replace('.json', '')
       // 先去掉排序前缀，再检查是否以 link- 开头
-      const nameWithoutOrder = cleanEntryName.replace(/^\[\d+\]-/, '')
+      const nameWithoutOrder = cleanEntryName.replace(/^(\[\d+\]|__\d+__)-/, '')
       if (!nameWithoutOrder.startsWith('link-')) continue  // 不是 link 文件，跳过
 
       try {
