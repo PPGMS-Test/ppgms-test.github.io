@@ -1,93 +1,93 @@
 [
   {
     "name": "ACDC-Sample",
-    "path": "[1]-jsv5-test/ACDC/ACDC-Sample.html",
-    "filePath": "[1]-jsv5-test/ACDC/ACDC-Sample.html"
+    "path": "__1__-jsv5-test/ACDC/ACDC-Sample.html",
+    "filePath": "__1__-jsv5-test/ACDC/ACDC-Sample.html"
   },
   {
     "name": "applepay-test",
-    "path": "[1]-jsv5-test/ApplePay/applepay-test.html",
-    "filePath": "[1]-jsv5-test/ApplePay/applepay-test.html"
+    "path": "__1__-jsv5-test/ApplePay/applepay-test.html",
+    "filePath": "__1__-jsv5-test/ApplePay/applepay-test.html"
   },
   {
     "name": "index",
-    "path": "[1]-jsv5-test/BCDC",
-    "filePath": "[1]-jsv5-test/BCDC/index.html"
+    "path": "__1__-jsv5-test/BCDC",
+    "filePath": "__1__-jsv5-test/BCDC/index.html"
   },
   {
     "name": "index",
-    "path": "[1]-jsv5-test/google-pay/[2]-google-pay-basic-test",
-    "filePath": "[1]-jsv5-test/google-pay/[2]-google-pay-basic-test/index.html"
+    "path": "__1__-jsv5-test/google-pay/__2__-google-pay-basic-test",
+    "filePath": "__1__-jsv5-test/google-pay/__2__-google-pay-basic-test/index.html"
   },
   {
     "name": "index",
-    "path": "[1]-jsv5-test/google-pay/[3]-google-pay-with-shipping",
-    "filePath": "[1]-jsv5-test/google-pay/[3]-google-pay-with-shipping/index.html"
+    "path": "__1__-jsv5-test/google-pay/__3__-google-pay-with-shipping",
+    "filePath": "__1__-jsv5-test/google-pay/__3__-google-pay-with-shipping/index.html"
   },
   {
-    "name": "[2]-appswitch-test-vercel-backend",
-    "path": "[2]-jsv6-test/[2]-appswitch-test-vercel-backend.html",
-    "filePath": "[2]-jsv6-test/[2]-appswitch-test-vercel-backend.html"
+    "name": "__2__-appswitch-test-vercel-backend",
+    "path": "__2__-jsv6-test/__2__-appswitch-test-vercel-backend.html",
+    "filePath": "__2__-jsv6-test/__2__-appswitch-test-vercel-backend.html"
   },
   {
-    "name": "[3]-redirect-test-vercel-backend",
-    "path": "[2]-jsv6-test/[3]-redirect-test-vercel-backend.html",
-    "filePath": "[2]-jsv6-test/[3]-redirect-test-vercel-backend.html"
+    "name": "__3__-redirect-test-vercel-backend",
+    "path": "__2__-jsv6-test/__3__-redirect-test-vercel-backend.html",
+    "filePath": "__2__-jsv6-test/__3__-redirect-test-vercel-backend.html"
   },
   {
-    "name": "[4]-iframe-hostpage",
-    "path": "[2]-jsv6-test/[4]-iframe-hostpage.html",
-    "filePath": "[2]-jsv6-test/[4]-iframe-hostpage.html"
+    "name": "__4__-iframe-hostpage",
+    "path": "__2__-jsv6-test/__4__-iframe-hostpage.html",
+    "filePath": "__2__-jsv6-test/__4__-iframe-hostpage.html"
   },
   {
     "name": "jsv6-jsv5-comparison",
-    "path": "[2]-jsv6-test/jsv6-jsv5-comparison/jsv6-jsv5-comparison.html",
-    "filePath": "[2]-jsv6-test/jsv6-jsv5-comparison/jsv6-jsv5-comparison.html"
+    "path": "__2__-jsv6-test/jsv6-jsv5-comparison/jsv6-jsv5-comparison.html",
+    "filePath": "__2__-jsv6-test/jsv6-jsv5-comparison/jsv6-jsv5-comparison.html"
   },
   {
     "name": "jsv6-cross-border-msg",
-    "path": "[3]-paylater/JSV6-PLM/jsv6-cross-border-msg.html",
-    "filePath": "[3]-paylater/JSV6-PLM/jsv6-cross-border-msg.html"
+    "path": "__3__-paylater/JSV6-PLM/jsv6-cross-border-msg.html",
+    "filePath": "__3__-paylater/JSV6-PLM/jsv6-cross-border-msg.html"
   },
   {
-    "name": "[3]-paylater-msg-dashboard",
-    "path": "[3]-paylater/PLM-admin-dashboard/[3]-paylater-msg-dashboard.html",
-    "filePath": "[3]-paylater/PLM-admin-dashboard/[3]-paylater-msg-dashboard.html"
+    "name": "__3__-paylater-msg-dashboard",
+    "path": "__3__-paylater/PLM-admin-dashboard/__3__-paylater-msg-dashboard.html",
+    "filePath": "__3__-paylater/PLM-admin-dashboard/__3__-paylater-msg-dashboard.html"
   },
   {
     "name": "index",
-    "path": "[3]-paylater/vault-BNPL-conflict",
-    "filePath": "[3]-paylater/vault-BNPL-conflict/index.html"
+    "path": "__3__-paylater/vault-BNPL-conflict",
+    "filePath": "__3__-paylater/vault-BNPL-conflict/index.html"
   },
   {
     "name": "PayLater-Vault冲突 - 按钮渲染加入vaultable参数",
-    "path": "[3]-paylater/vault-BNPL-conflict/各种情况/PayLater-Vault冲突 - 按钮渲染加入vaultable参数.html",
-    "filePath": "[3]-paylater/vault-BNPL-conflict/各种情况/PayLater-Vault冲突 - 按钮渲染加入vaultable参数.html"
+    "path": "__3__-paylater/vault-BNPL-conflict/各种情况/PayLater-Vault冲突 - 按钮渲染加入vaultable参数.html",
+    "filePath": "__3__-paylater/vault-BNPL-conflict/各种情况/PayLater-Vault冲突 - 按钮渲染加入vaultable参数.html"
   },
   {
     "name": "PayLater-Vault冲突 - 单独的PayLater按钮",
-    "path": "[3]-paylater/vault-BNPL-conflict/各种情况/PayLater-Vault冲突 - 单独的PayLater按钮.html",
-    "filePath": "[3]-paylater/vault-BNPL-conflict/各种情况/PayLater-Vault冲突 - 单独的PayLater按钮.html"
+    "path": "__3__-paylater/vault-BNPL-conflict/各种情况/PayLater-Vault冲突 - 单独的PayLater按钮.html",
+    "filePath": "__3__-paylater/vault-BNPL-conflict/各种情况/PayLater-Vault冲突 - 单独的PayLater按钮.html"
   },
   {
     "name": "PayLater-Vault冲突 - 展示Paylater - basic",
-    "path": "[3]-paylater/vault-BNPL-conflict/各种情况/PayLater-Vault冲突 - 展示Paylater - basic.html",
-    "filePath": "[3]-paylater/vault-BNPL-conflict/各种情况/PayLater-Vault冲突 - 展示Paylater - basic.html"
+    "path": "__3__-paylater/vault-BNPL-conflict/各种情况/PayLater-Vault冲突 - 展示Paylater - basic.html",
+    "filePath": "__3__-paylater/vault-BNPL-conflict/各种情况/PayLater-Vault冲突 - 展示Paylater - basic.html"
   },
   {
     "name": "PayLater-Vault冲突 - 展示Paylater - returning buyer",
-    "path": "[3]-paylater/vault-BNPL-conflict/各种情况/PayLater-Vault冲突 - 展示Paylater - returning buyer.html",
-    "filePath": "[3]-paylater/vault-BNPL-conflict/各种情况/PayLater-Vault冲突 - 展示Paylater - returning buyer.html"
+    "path": "__3__-paylater/vault-BNPL-conflict/各种情况/PayLater-Vault冲突 - 展示Paylater - returning buyer.html",
+    "filePath": "__3__-paylater/vault-BNPL-conflict/各种情况/PayLater-Vault冲突 - 展示Paylater - returning buyer.html"
   },
   {
     "name": "PayLater-Vault冲突 - 展示Paylater - vault with purchase",
-    "path": "[3]-paylater/vault-BNPL-conflict/各种情况/PayLater-Vault冲突 - 展示Paylater - vault with purchase.html",
-    "filePath": "[3]-paylater/vault-BNPL-conflict/各种情况/PayLater-Vault冲突 - 展示Paylater - vault with purchase.html"
+    "path": "__3__-paylater/vault-BNPL-conflict/各种情况/PayLater-Vault冲突 - 展示Paylater - vault with purchase.html",
+    "filePath": "__3__-paylater/vault-BNPL-conflict/各种情况/PayLater-Vault冲突 - 展示Paylater - vault with purchase.html"
   },
   {
     "name": "PayLater-Vault冲突 - JSSDK加入vault参数",
-    "path": "[3]-paylater/vault-BNPL-conflict/各种情况/PayLater-Vault冲突 - JSSDK加入vault参数.html",
-    "filePath": "[3]-paylater/vault-BNPL-conflict/各种情况/PayLater-Vault冲突 - JSSDK加入vault参数.html"
+    "path": "__3__-paylater/vault-BNPL-conflict/各种情况/PayLater-Vault冲突 - JSSDK加入vault参数.html",
+    "filePath": "__3__-paylater/vault-BNPL-conflict/各种情况/PayLater-Vault冲突 - JSSDK加入vault参数.html"
   },
   {
     "name": "app-switch-jsv5",

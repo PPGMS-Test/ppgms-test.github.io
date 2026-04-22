@@ -26,7 +26,7 @@
         "items": [
           {
             "description": "",
-            "url": "[1]-jsv5-test/ACDC/ACDC-Sample.html",
+            "url": "__1__-jsv5-test/ACDC/ACDC-Sample.html",
             "text": "ACDC-Sample",
             "isFolder": false,
             "hasChildren": false,
@@ -41,7 +41,7 @@
         "items": [
           {
             "description": "",
-            "url": "[1]-jsv5-test/ApplePay/applepay-test.html",
+            "url": "__1__-jsv5-test/ApplePay/applepay-test.html",
             "text": "applepay-test",
             "isFolder": false,
             "hasChildren": false,
@@ -56,7 +56,7 @@
         "items": [
           {
             "description": "",
-            "url": "[1]-jsv5-test/BCDC/index.html",
+            "url": "__1__-jsv5-test/BCDC/index.html",
             "text": "BCDC",
             "isFolder": false,
             "hasChildren": false,
@@ -71,7 +71,7 @@
         "items": [
           {
             "description": "google-pay-basic-test",
-            "url": "[1]-jsv5-test/google-pay/[2]-google-pay-basic-test/index.html",
+            "url": "__1__-jsv5-test/google-pay/__2__-google-pay-basic-test/index.html",
             "text": "google-pay-basic-test",
             "isFolder": true,
             "expanded": true,
@@ -79,7 +79,7 @@
             "children": [
               {
                 "description": "",
-                "url": "[1]-jsv5-test/google-pay/[2]-google-pay-basic-test/index.html",
+                "url": "__1__-jsv5-test/google-pay/__2__-google-pay-basic-test/index.html",
                 "text": "google-pay-basic-test",
                 "isFolder": false,
                 "hasChildren": false,
@@ -90,7 +90,7 @@
           },
           {
             "description": "google-pay-with-shipping",
-            "url": "[1]-jsv5-test/google-pay/[3]-google-pay-with-shipping/index.html",
+            "url": "__1__-jsv5-test/google-pay/__3__-google-pay-with-shipping/index.html",
             "text": "google-pay-with-shipping",
             "isFolder": true,
             "expanded": true,
@@ -98,7 +98,7 @@
             "children": [
               {
                 "description": "",
-                "url": "[1]-jsv5-test/google-pay/[3]-google-pay-with-shipping/index.html",
+                "url": "__1__-jsv5-test/google-pay/__3__-google-pay-with-shipping/index.html",
                 "text": "google-pay-with-shipping",
                 "isFolder": false,
                 "hasChildren": false,
@@ -123,15 +123,7 @@
         "items": [
           {
             "description": "",
-            "url": "https://jsv6-test.pages.dev/",
-            "text": "JSv6主测试站",
-            "isFolder": false,
-            "hasChildren": false,
-            "isExternal": true
-          },
-          {
-            "description": "",
-            "url": "[2]-jsv6-test/[2]-appswitch-test-vercel-backend.html",
+            "url": "__2__-jsv6-test/__2__-appswitch-test-vercel-backend.html",
             "text": "appswitch-test-vercel-backend",
             "isFolder": false,
             "hasChildren": false,
@@ -139,7 +131,7 @@
           },
           {
             "description": "",
-            "url": "[2]-jsv6-test/[3]-redirect-test-vercel-backend.html",
+            "url": "__2__-jsv6-test/__3__-redirect-test-vercel-backend.html",
             "text": "redirect-test-vercel-backend",
             "isFolder": false,
             "hasChildren": false,
@@ -147,7 +139,7 @@
           },
           {
             "description": "",
-            "url": "[2]-jsv6-test/[4]-iframe-hostpage.html",
+            "url": "__2__-jsv6-test/__4__-iframe-hostpage.html",
             "text": "iframe-hostpage",
             "isFolder": false,
             "hasChildren": false,
@@ -162,7 +154,7 @@
         "items": [
           {
             "description": "",
-            "url": "[2]-jsv6-test/jsv6-jsv5-comparison/jsv6-jsv5-comparison.html",
+            "url": "__2__-jsv6-test/jsv6-jsv5-comparison/jsv6-jsv5-comparison.html",
             "text": "jsv6-jsv5-comparison",
             "isFolder": false,
             "hasChildren": false,
@@ -184,7 +176,7 @@
         "items": [
           {
             "description": "",
-            "url": "[3]-paylater/JSV6-PLM/jsv6-cross-border-msg.html",
+            "url": "__3__-paylater/JSV6-PLM/jsv6-cross-border-msg.html",
             "text": "jsv6-cross-border-msg",
             "isFolder": false,
             "hasChildren": false,
@@ -199,15 +191,7 @@
         "items": [
           {
             "description": "",
-            "url": "https://paypal-paylater-message-jsv5-dashboard.pages.dev/",
-            "text": "PayPal PayLater Check",
-            "isFolder": false,
-            "hasChildren": false,
-            "isExternal": true
-          },
-          {
-            "description": "",
-            "url": "[3]-paylater/PLM-admin-dashboard/[3]-paylater-msg-dashboard.html",
+            "url": "__3__-paylater/PLM-admin-dashboard/__3__-paylater-msg-dashboard.html",
             "text": "paylater-msg-dashboard",
             "isFolder": false,
             "hasChildren": false,
@@ -222,7 +206,7 @@
         "items": [
           {
             "description": "",
-            "url": "[3]-paylater/vault-BNPL-conflict/index.html",
+            "url": "__3__-paylater/vault-BNPL-conflict/index.html",
             "text": "Vault Pay-Later Conflict",
             "isFolder": false,
             "hasChildren": false,
