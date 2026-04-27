@@ -1,2 +1,9 @@
+# github-homepage
+github-homepage/node_modules
+github-homepage/dist
+
+# paypal-backend-api
+paypal-backend-api/node_modules
+paypal-backend-api/.next
+paypal-backend-api/.env
 node_modules
-dist

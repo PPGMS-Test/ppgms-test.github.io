@@ -1,20 +1,12 @@
 {
-  "name": "ppgms-test",
+  "name": "ppgms-test-monorepo",
   "version": "1.0.0",
   "private": true,
-  "type": "module",
+  "packageManager": "pnpm@9.0.0",
   "scripts": {
-    "dev": "vite build && vite",
-    "build": "vite build",
-    "preview": "vite preview",
-    "generate-nav": "node scripts/generate-nav.js",
-    "prebuild": "npm run generate-nav"
-  },
-  "dependencies": {
-    "vue": "^3.4.0"
-  },
-  "devDependencies": {
-    "@vitejs/plugin-vue": "^5.0.0",
-    "vite": "^5.4.0"
+    "dev:homepage": "pnpm --filter github-homepage dev",
+    "dev:api": "pnpm --filter paypal-backend-api dev",
+    "build:homepage": "pnpm --filter github-homepage build",
+    "build:api": "pnpm --filter paypal-backend-api build"
   }
 }

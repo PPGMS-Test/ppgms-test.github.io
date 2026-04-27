@@ -2,7 +2,8 @@
   "permissions": {
     "allow": [
       "Bash(npm uninstall:*)",
-      "Bash(node *)"
+      "Bash(node *)",
+      "mcp__plugin_everything-claude-code_github__get_file_contents"
     ]
   }
 }

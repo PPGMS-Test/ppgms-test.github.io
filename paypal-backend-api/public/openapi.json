@@ -1,0 +1,199 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "PayPal Backend API",
+    "description": "Backend proxy API for PayPal SDK integration. Handles client token generation and order management.",
+    "version": "1.0.0"
+  },
+  "tags": [
+    { "name": "Auth", "description": "Client token endpoints" },
+    { "name": "Orders", "description": "Order creation and management" }
+  ],
+  "paths": {
+    "/api/auth/sandbox-client-token": {
+      "get": {
+        "tags": ["Auth"],
+        "summary": "Get sandbox client token",
+        "description": "Returns a browser-safe client token for the PayPal sandbox environment (v6-sdk-test app).",
+        "responses": {
+          "200": {
+            "description": "Client token",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ClientToken" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/live-client-token-avmkf": {
+      "get": {
+        "tags": ["Auth"],
+        "summary": "Get live client token (AVmKF app)",
+        "description": "Returns a browser-safe client token for the PayPal live environment (AVmKF app).",
+        "responses": {
+          "200": {
+            "description": "Client token",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ClientToken" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/checkout/orders/create": {
+      "post": {
+        "tags": ["Orders"],
+        "summary": "Create order (custom body)",
+        "description": "Create a PayPal order with a fully custom order request body.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/OrderRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Order created", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Order" } } } }
+        }
+      }
+    },
+    "/api/checkout/orders/create-with-sample-data": {
+      "post": {
+        "tags": ["Orders"],
+        "summary": "Create order with sample data",
+        "description": "Create a $100 USD sandbox order using built-in sample data.",
+        "responses": {
+          "200": { "description": "Order created", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Order" } } } }
+        }
+      }
+    },
+    "/api/checkout/orders/create-bcdc-inline": {
+      "post": {
+        "tags": ["Orders"],
+        "summary": "Create order (BCDC Inline)",
+        "description": "Create a $149.95 order with BCDC Inline payment source and sample shipping data.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "returnUrl": { "type": "string", "example": "https://example.com/return" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Order created", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Order" } } } }
+        }
+      }
+    },
+    "/api/checkout/orders/create-app-switch": {
+      "post": {
+        "tags": ["Orders"],
+        "summary": "Create order (App Switch)",
+        "description": "Create a $149.95 order configured for PayPal App Switch flow.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["returnUrl", "cancelUrl"],
+                "properties": {
+                  "returnUrl": { "type": "string", "example": "https://example.com/return" },
+                  "cancelUrl": { "type": "string", "example": "https://example.com/cancel" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Order created", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Order" } } } }
+        }
+      }
+    },
+    "/api/checkout/orders/{orderId}": {
+      "get": {
+        "tags": ["Orders"],
+        "summary": "Get order detail",
+        "parameters": [
+          { "name": "orderId", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Order detail", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Order" } } } }
+        }
+      },
+      "post": {
+        "tags": ["Orders"],
+        "summary": "Capture order",
+        "description": "Capture payment for an approved order.",
+        "parameters": [
+          { "name": "orderId", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Order captured", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Order" } } } }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "ClientToken": {
+        "type": "object",
+        "properties": {
+          "accessToken": { "type": "string" },
+          "expiresIn": { "type": "integer" },
+          "scope": { "type": "string" },
+          "tokenType": { "type": "string" }
+        }
+      },
+      "Order": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "status": { "type": "string", "example": "CREATED" },
+          "links": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "href": { "type": "string" },
+                "rel": { "type": "string" },
+                "method": { "type": "string" }
+              }
+            }
+          }
+        }
+      },
+      "OrderRequest": {
+        "type": "object",
+        "required": ["intent", "purchaseUnits"],
+        "properties": {
+          "intent": { "type": "string", "enum": ["CAPTURE", "AUTHORIZE"] },
+          "purchaseUnits": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "amount": {
+                  "type": "object",
+                  "properties": {
+                    "currencyCode": { "type": "string", "example": "USD" },
+                    "value": { "type": "string", "example": "100.00" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
