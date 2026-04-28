@@ -60,9 +60,9 @@
     "filePath": "__3__-paylater/vault-BNPL-conflict/index.html"
   },
   {
-    "name": "PayLater-Vault冲突 - 按钮渲染加入vaultable参数",
-    "path": "__3__-paylater/vault-BNPL-conflict/各种情况/PayLater-Vault冲突 - 按钮渲染加入vaultable参数.html",
-    "filePath": "__3__-paylater/vault-BNPL-conflict/各种情况/PayLater-Vault冲突 - 按钮渲染加入vaultable参数.html"
+    "name": "PayLater-Vault冲突 - JSSDK加入vault参数",
+    "path": "__3__-paylater/vault-BNPL-conflict/各种情况/PayLater-Vault冲突 - JSSDK加入vault参数.html",
+    "filePath": "__3__-paylater/vault-BNPL-conflict/各种情况/PayLater-Vault冲突 - JSSDK加入vault参数.html"
   },
   {
     "name": "PayLater-Vault冲突 - 单独的PayLater按钮",
@@ -85,9 +85,9 @@
     "filePath": "__3__-paylater/vault-BNPL-conflict/各种情况/PayLater-Vault冲突 - 展示Paylater - vault with purchase.html"
   },
   {
-    "name": "PayLater-Vault冲突 - JSSDK加入vault参数",
-    "path": "__3__-paylater/vault-BNPL-conflict/各种情况/PayLater-Vault冲突 - JSSDK加入vault参数.html",
-    "filePath": "__3__-paylater/vault-BNPL-conflict/各种情况/PayLater-Vault冲突 - JSSDK加入vault参数.html"
+    "name": "PayLater-Vault冲突 - 按钮渲染加入vaultable参数",
+    "path": "__3__-paylater/vault-BNPL-conflict/各种情况/PayLater-Vault冲突 - 按钮渲染加入vaultable参数.html",
+    "filePath": "__3__-paylater/vault-BNPL-conflict/各种情况/PayLater-Vault冲突 - 按钮渲染加入vaultable参数.html"
   },
   {
     "name": "app-switch-jsv5",

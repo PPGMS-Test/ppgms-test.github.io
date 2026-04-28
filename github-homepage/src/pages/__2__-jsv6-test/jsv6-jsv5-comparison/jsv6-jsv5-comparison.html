@@ -297,43 +297,43 @@
         <div class="section-header">
           <h2 class="section-title">
             <i class="fas fa-exchange-alt"></i>
-            3. 回调参数与数据结构
+            3. 回调参数与支付会话
           </h2>
         </div>
         <div class="section-content">
           <table class="comparison-table">
             <thead>
               <tr>
-                <th>参数 / 回调</th>
+                <th>维度</th>
                 <th>v5（GMS-exhibition）</th>
                 <th>v6（jsv6-test）</th>
               </tr>
             </thead>
             <tbody>
               <tr>
-                <td class="feature-name">createOrder</td>
-                <td>回调函数，返回 <span class="code-badge">orderId</span> 字符串</td>
-                <td>返回 Promise（在 <span class="code-badge">session.start()</span> 之前预先创建）</td>
+                <td class="feature-name">createOrder 触发时机</td>
+                <td>用户点击按钮后，SDK 自动触发回调，函数返回 <span class="code-badge">orderId</span> 字符串</td>
+                <td>在用户点击前即可 pre-fetch order（<span class="code-badge">createOrderPromise</span>），点击后传入 <span class="code-badge">session.start()</span></td>
               </tr>
               <tr>
-                <td class="feature-name">onApprove data</td>
-                <td><span class="code-badge">{ orderID, payerID, ... }</span></td>
-                <td><span class="code-badge">{ orderId, data: { orderId } }</span> — 多一层兼容结构</td>
+                <td class="feature-name">支付会话模型</td>
+                <td>无显式 session 概念；SDK 内部管理整个支付生命周期</td>
+                <td>显式创建 <span class="code-badge">PaymentSession</span> 对象，开发者持有引用，可主动调用 <span class="code-badge">session.start()</span></td>
+              </tr>
+              <tr>
+                <td class="feature-name">弹窗 / 重定向控制</td>
+                <td><span class="neutral">SDK 自动决定，开发者无法干预</span></td>
+                <td>显式传入 <span class="code-badge">presentationMode: "auto" / "popup" / "redirect"</span></td>
+              </tr>
+              <tr>
+                <td class="feature-name">onApprove 数据</td>
+                <td><span class="code-badge">{ orderID, payerID, facilitatorAccessToken, ... }</span></td>
+                <td><span class="code-badge">{ orderId }</span>（字段更简洁，去掉了 facilitatorAccessToken）</td>
               </tr>
               <tr>
                 <td class="feature-name">onCancel</td>
-                <td><span class="code-badge">onCancel(data)</span> 带有 data 参数</td>
-                <td><span class="code-badge">onCancel()</span> 无参数</td>
-              </tr>
-              <tr>
-                <td class="feature-name">onError</td>
-                <td><span class="code-badge">onError(err)</span></td>
-                <td><span class="code-badge">onError(error)</span></td>
-              </tr>
-              <tr>
-                <td class="feature-name">presentationMode</td>
-                <td><span class="neutral">N/A（SDK 自动决定弹窗 / 重定向）</span></td>
-                <td>显式传入 <span class="code-badge">{ presentationMode: "auto" / "popup" / "redirect" }</span></td>
+                <td><span class="code-badge">onCancel(data)</span>，data 包含 orderID 等信息</td>
+                <td><span class="code-badge">onCancel()</span>，无参数</td>
               </tr>
             </tbody>
           </table>
@@ -360,28 +360,28 @@
             <tbody>
               <tr>
                 <td class="feature-name">前端暴露的凭证</td>
-                <td><span class="negative">client-id（写在 URL 里，公开可见）</span></td>
-                <td><span class="positive">仅有 clientToken（短效、服务端生成）</span></td>
-              </tr>
-              <tr>
-                <td class="feature-name">API Headers</td>
-                <td><span class="code-badge">PayPal-Partner-Attribution-Id</span> + <span class="code-badge">PayPal-Auth-Assertion</span>（JWT 结构）</td>
-                <td><span class="code-badge">Authorization: Basic base64(clientId:secret)</span> — 后端 Basic Auth</td>
-              </tr>
-              <tr>
-                <td class="feature-name">Auth Assertion</td>
-                <td>有（<span class="code-badge">{ iss: clientID, payer_id: merchantID }</span> 编码为 JWT）</td>
-                <td><span class="neutral">无</span></td>
-              </tr>
-              <tr>
-                <td class="feature-name">BN Code</td>
-                <td><span class="code-badge">PayPal-Partner-Attribution-Id: PP-Test-Petro</span></td>
-                <td><span class="neutral">无</span></td>
+                <td><span class="negative">client-id 写在 script src URL 里，任何人打开 DevTools 即可看到</span></td>
+                <td><span class="positive">仅暴露短效 clientToken（服务端生成，有效期短，泄露风险低）</span></td>
               </tr>
               <tr>
                 <td class="feature-name">client-id 位置</td>
-                <td><span class="negative">SDK URL 参数（前端可见）</span></td>
-                <td><span class="positive">仅在后端环境变量</span></td>
+                <td><span class="negative">前端 URL 参数（公开）</span></td>
+                <td><span class="positive">仅存在于后端环境变量，前端完全不感知</span></td>
+              </tr>
+              <tr>
+                <td class="feature-name">clientToken 获取</td>
+                <td><span class="neutral">无此概念</span></td>
+                <td>页面加载时调用后端接口 <span class="code-badge">/api/paypal/client-token</span> 获取，再传入 SDK</td>
+              </tr>
+              <tr>
+                <td class="feature-name">Partner Attribution（BN Code）</td>
+                <td>通过 Header <span class="code-badge">PayPal-Partner-Attribution-Id</span> 传递，支持 partner 归因统计</td>
+                <td><span class="neutral">测试项目中未配置，实际集成时应通过 SDK 初始化选项传入</span></td>
+              </tr>
+              <tr>
+                <td class="feature-name">后端鉴权方式</td>
+                <td>Bearer Token（OAuth2 client_credentials）</td>
+                <td>Basic Auth（<span class="code-badge">base64(clientId:secret)</span>），适合服务端直接调用</td>
               </tr>
             </tbody>
           </table>
@@ -393,7 +393,7 @@
         <div class="section-header">
           <h2 class="section-title">
             <i class="fas fa-credit-card"></i>
-            5. 支付方式支持与配置
+            5. 支付方式的声明与加载方式
           </h2>
         </div>
         <div class="section-content">
@@ -408,164 +408,68 @@
             <tbody>
               <tr>
                 <td class="feature-name">PayPal 标准钱包</td>
-                <td><span class="code-badge">paypal.Buttons()</span> 默认渲染</td>
-                <td><span class="code-badge">components: ["paypal-payments"]</span></td>
+                <td><span class="code-badge">paypal.Buttons()</span> 默认渲染，无需额外声明</td>
+                <td>实例化时声明 <span class="code-badge">components: ["paypal-payments"]</span></td>
               </tr>
               <tr>
-                <td class="feature-name">BCDC（基础卡）</td>
-                <td><span class="code-badge">fundingSource: paypal.FUNDING.CARD</span> + <span class="code-badge">expandCardForm: true</span></td>
-                <td><span class="code-badge">components: ["paypal-guest-payments"]</span>，创建 <span class="code-badge">GuestOneTimePaymentSession</span></td>
+                <td class="feature-name">BCDC（基础卡直接输入）</td>
+                <td><span class="code-badge">fundingSource: paypal.FUNDING.CARD</span> + <span class="code-badge">expandCardForm: true</span>，内联展开卡表单</td>
+                <td>独立实例：<span class="code-badge">components: ["paypal-guest-payments"]</span>，创建 <span class="code-badge">createPayPalGuestOneTimePaymentSession</span></td>
               </tr>
               <tr>
                 <td class="feature-name">ACDC（高级卡 / 3DS）</td>
-                <td>独立 ACDC 按钮，order 中传 <span class="code-badge">payment_source.card</span></td>
-                <td>独立路由，使用不同 create-order 端点</td>
+                <td>同一 SDK 实例内，通过 <span class="code-badge">fundingSource: FUNDING.CARD</span> 并在 order 中传 <span class="code-badge">payment_source.card</span> 触发</td>
+                <td>独立路由 + 独立 create-order 端点（<span class="code-badge">create-order-ACDC</span>）</td>
               </tr>
               <tr>
                 <td class="feature-name">BNPL / Pay Later</td>
-                <td><span class="code-badge">fundingSource: paypal.FUNDING.PAYLATER</span> + URL 参数 <span class="code-badge">enable-funding=paylater</span></td>
-                <td>独立测试页面</td>
+                <td>URL 参数 <span class="code-badge">enable-funding=paylater</span> 开启，<span class="code-badge">fundingSource: FUNDING.PAYLATER</span> 渲染按钮</td>
+                <td>独立测试页面；SDK 层面通过 <span class="code-badge">components</span> 声明控制</td>
               </tr>
               <tr>
-                <td class="feature-name">国家 / 币种切换</td>
-                <td><span class="negative">需要重新加载脚本（URL 参数 <span class="code-badge">buyer-country</span> & <span class="code-badge">currency</span> 变化）</span></td>
-                <td><span class="positive">仅换后端端点（如 <span class="code-badge">create-order-EUR</span>、<span class="code-badge">create-order-PLN</span>）</span></td>
+                <td class="feature-name">国家 / 币种变更</td>
+                <td><span class="negative">需销毁并重新加载整个 SDK 脚本（URL 参数 <span class="code-badge">buyer-country</span> 与 <span class="code-badge">currency</span> 绑定在加载时）</span></td>
+                <td><span class="positive">SDK 本身无感知，仅需切换后端 create-order 端点（如 <span class="code-badge">/create-order-EUR</span>）</span></td>
+              </tr>
+              <tr>
+                <td class="feature-name">是否支持 isEligible 检查</td>
+                <td>有 <span class="code-badge">button.isEligible()</span>，不满足条件时可跳过渲染</td>
+                <td>SDK 内部处理，开发者无需手动检查 eligibility</td>
               </tr>
             </tbody>
           </table>
         </div>
       </div>
 
-      <!-- 6. Vault -->
-      <div class="section">
-        <div class="section-header">
-          <h2 class="section-title">
-            <i class="fas fa-lock"></i>
-            6. Vault（保存支付方式）支持
-          </h2>
-        </div>
-        <div class="section-content">
-          <table class="comparison-table">
-            <thead>
-              <tr>
-                <th>维度</th>
-                <th>v5（GMS-exhibition）</th>
-                <th>v6（jsv6-test）</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td class="feature-name">完整度</td>
-                <td><span class="positive">完整实现：存储 + 重复使用</span></td>
-                <td><span class="neutral">基础（仅有 clientToken 接口，无完整 vault 流程）</span></td>
-              </tr>
-              <tr>
-                <td class="feature-name">One-time + Save</td>
-                <td><span class="code-badge">attributes.vault.store_in_vault: "ON_SUCCESS"</span></td>
-                <td><span class="icon-cross"><i class="fas fa-times-circle"></i> 未实现</span></td>
-              </tr>
-              <tr>
-                <td class="feature-name">Recurring（用已保存卡）</td>
-                <td><span class="code-badge">payment_source.card.vault_id</span> 直接充值</td>
-                <td><span class="icon-cross"><i class="fas fa-times-circle"></i> 未实现</span></td>
-              </tr>
-              <tr>
-                <td class="feature-name">customer_id 管理</td>
-                <td>有（用于 <span class="code-badge">target_customer_id</span> 获取 id_token）</td>
-                <td><span class="neutral">无</span></td>
-              </tr>
-              <tr>
-                <td class="feature-name">数据持久化</td>
-                <td>Redux state 保存 vaultID、customerId、卡末四位</td>
-                <td><span class="neutral">无</span></td>
-              </tr>
-              <tr>
-                <td class="feature-name">data-user-id-token</td>
-                <td>SDK script 加载时传入 <span class="code-badge">data-user-id-token</span> 属性</td>
-                <td>通过 clientToken 内置</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <!-- 7. Order Object -->
-      <div class="section">
-        <div class="section-header">
-          <h2 class="section-title">
-            <i class="fas fa-file-alt"></i>
-            7. Order 对象结构差异
-          </h2>
-        </div>
-        <div class="section-content">
-          <table class="comparison-table">
-            <thead>
-              <tr>
-                <th>字段</th>
-                <th>v5（GMS-exhibition）</th>
-                <th>v6（jsv6-test）</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td class="feature-name">payment_source</td>
-                <td>丰富（含 name、address、email、phone、attributes、experience_context）</td>
-                <td>简化（通常仅 intent + purchase_units）</td>
-              </tr>
-              <tr>
-                <td class="feature-name">return_url / cancel_url</td>
-                <td>在 <span class="code-badge">experience_context</span> 中明确设置</td>
-                <td><span class="positive">不需要（SDK v6 内置管理）</span></td>
-              </tr>
-              <tr>
-                <td class="feature-name">BN Code 位置</td>
-                <td>Header <span class="code-badge">PayPal-Partner-Attribution-Id</span></td>
-                <td><span class="neutral">无</span></td>
-              </tr>
-              <tr>
-                <td class="feature-name">Request ID</td>
-                <td>随机生成 <span class="code-badge">PayPal-Request-Id</span></td>
-                <td><span class="neutral">无</span></td>
-              </tr>
-              <tr>
-                <td class="feature-name">breakdown 明细</td>
-                <td><span class="neutral">无（仅 amount.value）</span></td>
-                <td>有（<span class="code-badge">breakdown.item_total</span> + <span class="code-badge">items[]</span> 数组）</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <!-- 8. Summary -->
+      <!-- 6. Summary -->
       <div class="section">
         <div class="section-header">
           <h2 class="section-title">
             <i class="fas fa-balance-scale"></i>
-            8. 核心设计哲学总结
+            6. 核心设计哲学总结
           </h2>
         </div>
         <div class="philosophy-grid">
           <div class="philosophy-card v6">
-            <h3><i class="fas fa-rocket" style="color:var(--success)"></i> SDK v6（jsv6-test）</h3>
+            <h3><i class="fas fa-rocket" style="color:var(--success)"></i> SDK v6 的设计方向</h3>
             <ul>
               <li>Run-time 配置，不依赖 URL 参数</li>
-              <li>client-id 完全隐藏在后端</li>
-              <li>开发者完全控制 UI，SDK 仅处理支付逻辑</li>
-              <li>presentationMode 显式控制弹窗 / 重定向</li>
-              <li>多币种无需重新加载脚本</li>
-              <li>适合：需要强安全性和 UI 控制权的场景</li>
+              <li>client-id 完全隐藏在后端，安全性更高</li>
+              <li>开发者持有 PaymentSession 引用，完全控制触发时机</li>
+              <li>presentationMode 显式控制弹窗 / 重定向行为</li>
+              <li>多币种 / 多国家切换无需重载 SDK</li>
+              <li>与 Stripe、Apple Pay、Google Pay 等保持相近的 API 规范</li>
             </ul>
           </div>
           <div class="philosophy-card v5">
-            <h3><i class="fas fa-boxes" style="color:var(--warning)"></i> SDK v5（GMS-exhibition）</h3>
+            <h3><i class="fas fa-boxes" style="color:var(--warning)"></i> SDK v5 的设计方向</h3>
             <ul>
-              <li>Load-time 配置，所有参数在 URL 中声明</li>
-              <li>client-id 前端可见</li>
-              <li>SDK 自动接管完整 UI 流程</li>
-              <li>完整 Vault 生命周期（存储 + 重复使用）</li>
-              <li>丰富的 payment_source 控制</li>
-              <li>适合：快速集成、需要 Vault 功能的场景</li>
+              <li>Load-time 配置，所有参数在 script URL 中声明</li>
+              <li>client-id 前端可见，接入简单但安全级别较低</li>
+              <li>SDK 自动接管完整 UI 流程，开发者干预空间有限</li>
+              <li><span class="code-badge">isEligible()</span> 机制让开发者可根据环境条件控制渲染</li>
+              <li>支持 partner 归因（BN Code / Auth Assertion）</li>
+              <li>快速集成首选，适合对安全要求不高的内部测试环境</li>
             </ul>
           </div>
         </div>
