@@ -1,12 +1,12 @@
 [
   {
     "title": "JSv5 Test",
-    "icon": "folder",
+    "icon": "number-five",
     "expanded": true,
     "groups": [
       {
         "title": "JSv5 Test",
-        "icon": "folder",
+        "icon": "number-five",
         "expanded": true,
         "items": [
           {
@@ -113,12 +113,12 @@
   },
   {
     "title": "JSv6 Test",
-    "icon": "folder",
+    "icon": "number-six",
     "expanded": true,
     "groups": [
       {
         "title": "JSv6 Test",
-        "icon": "folder",
+        "icon": "number-six",
         "expanded": true,
         "items": [
           {
@@ -174,7 +174,7 @@
   },
   {
     "title": "Pay Later",
-    "icon": "folder",
+    "icon": "credit-card",
     "expanded": false,
     "groups": [
       {
@@ -233,13 +233,13 @@
     ]
   },
   {
-    "title": "appSwitch",
-    "icon": "folder",
+    "title": "App Switch",
+    "icon": "app-switch-filled",
     "expanded": true,
     "groups": [
       {
-        "title": "appSwitch",
-        "icon": "folder",
+        "title": "App Switch",
+        "icon": "app-switch-filled",
         "expanded": true,
         "items": [
           {
