@@ -16,6 +16,9 @@
   --shadow-md: 0 4px 12px rgba(0,0,0,0.08), 0 2px 4px rgba(0,0,0,0.06);
   --radius: 12px;
   --radius-sm: 8px;
+  --scrollbar-thumb: rgba(0,0,0,0.18);
+  --scrollbar-thumb-hover: rgba(0,0,0,0.32);
+  --scrollbar-track: transparent;
 }
 
 .dark-mode {
@@ -28,6 +31,8 @@
   --link-color: #60a5fa;
   --shadow-sm: 0 1px 3px rgba(0,0,0,0.3);
   --shadow-md: 0 4px 12px rgba(0,0,0,0.3);
+  --scrollbar-thumb: rgba(255,255,255,0.18);
+  --scrollbar-thumb-hover: rgba(255,255,255,0.32);
 }
 
 body {
@@ -39,7 +44,35 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* Masonry grid */
+/* ── Scrollbar ─────────────────────────────────────────────────── */
+/* Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+}
+
+/* WebKit (Chrome/Safari/Edge) */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--scrollbar-track);
+  border-radius: 999px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 999px;
+  transition: background 0.2s;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover);
+}
+
+/* ── Masonry grid ──────────────────────────────────────────────── */
 .masonry-grid {
   display: flex;
   gap: 20px;
@@ -51,9 +84,34 @@ body {
   flex-direction: column;
   gap: 20px;
   flex: 1;
+  min-width: 0;
 }
 
-/* Footer */
+/* ── Page layout ───────────────────────────────────────────────── */
+.page-main {
+  padding: 24px;
+  max-width: 1700px;
+  margin: 0 auto;
+}
+
+.page-header {
+  margin-bottom: 24px;
+  padding-right: 60px;
+}
+
+.page-header h1 {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text-color);
+}
+
+.page-header p {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+/* ── Footer ────────────────────────────────────────────────────── */
 footer {
   text-align: center;
   padding: 32px;
@@ -70,8 +128,56 @@ footer a:hover {
   text-decoration: underline;
 }
 
+/* ── Nav item tap targets ───────────────────────────────────────── */
+.nav-link,
+.nav-button {
+  min-height: 44px;
+}
+
+/* ── History dialog ─────────────────────────────────────────────── */
+.history-dialog-box {
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+  width: 100%;
+  max-width: 560px;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* ── Mobile ────────────────────────────────────────────────────── */
 @media (max-width: 640px) {
   .masonry-grid {
-    flex-direction: column;
+    gap: 12px;
+  }
+
+  .masonry-col {
+    gap: 12px;
+  }
+
+  .page-main {
+    padding: 12px;
+  }
+
+  .page-header {
+    padding-right: 52px;
+    margin-bottom: 16px;
+  }
+
+  .page-header h1 {
+    font-size: 17px;
+  }
+
+  footer {
+    padding: 20px 16px;
+    font-size: 12px;
+  }
+
+  .history-dialog-box {
+    max-width: calc(100vw - 24px);
+    max-height: 90vh;
+    border-radius: var(--radius-sm);
   }
 }

@@ -241,6 +241,7 @@ function NavItemRow({ item, itemKey, expanded, toggle, accentColor, indent = 0 }
       href={item.isExternal ? item.url : `/${item.url}`}
       target="_blank"
       rel="noopener noreferrer"
+      className="nav-link"
       style={{
         display: 'flex',
         alignItems: 'center',

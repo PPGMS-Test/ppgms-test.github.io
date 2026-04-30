@@ -31,14 +31,10 @@ export default function App() {
     <>
       <ThemeToggle isDark={isDark} onToggle={() => setIsDark(d => !d)} />
 
-      <main style={{ padding: '24px', maxWidth: 1700, margin: '0 auto' }}>
-        <header style={{ marginBottom: 24, paddingRight: 60 }}>
-          <h1 style={{ fontSize: 22, fontWeight: 700, color: 'var(--text-color)' }}>
-            PayPal GMS SH — 测试页面导航
-          </h1>
-          <p style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: 4 }}>
-            {panels.length} 个模块 · 点击任意链接在新标签页打开
-          </p>
+      <main className="page-main">
+        <header className="page-header">
+          <h1>PayPal GMS SH — 测试页面导航</h1>
+          <p>{panels.length} 个模块 · 点击任意链接在新标签页打开</p>
         </header>
 
         <Masonry
