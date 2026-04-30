@@ -2,6 +2,13 @@
 
 - [ ] ecs playground的开发 ⏫
 - [ ] App Switch到底能不能跳转的问题研究  🔼
-- [ ] Pay Later Message被script注入的问题
+- [ ] Pay Later Message被script注入的问题 🔼
+- [ ] JSv6 Subscription scenario 🔼
+- [ ] JSv6 Fastlane scenario 🔼
+- [ ] JSv6 Vault First Time scenario 🔼
 - [ ] paypal-backend-api 部署到 Cloudflare 用以解决公司网络无法访问serverless的api endpoint 🔽
+- [ ] Internal Claude Desktop Partner Analysis Tool study 🔽
+- [ ] Payment Link QR-code dashboard Demo 🔽
+- [ ] 3DS Demo, 场景文字描述的改进 🔽
+- [x] jsv6 test page. BCDC inline scenario 去掉email address以防触发fastlane流程 ✅ 2026-04-30
 - [x] 完善 PayPal SDK v6 vs v5 开发tech对比文档 ✅ 2026-04-27
