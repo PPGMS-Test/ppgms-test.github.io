@@ -14,19 +14,48 @@ pnpm generate-nav # Regenerate src/router/nav-data.json and src/router/pages.jso
 
 ## Architecture
 
-This is a Vue 3 + Vite static site that serves as a **navigation hub** for PayPal/GMS payment SDK test pages.
+`github-homepage/` 是 **React 18 + Vite 5 + TypeScript** 静态站点（2026-04 从 Vue 3 重构），作为 PayPal/GMS 测试页面的导航中心。
+
+### Monorepo 结构
+
+```
+ppgms-test.github.io/
+├── github-homepage/      ← React 前端（本文档主要描述范围）
+│   ├── src/
+│   │   ├── App.tsx
+│   │   ├── main.tsx
+│   │   ├── types.ts
+│   │   ├── components/
+│   │   │   ├── NavPanel.tsx     ← 导航面板卡片
+│   │   │   ├── TodoPanel.tsx    ← Todo + 历史 Dialog
+│   │   │   └── ThemeToggle.tsx
+│   │   ├── styles/global.css
+│   │   ├── router/              ← 构建时生成，勿手动编辑
+│   │   │   ├── nav-data.json
+│   │   │   └── pages.json
+│   │   └── pages/               ← 各 SDK 测试 HTML 页面
+│   ├── scripts/
+│   │   ├── generate-nav.js
+│   │   ├── scanner.js
+│   │   └── formatter.js
+│   ├── public/                  ← SVG 图标（favicon、自定义 panel icon）
+│   ├── todo.md                  ← Todo 数据源（Obsidian Tasks 格式）
+│   └── vite.config.ts
+├── paypal-backend-api/   ← Next.js API 代理（Edge Runtime）
+└── pnpm-workspace.yaml
+```
 
 ### How the nav system works
 
-1. **Source pages** live in `src/pages/` as standalone `.html` files organized into folders.
+1. **Source pages** live in `github-homepage/src/pages/` as standalone `.html` files organized into folders.
 2. **`scripts/generate-nav.js`** runs at build time and:
    - Calls `scanner.js` → recursively walks `src/pages/` and returns a directory tree
    - Calls `formatter.js` → converts the tree into a 4-level nav JSON structure
-   - Writes `src/router/nav-data.json` (consumed by `App.vue`) and `src/router/pages.json`
-3. **`vite.config.js`** has two custom plugins:
+   - Writes `src/router/nav-data.json` (consumed by `App.tsx`) and `src/router/pages.json`
+3. **`vite.config.ts`** has two custom plugins:
    - `copyPages`: copies `.html` files from `src/pages/` to `dist/` at build time (skipping `noshow-` prefixed items)
    - `serve-src-pages`: dev server middleware that serves `src/pages/*.html` files directly
-4. **`App.vue`** imports `nav-data.json` and renders `<NavColumn>` components for each top-level nav panel.
+4. **`App.tsx`** imports `nav-data.json` and renders `<NavPanel>` + `<TodoPanel>` in a `react-masonry-css` grid.
 
 ### Folder/file naming conventions in `src/pages/`
 
@@ -43,9 +72,39 @@ This is a Vue 3 + Vite static site that serves as a **navigation hub** for PayPa
 
 4-level hierarchy: **panel → groups → subGroups → items**. Each item has `url`, `text`, `isExternal`, `isFolder`, and optionally `children`/`subGroups`.
 
+### Frontend tech stack
+
+| 关注点 | 选择 |
+|--------|------|
+| 框架 | React 18 + Vite 5 + TypeScript |
+| 图标 | `lucide-react`（面板也支持 `public/` 下的自定义 `.svg`） |
+| 布局 | `react-masonry-css`（4→3→2→1 列响应式） |
+| 主题 | CSS 自定义属性 + `dark-mode` class，localStorage 持久化 |
+| Todo | `todo.md` 以 `?raw` 导入，Obsidian Tasks 格式解析 |
+
+### Panel icon 规则（`config.json` 中的 `icon` 字段）
+
+- 填写 Lucide 图标 kebab-case 名（如 `credit-card`）→ 渲染 Lucide 组件
+- 填写自定义名称（如 `number-five`）→ 渲染 `public/number-five.svg`，自动加 `filter: brightness(0) invert(1)` 适配白色 header
+- 未填写 → 按 panel 索引循环使用预设 8 个 Lucide 图标
+
+### Todo / History 系统
+
+- **数据源**：`github-homepage/todo.md`，Obsidian Tasks 格式
+  - 优先级：`⏫` = high，`🔼` = medium，`🔽` = low（无 emoji 默认 medium）
+  - 完成日期：行尾加 `✅ YYYY-MM-DD`
+  - 正则匹配 emoji 须加 `u` flag，否则 surrogate pair 无法匹配
+- **TodoPanel**：
+  - 默认折叠，点击 header 展开
+  - 展开后显示待完成 items + 已完成计数入口按钮（不列出 item）
+  - "View All" 打开 **HistoryDialog**（portal overlay，Escape/背景点击关闭）
+  - HistoryDialog 按年月倒序分组，展示文字、优先级 badge、完成日期
+
 ### Deployment
 
 GitHub Actions (`.github/workflows/deploy.yml`) builds and deploys to GitHub Pages at `https://ppgms-test.github.io/`.
+
+构建命令（在 `github-homepage/` 内）：`pnpm build` → 先 `generate-nav`，再 `vite build`，输出到 `dist/`。
 
 ---
 
