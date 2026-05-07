@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
     <head>
         <meta charset="UTF-8" />
@@ -58,7 +58,8 @@
                 background: white;
                 padding: 2rem;
                 border-radius: 10px;
-                box-shadow: 0 24px 38px 3px rgba(0, 0, 0, 0.14),
+                box-shadow:
+                    0 24px 38px 3px rgba(0, 0, 0, 0.14),
                     0 9px 46px 8px rgba(0, 0, 0, 0.12),
                     0 11px 15px -7px rgba(0, 0, 0, 0.2);
                 z-index: 1000;
@@ -439,13 +440,13 @@
             const logGreen = (msg) => {
                 console.log(
                     "%c " + msg,
-                    "color: #4CAF50; font-weight: bold; background-color: #E8F5E9; padding: 2px 6px; border-radius: 4px;"
+                    "color: #4CAF50; font-weight: bold; background-color: #E8F5E9; padding: 2px 6px; border-radius: 4px;",
                 );
             };
 
             const getPayPalURLEndpoint = () => {
                 const mode = window.Alpine.$data(
-                    document.querySelector('[x-data="app"]')
+                    document.querySelector('[x-data="app"]'),
                 )?.mode;
                 return mode === "merchant"
                     ? "https://api.sandbox.paypal.com"
@@ -527,7 +528,7 @@
                                 : this.partnerClientId;
                         console.log(
                             `%c 当前clientID: ${clientId}`,
-                            "color: blue; background-color: #2BBBAD; padding: 2px 10px; border-radius: 4px; font-size: 16px; font-weight: bold;"
+                            "color: blue; background-color: #2BBBAD; padding: 2px 10px; border-radius: 4px; font-size: 16px; font-weight: bold;",
                         );
                         const secretKey =
                             this.mode === "merchant"
@@ -535,7 +536,7 @@
                                 : this.partnerSecretKey;
                         console.log(
                             `%c 当前secretKey: ${secretKey}`,
-                            "color: blue; background-color: #2BBBAD; padding: 2px 10px; border-radius: 4px; font-size: 16px; font-weight: bold;"
+                            "color: blue; background-color: #2BBBAD; padding: 2px 10px; border-radius: 4px; font-size: 16px; font-weight: bold;",
                         );
 
                         const auth = btoa(`${clientId}:${secretKey}`);
@@ -549,7 +550,7 @@
                             requestHeader["Paypal-Auth-Assertion"] =
                                 generatePayPalAuthAssertion(
                                     clientId,
-                                    partnerMerchantId
+                                    partnerMerchantId,
                                 );
 
                         fetch(`${getPayPalURLEndpoint()}/v1/oauth2/token`, {
@@ -577,16 +578,18 @@
                                 // script.setAttribute("data-user-id-token", id_token);
                                 script.onload = async function () {
                                     const paymentType = window.Alpine.$data(
-                                        document.querySelector('[x-data="app"]')
+                                        document.querySelector(
+                                            '[x-data="app"]',
+                                        ),
                                     )?.paymentType;
                                     logGreen(
-                                        `PayPal JS SDK: init! Current Payment Mode: ${paymentType}`
+                                        `PayPal JS SDK: init! Current Payment Mode: ${paymentType}`,
                                     );
                                     if (paymentType === "recurring") {
                                         await makeRecurringApplePay();
                                     } else {
                                         await loadApplePayScript(
-                                            applePayCDNUrl
+                                            applePayCDNUrl,
                                         );
                                     }
                                 };
@@ -668,7 +671,7 @@
                 payButton.addEventListener("click", function () {
                     // 获取Alpine组件实例并调用方法
                     const app = Alpine.$data(
-                        document.querySelector('[x-data="app"]')
+                        document.querySelector('[x-data="app"]'),
                     );
                     if (app && app.handlePayButtonClick) {
                         app.handlePayButtonClick();
@@ -714,7 +717,7 @@
                 }
                 if (!ApplePaySession.canMakePayments()) {
                     console.error(
-                        "This device is not capable of making Apple Pay payments"
+                        "This device is not capable of making Apple Pay payments",
                     );
                     return;
                 }
@@ -789,7 +792,7 @@
 
                     let session = new ApplePaySession(4, paymentRequest);
                     console.log(
-                        "     [onClick][2] Apple Pay Session is generated"
+                        "     [onClick][2] Apple Pay Session is generated",
                     );
 
                     session.onvalidatemerchant = (event) => {
@@ -800,12 +803,12 @@
                             })
                             .then((payload) => {
                                 session.completeMerchantValidation(
-                                    payload.merchantSession
+                                    payload.merchantSession,
                                 );
                             })
                             .catch((err) => {
                                 console.log(
-                                    "     [onClick][onvalidatemerchant][4] onvalidatemerchant error"
+                                    "     [onClick][onvalidatemerchant][4] onvalidatemerchant error",
                                 );
                                 console.error(err);
                                 session.abort();
@@ -831,6 +834,8 @@
                                 token: event.payment.token,
                                 billingContact: event.payment.billingContact,
                                 shippingContact: event.payment.shippingContact,
+                                email: event.payment.billingContact
+                                    .emailAddress,
                             });
 
                             /*
@@ -960,7 +965,7 @@
                         method: "POST",
                         headers: requestHeader,
                         body: JSON.stringify(CreateOrderRequestBody),
-                    }
+                    },
                 )
                     .then((data) => data.json())
                     .then((jsonData) => {
@@ -993,7 +998,7 @@
                     {
                         method: "POST",
                         headers: requestHeader,
-                    }
+                    },
                 );
                 let orderData = await result.json();
                 console.log(JSON.stringify(orderData, null, "  "));
@@ -1009,13 +1014,13 @@
 
             const saveAlpineTransactionID = (transactionID) => {
                 Alpine.$data(
-                    document.querySelector('[x-data="app"]')
+                    document.querySelector('[x-data="app"]'),
                 ).transactionId = transactionID;
             };
 
             const popSuccessDialog = () => {
                 Alpine.$data(
-                    document.querySelector('[x-data="app"]')
+                    document.querySelector('[x-data="app"]'),
                 ).showSuccessDialog = false;
             };
 
@@ -1024,7 +1029,7 @@
              */
             const generateRandomPayPalRequestID = () => {
                 let PayPal_Request_Id = (Math.random() * 100000000).toString(
-                    36
+                    36,
                 );
                 PayPal_Request_Id = Date.now().toString(32);
                 return PayPal_Request_Id;
