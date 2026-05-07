@@ -782,7 +782,12 @@
                             "email",
                             "postalAddress",
                         ],
-                        requiredShippingContactFields: [],
+                        requiredShippingContactFields: [
+                            "name",
+                            "phone",
+                            "email",
+                            "postalAddress",
+                        ],
                         total: {
                             label: "Demo (Card is not charged)",
                             amount: amount,
@@ -829,12 +834,37 @@
                              * Confirm Payment
                              */
 
+                            console.log("billingContact:");
+                            console.log(
+                                JSON.stringify(
+                                    event.payment.billingContact,
+                                    null,
+                                    2,
+                                ),
+                            );
+                            console.log(
+                                "*****************************************",
+                            );
+                            console.log("shippingContact:");
+                            console.log(
+                                JSON.stringify(
+                                    event.payment.shippingContact,
+                                    null,
+                                    2,
+                                ),
+                            );
+                            console.log(
+                                "*****************************************",
+                            );
+
                             await applepay.confirmOrder({
                                 orderId: orderID,
                                 token: event.payment.token,
                                 billingContact: event.payment.billingContact,
+
                                 shippingContact: event.payment.shippingContact,
-                                email: event.payment.billingContact
+
+                                email: event.payment.shippingContact
                                     .emailAddress,
                             });
 
