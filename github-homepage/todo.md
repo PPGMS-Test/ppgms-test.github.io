@@ -3,6 +3,8 @@
 - [ ] ecs playground的开发 ⏫
 - [ ] Pay Later Message被script注入的问题 🔼
 - [ ] JSv6 Subscription scenario 🔼
+- [ ] JSv6 checkEligible 在后端的情况
+- [ ] JSv6 有check eligible和没有的对比情况
 - [ ] JSv6 Fastlane scenario 🔼
 - [ ] JSv6 Vault First Time scenario 🔼
 - [ ] paypal-backend-api 部署到 Cloudflare 用以解决公司网络无法访问serverless的api endpoint 🔽
