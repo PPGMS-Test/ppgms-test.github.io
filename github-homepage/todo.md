@@ -4,7 +4,7 @@
 - [ ] Pay Later Message被script注入的问题 🔼
 - [ ] JSv6 Subscription scenario 🔼
 - [ ] JSv6 check Eligible 在后端的情况
-- [ ] JSv6 有check eligible和没有的对比情况
+- [x] JSv6 有check eligible 和没有的对比情况 ⏫ ✅ 2026-05-10
 - [ ] Cross Border Message在Partner解决方案下的测试demo 🔼
 - [ ] JSv6 Cross Boarder PLM 🔼
 - [ ] JSv6 Fastlane scenario 🔼
@@ -14,7 +14,7 @@
 - [ ] Payment Link QR-code dashboard Demo 🔽
 - [ ] 3DS Demo, 场景文字描述的改进 🔽
 - [ ] Applet Study for Wukong 🔽
-- [x] App Switch到底能不能跳转的问题研究(录了视频)  ✅ 2026-05-07
-- [x] jsv6 test page. BCDC inline scenario 去掉email address以防触发fastlane流程 ✅ 2026-04-30
+- [x] App Switch到底能不能跳转的问题研究(录了视频) ⏫ ✅ 2026-05-07
+- [x] jsv6 test page. BCDC inline scenario 去掉email address以防触发fastlane流程 🔼 ✅ 2026-04-30
 - [x] 完善 PayPal SDK v6 vs v5 开发tech对比文档 ✅ 2026-04-27
 
