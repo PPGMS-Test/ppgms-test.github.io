@@ -63,9 +63,17 @@ function HistoryDialog({ items, onClose }: { items: TodoItem[]; onClose: () => v
     return () => window.removeEventListener('keydown', handler)
   }, [onClose])
 
+  // Sort by doneDate descending, items without date go last
+  const sorted = [...items].sort((a, b) => {
+    if (!a.doneDate && !b.doneDate) return 0
+    if (!a.doneDate) return 1
+    if (!b.doneDate) return -1
+    return b.doneDate.localeCompare(a.doneDate)
+  })
+
   // Group by doneDate year-month
   const groups: Record<string, TodoItem[]> = {}
-  for (const item of items) {
+  for (const item of sorted) {
     const key = item.doneDate ? item.doneDate.slice(0, 7) : '未知时间'
     ;(groups[key] ??= []).push(item)
   }
