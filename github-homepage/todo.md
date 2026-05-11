@@ -3,7 +3,7 @@
 - [ ] ecs playground的开发 ⏫
 - [ ] Pay Later Message被script注入的问题 🔼
 - [ ] JSv6 Subscription scenario 🔼
-- [x] JSv6 check Eligible 在后端的情况
+- [x] JSv6 check Eligible 在后端的情况 ⏫ ✅ 2026-05-11
 - [x] JSv6 有check eligible 和没有的对比情况 ⏫ ✅ 2026-05-10
 - [ ] Cross Border Message在Partner解决方案下的测试demo 🔼
 - [ ] JSv6 Cross Boarder PLM 🔼
