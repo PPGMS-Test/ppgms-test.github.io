@@ -5,11 +5,11 @@
 - [ ] JSv6 Subscription scenario 🔼
 - [x] JSv6 check Eligible 在后端的情况 ⏫ ✅ 2026-05-11
 - [x] JSv6 有check eligible 和没有的对比情况 ⏫ ✅ 2026-05-10
-- [ ] Cross Border Message在Partner解决方案下的测试demo 🔼
+- [x] Cross Border Message在Partner解决方案下的测试demo讨论 (ISU方案也可以拿到client-id, 只是拿不到secret) 🔽
 - [ ] JSv6 Cross Boarder PLM 🔼
 - [ ] JSv6 Fastlane scenario 🔼
-- [ ] JSv6 Vault First Time scenario 🔼
-- [ ] JSv6 Vault Recurring  scenario 🔼
+- [x] JSv6 Vault First Time scenario 🔼 ✅ 2026-05-12
+- [x] JSv6 Vault Recurring  scenario 🔼 ✅ 2026-05-12
 - [ ] paypal-backend-api 部署到 Cloudflare 用以解决公司网络无法访问serverless的api endpoint 🔽
 - [ ] Internal Claude Desktop Partner Analysis Tool study 🔽
 - [ ] Payment Link QR-code dashboard Demo 🔽
