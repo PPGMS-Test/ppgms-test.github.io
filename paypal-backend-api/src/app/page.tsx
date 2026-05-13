@@ -1,13 +1,8 @@
-import { ApiReference } from '@scalar/nextjs-api-reference'
+'use client'
+
+import SwaggerUI from 'swagger-ui-react'
+import 'swagger-ui-react/swagger-ui.css'
 
 export default function Home() {
-  return (
-    <ApiReference
-      configuration={{
-        url: '/openapi.json',
-        pageTitle: 'PayPal Backend API',
-        theme: 'default',
-      }}
-    />
-  )
+  return <SwaggerUI url="/openapi.json" />
 }

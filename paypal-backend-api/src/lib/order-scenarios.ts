@@ -125,6 +125,19 @@ export function createOrderAppSwitch(returnUrl: string, cancelUrl: string) {
               sku: 'test-product-1',
             },
           ],
+          shipping: {
+            type: FulfillmentType.Shipping,
+            method: 'DHL',
+            name: { fullName: 'John Doe' },
+            address: {
+              addressLine1: '1600 Amphitheatre Parkway',
+              addressLine2: 'Suite 100',
+              postalCode: '94043',
+              adminArea2: 'Mountain View',
+              countryCode: 'US',
+              adminArea1: 'CA',
+            },
+          },
         },
       ],
       paymentSource: {

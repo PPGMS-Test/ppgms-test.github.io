@@ -1,3 +1,5 @@
+export const runtime = 'edge'
+
 import { corsJson, corsOptions } from '@/lib/cors'
 import { createOrder } from '@/lib/order-scenarios'
 import type { OrderRequest } from '@paypal/paypal-server-sdk'

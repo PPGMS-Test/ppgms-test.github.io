@@ -1,3 +1,5 @@
+export const runtime = 'edge'
+
 import { corsJson, corsOptions } from '@/lib/cors'
 import { getLiveBrowserSafeClientToken } from '@/lib/paypal-client'
 import { getLiveAvmkfCredentials } from '@/lib/credentials'

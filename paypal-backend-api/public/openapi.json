@@ -53,7 +53,18 @@
           "required": true,
           "content": {
             "application/json": {
-              "schema": { "$ref": "#/components/schemas/OrderRequest" }
+              "schema": { "$ref": "#/components/schemas/OrderRequest" },
+              "example": {
+                "intent": "CAPTURE",
+                "purchaseUnits": [
+                  {
+                    "amount": {
+                      "currencyCode": "USD",
+                      "value": "100.00"
+                    }
+                  }
+                ]
+              }
             }
           }
         },
@@ -66,7 +77,7 @@
       "post": {
         "tags": ["Orders"],
         "summary": "Create order with sample data",
-        "description": "Create a $100 USD sandbox order using built-in sample data.",
+        "description": "Create a $100 USD sandbox order using built-in sample data. No request body needed.",
         "responses": {
           "200": { "description": "Order created", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Order" } } } }
         }
@@ -83,8 +94,11 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "returnUrl": { "type": "string", "example": "https://example.com/return" }
+                  "returnUrl": { "type": "string" }
                 }
+              },
+              "example": {
+                "returnUrl": "https://example.com/return"
               }
             }
           }
@@ -107,9 +121,13 @@
                 "type": "object",
                 "required": ["returnUrl", "cancelUrl"],
                 "properties": {
-                  "returnUrl": { "type": "string", "example": "https://example.com/return" },
-                  "cancelUrl": { "type": "string", "example": "https://example.com/cancel" }
+                  "returnUrl": { "type": "string" },
+                  "cancelUrl": { "type": "string" }
                 }
+              },
+              "example": {
+                "returnUrl": "https://example.com/return",
+                "cancelUrl": "https://example.com/cancel"
               }
             }
           }
@@ -124,7 +142,13 @@
         "tags": ["Orders"],
         "summary": "Get order detail",
         "parameters": [
-          { "name": "orderId", "in": "path", "required": true, "schema": { "type": "string" } }
+          {
+            "name": "orderId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" },
+            "example": "3JR90341RV502671K"
+          }
         ],
         "responses": {
           "200": { "description": "Order detail", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Order" } } } }
@@ -135,7 +159,13 @@
         "summary": "Capture order",
         "description": "Capture payment for an approved order.",
         "parameters": [
-          { "name": "orderId", "in": "path", "required": true, "schema": { "type": "string" } }
+          {
+            "name": "orderId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" },
+            "example": "3JR90341RV502671K"
+          }
         ],
         "responses": {
           "200": { "description": "Order captured", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Order" } } } }

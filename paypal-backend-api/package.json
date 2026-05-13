@@ -3,22 +3,26 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --port 3001",
+    "dev": "next dev --port 30041",
     "build": "next build",
-    "start": "next start --port 3001",
+    "build:cf": "npx @cloudflare/next-on-pages",
+    "start": "next start --port 30051",
     "lint": "next lint"
   },
   "dependencies": {
+    "@cloudflare/next-on-pages": "^1.13.16",
     "@paypal/paypal-server-sdk": "^2.1.0",
     "@scalar/nextjs-api-reference": "latest",
     "next": "^15.3.1",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.0.0",
+    "swagger-ui-react": "^5.32.6"
   },
   "devDependencies": {
     "@types/node": "^22",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/swagger-ui-react": "^5.18.0",
     "typescript": "^5"
   }
 }

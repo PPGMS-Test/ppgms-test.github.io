@@ -1,3 +1,5 @@
+export const runtime = 'edge'
+
 import { corsJson, corsOptions } from '@/lib/cors'
 import { createOrderAppSwitch } from '@/lib/order-scenarios'
 
