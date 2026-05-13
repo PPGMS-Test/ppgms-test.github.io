@@ -62,7 +62,6 @@ export function createOrderBCDCInline(returnUrl?: string) {
           ],
           shipping: {
             type: FulfillmentType.Shipping,
-            method: 'DHL',
             name: { fullName: 'John Doe' },
             address: {
               addressLine1: '1600 Amphitheatre Parkway',
@@ -127,7 +126,6 @@ export function createOrderAppSwitch(returnUrl: string, cancelUrl: string) {
           ],
           shipping: {
             type: FulfillmentType.Shipping,
-            method: 'DHL',
             name: { fullName: 'John Doe' },
             address: {
               addressLine1: '1600 Amphitheatre Parkway',
@@ -151,7 +149,7 @@ export function createOrderAppSwitch(returnUrl: string, cancelUrl: string) {
             userAction: PaypalExperienceUserAction.PayNow,
             returnUrl,
             cancelUrl,
-            appSwitchContext: { launchPaypalApp: true },
+            appSwitchContext: {},
           },
           name: { givenName: 'John', surname: 'Doe' },
           address: {
