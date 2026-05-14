@@ -14,10 +14,6 @@ concurrency:
   group: "pages"
   cancel-in-progress: false
 
-defaults:
-  run:
-    working-directory: github-homepage
-
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -35,18 +31,40 @@ jobs:
         with:
           node-version: '20'
           cache: 'pnpm'
-          cache-dependency-path: github-homepage/pnpm-lock.yaml
+          cache-dependency-path: |
+            github-homepage/pnpm-lock.yaml
+            applepay-dashboard/pnpm-lock.yaml
 
-      - name: Install dependencies
+      # ── applepay-dashboard ──────────────────────────────────────────
+      - name: Install applepay-dashboard dependencies
+        working-directory: applepay-dashboard
+        run: pnpm install --no-frozen-lockfile
+
+      - name: Build applepay-dashboard
+        working-directory: applepay-dashboard
+        run: pnpm build
+
+      # ── github-homepage ─────────────────────────────────────────────
+      - name: Install github-homepage dependencies
+        working-directory: github-homepage
         run: pnpm install --no-frozen-lockfile
 
       - name: Generate navigation data
+        working-directory: github-homepage
         run: pnpm run generate-nav
 
-      - name: Build
+      - name: Build github-homepage
+        working-directory: github-homepage
         run: pnpm run build
         env:
           NODE_ENV: production
+
+      # Merge: applepay-dashboard dist overwrites the stub index.html copied
+      # by copyPages, and adds assets/. Vite base = /__1__-jsv5-test/ApplePay/
+      - name: Merge applepay-dashboard into dist
+        run: |
+          mkdir -p github-homepage/dist/__1__-jsv5-test/ApplePay
+          cp -r applepay-dashboard/dist/. github-homepage/dist/__1__-jsv5-test/ApplePay/
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3

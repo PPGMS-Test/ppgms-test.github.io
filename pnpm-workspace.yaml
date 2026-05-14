@@ -1,3 +1,4 @@
 packages:
   - github-homepage
   - paypal-backend-api
+  - applepay-dashboard
