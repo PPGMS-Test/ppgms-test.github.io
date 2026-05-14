@@ -793,6 +793,15 @@
                             amount: amount,
                             type: "final",
                         },
+                        lineItems: [
+                            {
+                                label: "Recurring",
+                                amount: amount,
+                                paymentTiming: "recurring",
+                                recurringPaymentStartDate:
+                                    "2023-06-08T18:09:07.501Z",
+                            },
+                        ],
                     };
 
                     let session = new ApplePaySession(4, paymentRequest);
