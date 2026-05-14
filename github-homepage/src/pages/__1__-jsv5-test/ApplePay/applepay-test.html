@@ -791,7 +791,7 @@
                         total: {
                             label: "Demo (Card is not charged)",
                             amount: amount,
-                            type: "final",
+                            type: "recurring",
                         },
                         lineItems: [
                             {
@@ -802,6 +802,30 @@
                                     "2023-06-08T18:09:07.501Z",
                             },
                         ],
+                        recurringPaymentRequest: {
+                            paymentDescription:
+                                "Billing Agreement for A VIP Reader APP...", // 图片中的说明文字
+                            regularBilling: {
+                                label: "Recurring",
+                                amount: "6000.00",
+                                recurringPaymentStartDate: new Date(
+                                    "2026-05-20",
+                                ), // 对应图片中的 Starting May 20
+                                calendarUnit: "week", // 对应图片中的 per week
+                                calendarUnitCount: 1,
+                            },
+                            trialBilling: {
+                                label: "7 Days Trial",
+                                amount: "5000.00",
+                                recurringPaymentEndDate: new Date("2026-05-20"),
+                                calendarUnit: "day",
+                                calendarUnitCount: 7,
+                            },
+                            billingAgreement:
+                                "charge since today until cancel, no refund...", // 详细协议条款
+                            managementURL:
+                                "https://applepay.example.com/manage",
+                        },
                     };
 
                     let session = new ApplePaySession(4, paymentRequest);
