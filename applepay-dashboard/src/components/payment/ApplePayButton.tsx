@@ -1,5 +1,6 @@
 // Renders the native <apple-pay-button> web component
-// Apple Pay session is started via usePaymentFlow — this is purely presentational
+// Uses an invisible overlay <button> on top because the Web Component's
+// Shadow DOM click events don't reliably bubble to the light DOM parent.
 
 import { AlertCircle } from 'lucide-react'
 import type { PaymentFlowConfig } from '@/hooks/usePaymentFlow'
@@ -24,27 +25,35 @@ declare global {
 }
 
 export function ApplePayButton({ config, onPay, disabled }: ApplePayButtonProps) {
-  // Wrap in a plain <div> so React's onClick works reliably.
-  // The <apple-pay-button> web component uses Shadow DOM — click events
-  // inside it bubble through the shadow boundary and reach the parent div.
   return (
     <div className="space-y-2">
-      <div
-        onClick={() => {
-          if (!disabled) {
-            console.log('[ApplePayButton] clicked, starting payment session')
+      {/* Position wrapper so the overlay can cover the web component exactly */}
+      <div style={{ position: 'relative', display: 'inline-block', width: '100%' }}>
+        <apple-pay-button buttonstyle="black" type="buy" locale="en" />
+
+        {/* Transparent button sits on top — normal DOM element, React onClick works */}
+        <button
+          type="button"
+          disabled={disabled}
+          onClick={() => {
+            console.log('[ApplePayButton] overlay clicked, starting session')
             onPay(config)
-          }
-        }}
-        style={{ cursor: disabled ? 'not-allowed' : 'pointer' }}
-      >
-        <apple-pay-button
-          buttonstyle="black"
-          type="buy"
-          locale="en"
-          style={disabled ? { pointerEvents: 'none', opacity: 0.5 } : undefined}
+          }}
+          style={{
+            position: 'absolute',
+            inset: 0,
+            width: '100%',
+            height: '100%',
+            opacity: 0,
+            cursor: disabled ? 'not-allowed' : 'pointer',
+            background: 'transparent',
+            border: 'none',
+            padding: 0,
+          }}
+          aria-label="Pay with Apple Pay"
         />
       </div>
+
       <p className="text-xs text-center text-muted-foreground flex items-center justify-center gap-1">
         <AlertCircle className="h-3 w-3" />
         仅在 Safari + Apple 设备上可见
