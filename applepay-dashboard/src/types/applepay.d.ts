@@ -122,11 +122,7 @@ interface PayPalNamespace {
   Applepay(): PayPalApplepay
 }
 
-declare global {
-  interface Window {
-    ApplePaySession: typeof ApplePaySession
-    paypal: PayPalNamespace
-  }
+interface Window {
+  ApplePaySession: typeof ApplePaySession
+  paypal: PayPalNamespace
 }
-
-export {}

@@ -1,7 +1,6 @@
 import { CheckCircle2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
-import { Card } from '@/components/ui/card'
 import { SCENARIOS } from '@/scenarios/types'
 import type { ApplePayScenario, ScenarioMeta } from '@/scenarios/types'
 
