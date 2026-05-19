@@ -14,7 +14,9 @@ interface PaymentResultProps {
 export function PaymentResult({ status, result, error, onReset }: PaymentResultProps) {
   const [copied, setCopied] = useState(false)
 
+  // Only show for payment-level outcomes, not initialization errors
   if (status !== 'success' && status !== 'error') return null
+  if (status === 'error' && result === null) return null
 
   const copyTxId = () => {
     if (!result?.transactionId) return

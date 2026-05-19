@@ -17,7 +17,6 @@ export type PaymentStatus =
   | 'processing'
   | 'success'
   | 'error'
-  | 'cancelled'
 
 export interface PaymentResult {
   transactionId: string
@@ -29,6 +28,16 @@ export interface PaymentFlowConfig {
   amount: string
   vaultId?: string
   cdnVersion: ApplePayCDNVersion
+}
+
+function toErrorMessage(err: unknown, fallback: string): string {
+  if (err instanceof Error) return err.message
+  if (typeof err === 'string') return err
+  try {
+    return JSON.stringify(err)
+  } catch {
+    return fallback
+  }
 }
 
 export function usePaymentFlow() {
@@ -44,29 +53,32 @@ export function usePaymentFlow() {
     setSdkConfig(null)
 
     try {
+      // recurring-vault uses the backend API only — no PayPal JS SDK or Apple Pay needed
+      if (config.scenario === 'recurring-vault') {
+        setStatus('ready')
+        return
+      }
+
       const { clientId } = getActiveCredentials()
       await loadPayPalSDK(clientId)
+      await loadApplePaySDK(config.cdnVersion)
 
-      if (config.scenario !== 'recurring-vault') {
-        await loadApplePaySDK(config.cdnVersion)
-
-        if (!isApplePaySupported()) {
-          throw new Error(
-            'Apple Pay not supported. Use Safari on an Apple device with a card set up.',
-          )
-        }
+      if (!isApplePaySupported()) {
+        throw new Error(
+          'Apple Pay not supported on this device/browser. Use Safari on an Apple device.',
+        )
       }
 
       const applePayCfg = await getApplePaySDKConfig()
-      if (!applePayCfg.isEligible && config.scenario !== 'recurring-vault') {
+      if (!applePayCfg.isEligible) {
         throw new Error('Apple Pay is not eligible for this merchant/region.')
       }
 
       setSdkConfig(applePayCfg)
       setStatus('ready')
     } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Initialization failed'
-      setError(msg)
+      console.error('[usePaymentFlow] Initialization error:', err)
+      setError(toErrorMessage(err, 'Initialization failed'))
       setStatus('error')
     }
   }, [])
@@ -79,25 +91,18 @@ export function usePaymentFlow() {
       setError(null)
 
       const session = createApplePaySession(
-        {
-          scenario: config.scenario,
-          amount: config.amount,
-          vaultId: config.vaultId,
-          sdkConfig,
-        },
+        { scenario: config.scenario, amount: config.amount, vaultId: config.vaultId, sdkConfig },
         {
           onSuccess: (transactionId, captureData) => {
             setResult({ transactionId, captureData })
             setStatus('success')
           },
           onFailure: (err) => {
-            const msg = err instanceof Error ? err.message : 'Payment failed'
-            setError(msg)
+            console.error('[usePaymentFlow] Payment error:', err)
+            setError(toErrorMessage(err, 'Payment failed'))
             setStatus('error')
           },
-          onCancel: () => {
-            setStatus('ready')
-          },
+          onCancel: () => setStatus('ready'),
         },
       )
 
@@ -126,8 +131,8 @@ export function usePaymentFlow() {
       setResult({ transactionId: txId ?? order.id, captureData })
       setStatus('success')
     } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Recurring payment failed'
-      setError(msg)
+      console.error('[usePaymentFlow] Recurring payment error:', err)
+      setError(toErrorMessage(err, 'Recurring payment failed'))
       setStatus('error')
     }
   }, [])
@@ -139,14 +144,5 @@ export function usePaymentFlow() {
     setSdkConfig(null)
   }, [])
 
-  return {
-    status,
-    error,
-    result,
-    sdkConfig,
-    initialize,
-    startPayment,
-    startRecurringPayment,
-    reset,
-  }
+  return { status, error, result, sdkConfig, initialize, startPayment, startRecurringPayment, reset }
 }

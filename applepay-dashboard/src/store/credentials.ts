@@ -46,7 +46,15 @@ const INITIAL_STATE = {
 
 export const useCredentialsStore = create<CredentialsState>((set) => ({
   ...INITIAL_STATE,
-  setEnvironment: (environment) => set({ environment }),
+  setEnvironment: (environment) => {
+    if (environment === 'production') {
+      // Clear merchant credentials — no production defaults provided
+      set({ environment, clientId: '', clientSecret: '' })
+    } else {
+      // Restore sandbox defaults when switching back
+      set({ environment, clientId: SANDBOX_MERCHANT_DEFAULTS.clientId, clientSecret: SANDBOX_MERCHANT_DEFAULTS.clientSecret })
+    }
+  },
   setMode: (mode) => set({ mode }),
   setClientId: (clientId) => set({ clientId }),
   setClientSecret: (clientSecret) => set({ clientSecret }),

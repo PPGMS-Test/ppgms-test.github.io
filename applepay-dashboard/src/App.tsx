@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Loader2, RefreshCw } from 'lucide-react'
+import { Loader2, RefreshCw, AlertCircle } from 'lucide-react'
 import { ScenarioSelector } from '@/components/ScenarioSelector'
 import { ConfigPanel } from '@/components/ConfigPanel'
 import { PaymentResult } from '@/components/PaymentResult'
@@ -48,7 +48,10 @@ export default function App() {
   const isLoading = status === 'loading'
   const isReady = status === 'ready'
   const isProcessing = status === 'processing'
-  const isDone = status === 'success' || status === 'error'
+  // Payment-level done: success, or error that happened after a payment attempt (result != null)
+  const isPaymentDone = status === 'success' || (status === 'error' && result !== null)
+  // Init-level error: error before any payment was attempted
+  const isInitError = status === 'error' && result === null
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 py-8 px-4">
@@ -71,8 +74,8 @@ export default function App() {
           disabled={isLoading || isProcessing}
         />
 
-        {/* Config panel — hide after success */}
-        {!isDone && (
+        {/* Config panel — stays visible until payment succeeds so user can fix & retry */}
+        {!isPaymentDone && (
           <ConfigPanel
             config={config}
             onChange={setConfig}
@@ -81,7 +84,7 @@ export default function App() {
           />
         )}
 
-        {/* Loading state */}
+        {/* Loading indicator */}
         {isLoading && (
           <Card>
             <CardContent className="pt-6 text-center">
@@ -91,12 +94,15 @@ export default function App() {
           </Card>
         )}
 
-        {/* Error from initialization */}
-        {status === 'error' && !isDone && error && (
+        {/* Initialization error — ConfigPanel stays visible so user can adjust and retry */}
+        {isInitError && error && (
           <Card className="border-red-200 bg-red-50">
-            <CardContent className="pt-4 pb-4 flex items-center justify-between gap-3">
-              <p className="text-sm text-red-700">{error}</p>
-              <Button variant="outline" size="sm" onClick={reset}>
+            <CardContent className="pt-4 pb-4 flex items-start justify-between gap-3">
+              <div className="flex items-start gap-2">
+                <AlertCircle className="h-4 w-4 text-red-500 mt-0.5 flex-shrink-0" />
+                <p className="text-sm text-red-700 font-mono">{error}</p>
+              </div>
+              <Button variant="outline" size="sm" onClick={reset} className="flex-shrink-0">
                 <RefreshCw className="h-3.5 w-3.5" />
                 重置
               </Button>
@@ -125,7 +131,7 @@ export default function App() {
           </Card>
         )}
 
-        {/* Result */}
+        {/* Payment result (success or payment-level error only) */}
         <PaymentResult status={status} result={result} error={error} onReset={reset} />
 
         {/* Version badge */}
