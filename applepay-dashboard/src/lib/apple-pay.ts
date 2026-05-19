@@ -1,9 +1,10 @@
 // Apple Pay session orchestration logic
 // Pure functions — no React, no side effects beyond ApplePaySession
 
-import { createApplePayOrder, captureApplePayOrder, extractTransactionId } from '@/lib/api'
+import { createApplePayOrder, captureApplePayOrder } from '@/lib/api'
 import type { ApplePayScenario } from '@/scenarios/types'
 import { buildApplePayRequest } from '@/scenarios'
+import type { CaptureOrderResponse } from '@/lib/api'
 
 export interface ApplePaySessionCallbacks {
   onSuccess: (transactionId: string, captureResult: unknown) => void
@@ -16,6 +17,15 @@ export interface ApplePaySessionParams {
   amount: string
   vaultId?: string
   sdkConfig: PayPalApplepayConfig
+}
+
+function assertCaptureCompleted(captureResult: CaptureOrderResponse): string {
+  const capture = captureResult.purchase_units?.[0]?.payments?.captures?.[0]
+  if (!capture) throw new Error('Capture response missing purchase_unit/captures')
+  if (capture.status !== 'COMPLETED') {
+    throw new Error(`Capture not completed — PayPal status: ${capture.status}`)
+  }
+  return capture.id
 }
 
 export function createApplePaySession(
@@ -57,10 +67,11 @@ export function createApplePaySession(
       })
 
       const captureResult = await captureApplePayOrder(orderId)
-      const txId = extractTransactionId(captureResult)
+      // Verify PayPal actually settled — HTTP 200 can still carry status DECLINED
+      const captureId = assertCaptureCompleted(captureResult)
 
       session.completePayment({ status: window.ApplePaySession.STATUS_SUCCESS })
-      onSuccess(txId ?? orderId, captureResult)
+      onSuccess(captureId, captureResult)
     } catch (err) {
       console.error('[ApplePay] payment authorization error', err)
       session.completePayment({ status: window.ApplePaySession.STATUS_FAILURE })

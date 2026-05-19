@@ -85,7 +85,11 @@ export function usePaymentFlow() {
 
   const startPayment = useCallback(
     (config: PaymentFlowConfig) => {
-      if (!sdkConfig) return
+      if (!sdkConfig) {
+        setError('SDK not initialized — please click "确认配置并初始化 SDK" first')
+        setStatus('error')
+        return
+      }
 
       setStatus('processing')
       setError(null)
@@ -127,8 +131,11 @@ export function usePaymentFlow() {
         vaultId: config.vaultId,
       })
       const captureData = await captureApplePayOrder(order.id)
-      const txId = extractTransactionId(captureData)
-      setResult({ transactionId: txId ?? order.id, captureData })
+      const capture = captureData.purchase_units?.[0]?.payments?.captures?.[0]
+      if (!capture || capture.status !== 'COMPLETED') {
+        throw new Error(`Capture not completed — PayPal status: ${capture?.status ?? 'unknown'}`)
+      }
+      setResult({ transactionId: capture.id, captureData })
       setStatus('success')
     } catch (err) {
       console.error('[usePaymentFlow] Recurring payment error:', err)

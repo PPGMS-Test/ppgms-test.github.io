@@ -5,6 +5,8 @@
  */
 export function generatePayPalAuthAssertion(clientId: string, merchantId: string): string {
   const header = 'eyJhbGciOiJub25lIn0=' // base64({"alg":"none"})
-  const payload = btoa(JSON.stringify({ iss: clientId, payer_id: merchantId }))
+  // btoa() only handles Latin-1; encodeURIComponent + unescape handles full Unicode safely
+  const json = JSON.stringify({ iss: clientId, payer_id: merchantId })
+  const payload = btoa(unescape(encodeURIComponent(json)))
   return `${header}.${payload}.`
 }

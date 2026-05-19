@@ -42,14 +42,11 @@ function buildApplePayOrderBody(params: ApplePayOrderParams): OrderRequest {
   }
 
   if (scenario === 'one-time-vault') {
+    // storedCredential is NOT needed on initial vault save — only on subsequent MIT charges
     return {
       ...base,
       paymentSource: {
         applePay: {
-          storedCredential: {
-            paymentInitiator: 'CUSTOMER' as never,
-            paymentType: 'RECURRING' as never,
-          },
           attributes: {
             vault: { storeInVault: 'ON_SUCCESS' as never },
           },

@@ -40,6 +40,12 @@ export interface CaptureOrderResponse {
   [key: string]: unknown
 }
 
+type PayPalErrorBody = { error?: string; message?: string; name?: string; details?: unknown[] }
+
+function extractPayPalError(data: PayPalErrorBody, fallback: string): string {
+  return data.error ?? data.message ?? data.name ?? fallback
+}
+
 export async function createApplePayOrder(params: {
   scenario: ApplePayScenario
   amount: string
@@ -51,8 +57,8 @@ export async function createApplePayOrder(params: {
     headers: { 'Content-Type': 'application/json', ...credentialHeaders() },
     body: JSON.stringify(params),
   })
-  const data = (await res.json()) as CreateOrderResponse & { error?: string }
-  if (!res.ok) throw new Error(data.error ?? `Create order failed: ${res.status}`)
+  const data = (await res.json()) as CreateOrderResponse & PayPalErrorBody
+  if (!res.ok) throw new Error(extractPayPalError(data, `Create order failed: ${res.status}`))
   return data
 }
 
@@ -61,8 +67,8 @@ export async function captureApplePayOrder(orderId: string): Promise<CaptureOrde
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...credentialHeaders() },
   })
-  const data = (await res.json()) as CaptureOrderResponse & { error?: string }
-  if (!res.ok) throw new Error(data.error ?? `Capture failed: ${res.status}`)
+  const data = (await res.json()) as CaptureOrderResponse & PayPalErrorBody
+  if (!res.ok) throw new Error(extractPayPalError(data, `Capture failed: ${res.status}`))
   return data
 }
 
