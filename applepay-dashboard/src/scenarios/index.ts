@@ -32,7 +32,7 @@ export function buildApplePayRequest(params: BuildRequestParams): ApplePayPaymen
   // recurring-vault: add recurring payment details for UI display
   return {
     ...baseRequest,
-    total: { ...baseRequest.total, type: 'recurring', paymentTiming: 'recurring' },
+    total: { ...baseRequest.total, paymentTiming: 'recurring' },
     lineItems: [
       {
         label: 'Recurring Subscription',
