@@ -1,5 +1,8 @@
 export type ApplePayScenario = 'one-time-basic' | 'one-time-vault' | 'recurring-vault'
 
+// Single source of truth — PayPal SDK URL, Apple Pay session, and backend order body must all agree
+export const PAYMENT_CURRENCY = 'USD'
+
 export interface ScenarioMeta {
   id: ApplePayScenario
   label: string

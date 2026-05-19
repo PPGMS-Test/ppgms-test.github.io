@@ -10,13 +10,21 @@ const APPLE_PAY_CDN: Record<ApplePayCDNVersion, string> = {
 const PAYPAL_SCRIPT_ID = 'paypal-js-sdk'
 const APPLE_PAY_SCRIPT_ID = 'apple-pay-sdk'
 
-export function loadPayPalSDK(clientId: string): Promise<void> {
+import { PAYMENT_CURRENCY } from '@/scenarios/types'
+
+export function loadPayPalSDK(clientId: string, currency = PAYMENT_CURRENCY): Promise<void> {
   return new Promise((resolve, reject) => {
+    // Remove old script and clear window.paypal so the reload starts clean.
+    // Without this, the old Applepay() instance may linger in closures.
     document.getElementById(PAYPAL_SCRIPT_ID)?.remove()
+    if ('paypal' in window) {
+      // @ts-expect-error — intentionally clearing stale SDK instance before reload
+      delete window.paypal
+    }
 
     const script = document.createElement('script')
     script.id = PAYPAL_SCRIPT_ID
-    script.src = `https://www.paypal.com/sdk/js?client-id=${clientId}&buyer-country=US&currency=USD&components=applepay,buttons`
+    script.src = `https://www.paypal.com/sdk/js?client-id=${clientId}&buyer-country=US&currency=${currency}&components=applepay,buttons`
     script.crossOrigin = 'anonymous'
     script.onload = () => resolve()
     script.onerror = () => reject(new Error('PayPal SDK failed to load'))
@@ -26,9 +34,17 @@ export function loadPayPalSDK(clientId: string): Promise<void> {
 
 export function loadApplePaySDK(version: ApplePayCDNVersion): Promise<void> {
   return new Promise((resolve, reject) => {
-    // Once 1.latest is loaded it mutates window state — reload page to switch versions
-    if (document.getElementById(APPLE_PAY_SCRIPT_ID)) {
-      resolve()
+    const existing = document.getElementById(APPLE_PAY_SCRIPT_ID) as HTMLScriptElement | null
+
+    if (existing) {
+      // Apple Pay SDK mutates window state and cannot be safely reloaded mid-session.
+      if (existing.src === APPLE_PAY_CDN[version]) {
+        resolve() // same version already loaded — ok
+      } else {
+        reject(
+          new Error(`Apple Pay CDN 版本已切换为 ${version}，请刷新页面后重新初始化。`),
+        )
+      }
       return
     }
 

@@ -1,5 +1,6 @@
 // Builds the ApplePayPaymentRequest for each scenario
 import type { ApplePayScenario } from './types'
+import { PAYMENT_CURRENCY } from './types'
 
 interface BuildRequestParams {
   scenario: ApplePayScenario
@@ -13,7 +14,7 @@ export function buildApplePayRequest(params: BuildRequestParams): ApplePayPaymen
 
   const baseRequest: ApplePayPaymentRequest = {
     countryCode,
-    currencyCode: 'USD',
+    currencyCode: PAYMENT_CURRENCY,
     merchantCapabilities,
     supportedNetworks,
     requiredBillingContactFields: ['name', 'phone', 'email', 'postalAddress'],
