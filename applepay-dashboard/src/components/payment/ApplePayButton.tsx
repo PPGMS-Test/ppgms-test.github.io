@@ -1,6 +1,7 @@
 // Renders the native <apple-pay-button> web component
 // Apple Pay session is started via usePaymentFlow — this is purely presentational
 
+import { useRef, useEffect } from 'react'
 import { AlertCircle } from 'lucide-react'
 import type { PaymentFlowConfig } from '@/hooks/usePaymentFlow'
 
@@ -24,13 +25,28 @@ declare global {
 }
 
 export function ApplePayButton({ config, onPay, disabled }: ApplePayButtonProps) {
+  const buttonRef = useRef<HTMLElement>(null)
+
+  // React's onClick is unreliable on Web Components — use native addEventListener instead
+  useEffect(() => {
+    const el = buttonRef.current
+    if (!el) return
+
+    const handler = () => {
+      if (!disabled) onPay(config)
+    }
+
+    el.addEventListener('click', handler)
+    return () => el.removeEventListener('click', handler)
+  }, [config, onPay, disabled])
+
   return (
     <div className="space-y-2">
       <apple-pay-button
+        ref={buttonRef}
         buttonstyle="black"
         type="buy"
         locale="en"
-        onClick={() => !disabled && onPay(config)}
         style={disabled ? { pointerEvents: 'none', opacity: 0.5 } : undefined}
       />
       <p className="text-xs text-center text-muted-foreground flex items-center justify-center gap-1">
