@@ -14,10 +14,12 @@ export async function createOrder({
   orderRequestBody,
   paypalRequestId,
   controller,
+  paypalAuthAssertion,
 }: {
   orderRequestBody: OrderRequest
   paypalRequestId?: string
   controller?: OrdersController
+  paypalAuthAssertion?: string
 }) {
   const ctrl = controller ?? ordersController
   try {
@@ -25,6 +27,7 @@ export async function createOrder({
       body: orderRequestBody,
       paypalRequestId,
       prefer: 'return=minimal',
+      paypalAuthAssertion: paypalAuthAssertion ?? undefined,
     })
     return { jsonResponse: result, httpStatusCode: statusCode }
   } catch (error) {

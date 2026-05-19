@@ -48,9 +48,14 @@ export const vaultController = new VaultController(sandboxClient)
 
 // Build a per-request OrdersController from caller-supplied credentials.
 // Falls back to the singleton sandbox client when credentials are absent.
-export function buildOrdersController(clientId?: string | null, clientSecret?: string | null) {
+export function buildOrdersController(
+  clientId?: string | null,
+  clientSecret?: string | null,
+  environment?: string | null,
+) {
   if (clientId && clientSecret) {
-    return new OrdersController(buildClient(clientId, clientSecret, Environment.Sandbox))
+    const env = environment === 'production' ? Environment.Production : Environment.Sandbox
+    return new OrdersController(buildClient(clientId, clientSecret, env))
   }
   return ordersController
 }

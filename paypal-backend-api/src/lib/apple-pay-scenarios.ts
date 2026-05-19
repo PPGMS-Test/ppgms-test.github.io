@@ -11,6 +11,7 @@ export interface ApplePayOrderParams {
   vaultId?: string
   /** Optional per-request controller built from caller-supplied credentials */
   controller?: OrdersController
+  paypalAuthAssertion?: string
 }
 
 function buildApplePayOrderBody(params: ApplePayOrderParams): OrderRequest {
@@ -75,7 +76,7 @@ function buildApplePayOrderBody(params: ApplePayOrderParams): OrderRequest {
 }
 
 export async function createApplePayOrder(params: ApplePayOrderParams) {
-  const { controller, ...rest } = params
+  const { controller, paypalAuthAssertion, ...rest } = params
   const orderRequestBody = buildApplePayOrderBody(rest)
-  return createOrder({ orderRequestBody, controller })
+  return createOrder({ orderRequestBody, controller, paypalAuthAssertion })
 }

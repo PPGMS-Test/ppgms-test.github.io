@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Settings, ChevronDown, ChevronRight, KeyRound, RotateCcw } from 'lucide-react'
+import { Settings, ChevronDown, ChevronRight, KeyRound, RotateCcw, Globe } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -9,6 +9,7 @@ import { SCENARIOS } from '@/scenarios/types'
 import { useCredentialsStore } from '@/store/credentials'
 import type { ApplePayScenario } from '@/scenarios/types'
 import type { ApplePayCDNVersion } from '@/lib/paypal-sdk'
+import type { PayPalEnvironment, IntegrationMode } from '@/store/credentials'
 
 export interface PaymentConfig {
   scenario: ApplePayScenario
@@ -30,6 +31,36 @@ const CDN_OPTIONS: { value: ApplePayCDNVersion; label: string }[] = [
   { value: 'v1', label: 'v1 (仅 Safari)' },
 ]
 
+function ToggleGroup<T extends string>({
+  value,
+  options,
+  onChange,
+}: {
+  value: T
+  options: { value: T; label: string }[]
+  onChange: (v: T) => void
+}) {
+  return (
+    <div className="flex gap-2">
+      {options.map((opt) => (
+        <button
+          key={opt.value}
+          type="button"
+          onClick={() => onChange(opt.value)}
+          className={cn(
+            'flex-1 rounded-md border px-3 py-2 text-sm transition-colors',
+            value === opt.value
+              ? 'border-primary bg-primary/5 text-primary font-medium'
+              : 'border-input text-muted-foreground hover:border-primary/50',
+          )}
+        >
+          {opt.label}
+        </button>
+      ))}
+    </div>
+  )
+}
+
 export function ConfigPanel({ config, onChange, onSubmit, loading }: ConfigPanelProps) {
   const set = <K extends keyof PaymentConfig>(key: K, value: PaymentConfig[K]) =>
     onChange({ ...config, [key]: value })
@@ -37,8 +68,18 @@ export function ConfigPanel({ config, onChange, onSubmit, loading }: ConfigPanel
   const needsVault = SCENARIOS.find((s) => s.id === config.scenario)?.requiresVaultId ?? false
 
   const [credsOpen, setCredsOpen] = useState(false)
-  const { clientId, clientSecret, setClientId, setClientSecret, reset: resetCreds } =
-    useCredentialsStore()
+  const {
+    environment, mode,
+    clientId, clientSecret,
+    partnerClientId, partnerClientSecret, partnerMerchantId,
+    setEnvironment, setMode,
+    setClientId, setClientSecret,
+    setPartnerClientId, setPartnerClientSecret, setPartnerMerchantId,
+    reset: resetCreds,
+  } = useCredentialsStore()
+
+  const isPartner = mode === 'partner'
+  const headerLabel = `PayPal 凭据 · ${environment === 'sandbox' ? 'Sandbox' : 'Production'} · ${isPartner ? '三方' : '一方'}`
 
   return (
     <Card>
@@ -49,6 +90,7 @@ export function ConfigPanel({ config, onChange, onSubmit, loading }: ConfigPanel
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
+        {/* Amount */}
         <div className="space-y-1.5">
           <Label htmlFor="amount">金额 (USD)</Label>
           <Input
@@ -61,26 +103,15 @@ export function ConfigPanel({ config, onChange, onSubmit, loading }: ConfigPanel
           />
         </div>
 
+        {/* CDN version — only relevant for Apple Pay sessions */}
         {config.scenario !== 'recurring-vault' && (
           <div className="space-y-1.5">
             <Label>Apple Pay CDN 版本</Label>
-            <div className="flex gap-2">
-              {CDN_OPTIONS.map((opt) => (
-                <button
-                  key={opt.value}
-                  type="button"
-                  onClick={() => set('cdnVersion', opt.value)}
-                  className={cn(
-                    'flex-1 rounded-md border px-3 py-2 text-sm transition-colors',
-                    config.cdnVersion === opt.value
-                      ? 'border-primary bg-primary/5 text-primary font-medium'
-                      : 'border-input text-muted-foreground hover:border-primary/50',
-                  )}
-                >
-                  {opt.label}
-                </button>
-              ))}
-            </div>
+            <ToggleGroup
+              value={config.cdnVersion}
+              options={CDN_OPTIONS}
+              onChange={(v) => set('cdnVersion', v)}
+            />
             {config.cdnVersion === 'v1' && (
               <p className="text-xs text-amber-600">
                 ⚠ 切换到 v1 后如需测试 1.latest 请刷新页面，因为 1.latest 已被缓存
@@ -89,6 +120,7 @@ export function ConfigPanel({ config, onChange, onSubmit, loading }: ConfigPanel
           </div>
         )}
 
+        {/* Vault fields — recurring only */}
         {needsVault && (
           <>
             <div className="space-y-1.5">
@@ -112,7 +144,7 @@ export function ConfigPanel({ config, onChange, onSubmit, loading }: ConfigPanel
           </>
         )}
 
-        {/* Collapsible credentials section */}
+        {/* ── Collapsible credentials section ── */}
         <div className="rounded-lg border border-dashed border-border overflow-hidden">
           <button
             type="button"
@@ -120,47 +152,116 @@ export function ConfigPanel({ config, onChange, onSubmit, loading }: ConfigPanel
             className="w-full flex items-center gap-2 px-3 py-2.5 text-sm text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
           >
             <KeyRound className="h-3.5 w-3.5" />
-            <span className="flex-1 text-left">PayPal Credentials (Sandbox)</span>
-            {credsOpen ? (
-              <ChevronDown className="h-3.5 w-3.5" />
-            ) : (
-              <ChevronRight className="h-3.5 w-3.5" />
-            )}
+            <span className="flex-1 text-left">{headerLabel}</span>
+            {credsOpen ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
           </button>
 
-          <div className={cn('px-3 pb-3 space-y-3', !credsOpen && 'hidden')}>
+          <div className={cn('px-3 pb-3 space-y-4', !credsOpen && 'hidden')}>
+            {/* Environment */}
             <div className="space-y-1.5">
-              <Label htmlFor="cred-client-id" className="text-xs">
-                Client ID
+              <Label className="text-xs flex items-center gap-1">
+                <Globe className="h-3 w-3" /> 环境
               </Label>
-              <Input
-                id="cred-client-id"
-                value={clientId}
-                onChange={(e) => setClientId(e.target.value)}
-                className="font-mono text-xs h-8"
-                placeholder="Client ID"
+              <ToggleGroup<PayPalEnvironment>
+                value={environment}
+                options={[
+                  { value: 'sandbox', label: 'Sandbox' },
+                  { value: 'production', label: 'Production' },
+                ]}
+                onChange={setEnvironment}
+              />
+              {environment === 'production' && (
+                <p className="text-xs text-amber-600">⚠ 请填入正式环境凭据，不提供默认值</p>
+              )}
+            </div>
+
+            {/* Integration mode */}
+            <div className="space-y-1.5">
+              <Label className="text-xs">集成模式</Label>
+              <ToggleGroup<IntegrationMode>
+                value={mode}
+                options={[
+                  { value: 'merchant', label: '一方 Merchant' },
+                  { value: 'partner', label: '三方 Partner' },
+                ]}
+                onChange={setMode}
               />
             </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="cred-client-secret" className="text-xs">
-                Client Secret
-              </Label>
-              <Input
-                id="cred-client-secret"
-                type="password"
-                value={clientSecret}
-                onChange={(e) => setClientSecret(e.target.value)}
-                className="font-mono text-xs h-8"
-                placeholder="Client Secret"
-              />
-            </div>
+
+            {/* 1st-party credentials */}
+            {!isPartner && (
+              <>
+                <div className="space-y-1.5">
+                  <Label htmlFor="cred-client-id" className="text-xs">Client ID</Label>
+                  <Input
+                    id="cred-client-id"
+                    value={clientId}
+                    onChange={(e) => setClientId(e.target.value)}
+                    className="font-mono text-xs h-8"
+                    placeholder="Client ID"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="cred-client-secret" className="text-xs">Client Secret</Label>
+                  <Input
+                    id="cred-client-secret"
+                    type="password"
+                    value={clientSecret}
+                    onChange={(e) => setClientSecret(e.target.value)}
+                    className="font-mono text-xs h-8"
+                    placeholder="Client Secret"
+                  />
+                </div>
+              </>
+            )}
+
+            {/* 3rd-party credentials */}
+            {isPartner && (
+              <>
+                <div className="space-y-1.5">
+                  <Label htmlFor="cred-partner-client-id" className="text-xs">Partner Client ID</Label>
+                  <Input
+                    id="cred-partner-client-id"
+                    value={partnerClientId}
+                    onChange={(e) => setPartnerClientId(e.target.value)}
+                    className="font-mono text-xs h-8"
+                    placeholder="Partner Client ID"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="cred-partner-secret" className="text-xs">Partner Client Secret</Label>
+                  <Input
+                    id="cred-partner-secret"
+                    type="password"
+                    value={partnerClientSecret}
+                    onChange={(e) => setPartnerClientSecret(e.target.value)}
+                    className="font-mono text-xs h-8"
+                    placeholder="Partner Client Secret"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="cred-merchant-id" className="text-xs">
+                    授权 Merchant ID
+                    <span className="ml-1 text-muted-foreground">(用于 Auth Assertion)</span>
+                  </Label>
+                  <Input
+                    id="cred-merchant-id"
+                    value={partnerMerchantId}
+                    onChange={(e) => setPartnerMerchantId(e.target.value)}
+                    className="font-mono text-xs h-8"
+                    placeholder="Merchant ID (payer_id)"
+                  />
+                </div>
+              </>
+            )}
+
             <button
               type="button"
               onClick={resetCreds}
               className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
             >
               <RotateCcw className="h-3 w-3" />
-              恢复 Sandbox 默认值
+              恢复全部默认值
             </button>
           </div>
         </div>

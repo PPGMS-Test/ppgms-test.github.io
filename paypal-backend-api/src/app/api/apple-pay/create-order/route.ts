@@ -20,7 +20,9 @@ export async function POST(req: Request) {
 
     const clientId = req.headers.get('x-paypal-client-id')
     const clientSecret = req.headers.get('x-paypal-client-secret')
-    const controller = buildOrdersController(clientId, clientSecret)
+    const environment = req.headers.get('x-paypal-environment')
+    const paypalAuthAssertion = req.headers.get('x-paypal-auth-assertion') ?? undefined
+    const controller = buildOrdersController(clientId, clientSecret, environment)
 
     const { jsonResponse, httpStatusCode } = await createApplePayOrder({
       scenario,
@@ -28,6 +30,7 @@ export async function POST(req: Request) {
       currencyCode,
       vaultId,
       controller,
+      paypalAuthAssertion,
     })
     return corsJson(jsonResponse, httpStatusCode)
   } catch (err) {

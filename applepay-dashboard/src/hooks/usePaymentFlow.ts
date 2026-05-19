@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react'
-import { useCredentialsStore } from '@/store/credentials'
+import { getActiveCredentials } from '@/store/credentials'
 import {
   loadPayPalSDK,
   loadApplePaySDK,
@@ -44,7 +44,7 @@ export function usePaymentFlow() {
     setSdkConfig(null)
 
     try {
-      const { clientId } = useCredentialsStore.getState()
+      const { clientId } = getActiveCredentials()
       await loadPayPalSDK(clientId)
 
       if (config.scenario !== 'recurring-vault') {

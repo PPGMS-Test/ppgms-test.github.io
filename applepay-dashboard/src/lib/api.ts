@@ -1,15 +1,25 @@
 // Backend API client — communicates with Cloudflare-deployed paypal-backend-api
 import type { ApplePayScenario } from '@/scenarios/types'
-import { useCredentialsStore } from '@/store/credentials'
+import { useCredentialsStore, getActiveCredentials } from '@/store/credentials'
+import { generatePayPalAuthAssertion } from '@/lib/auth-assertion'
 
 const BASE_URL = 'https://ppgms-test-github-io.pages.dev'
 
 function credentialHeaders(): Record<string, string> {
-  const { clientId, clientSecret } = useCredentialsStore.getState()
-  return {
+  const { mode, environment, partnerMerchantId } = useCredentialsStore.getState()
+  const { clientId, clientSecret } = getActiveCredentials()
+
+  const headers: Record<string, string> = {
     'x-paypal-client-id': clientId,
     'x-paypal-client-secret': clientSecret,
+    'x-paypal-environment': environment,
   }
+
+  if (mode === 'partner' && partnerMerchantId) {
+    headers['x-paypal-auth-assertion'] = generatePayPalAuthAssertion(clientId, partnerMerchantId)
+  }
+
+  return headers
 }
 
 export interface CreateOrderResponse {
@@ -58,7 +68,6 @@ export async function captureApplePayOrder(orderId: string): Promise<CaptureOrde
 
 export function extractTransactionId(captureResult: CaptureOrderResponse): string | null {
   const unit = captureResult.purchase_units?.[0]
-  const txn =
-    unit?.payments?.captures?.[0] ?? unit?.payments?.authorizations?.[0]
+  const txn = unit?.payments?.captures?.[0] ?? unit?.payments?.authorizations?.[0]
   return txn?.id ?? null
 }

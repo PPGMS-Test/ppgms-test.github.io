@@ -17,13 +17,16 @@ export async function POST(
   try {
     const clientId = req.headers.get('x-paypal-client-id')
     const clientSecret = req.headers.get('x-paypal-client-secret')
+    const environment = req.headers.get('x-paypal-environment')
+    const paypalAuthAssertion = req.headers.get('x-paypal-auth-assertion') ?? undefined
 
     if (clientId && clientSecret) {
-      const ctrl = buildOrdersController(clientId, clientSecret)
+      const ctrl = buildOrdersController(clientId, clientSecret, environment)
       try {
         const { result, statusCode } = await ctrl.captureOrder({
           id: orderId,
           prefer: 'return=minimal',
+          paypalAuthAssertion,
         })
         return corsJson(result, statusCode)
       } catch (error) {
