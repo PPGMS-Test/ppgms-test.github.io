@@ -7,18 +7,21 @@ import {
   PaypalWalletContextShippingPreference,
   PhoneType,
 } from '@paypal/paypal-server-sdk'
-import type { OrderRequest } from '@paypal/paypal-server-sdk'
+import type { OrderRequest, OrdersController } from '@paypal/paypal-server-sdk'
 import { ordersController } from './paypal-client'
 
 export async function createOrder({
   orderRequestBody,
   paypalRequestId,
+  controller,
 }: {
   orderRequestBody: OrderRequest
   paypalRequestId?: string
+  controller?: OrdersController
 }) {
+  const ctrl = controller ?? ordersController
   try {
-    const { result, statusCode } = await ordersController.createOrder({
+    const { result, statusCode } = await ctrl.createOrder({
       body: orderRequestBody,
       paypalRequestId,
       prefer: 'return=minimal',

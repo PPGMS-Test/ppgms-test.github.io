@@ -2,6 +2,7 @@ export const runtime = 'edge'
 
 import { corsJson, corsOptions } from '@/lib/cors'
 import { createApplePayOrder } from '@/lib/apple-pay-scenarios'
+import { buildOrdersController } from '@/lib/paypal-client'
 import type { ApplePayOrderParams } from '@/lib/apple-pay-scenarios'
 
 export function OPTIONS() {
@@ -10,18 +11,23 @@ export function OPTIONS() {
 
 export async function POST(req: Request) {
   try {
-    const body: ApplePayOrderParams = await req.json()
+    const body: Omit<ApplePayOrderParams, 'controller'> = await req.json()
     const { scenario, amount, currencyCode, vaultId } = body
 
     if (!scenario || !amount) {
       return corsJson({ error: 'scenario and amount are required' }, 400)
     }
 
+    const clientId = req.headers.get('x-paypal-client-id')
+    const clientSecret = req.headers.get('x-paypal-client-secret')
+    const controller = buildOrdersController(clientId, clientSecret)
+
     const { jsonResponse, httpStatusCode } = await createApplePayOrder({
       scenario,
       amount,
       currencyCode,
       vaultId,
+      controller,
     })
     return corsJson(jsonResponse, httpStatusCode)
   } catch (err) {

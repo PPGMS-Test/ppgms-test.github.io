@@ -1,11 +1,15 @@
 // Backend API client — communicates with Cloudflare-deployed paypal-backend-api
 import type { ApplePayScenario } from '@/scenarios/types'
+import { useCredentialsStore } from '@/store/credentials'
 
 const BASE_URL = 'https://ppgms-test-github-io.pages.dev'
 
-export interface ApplePayConfig {
-  clientId: string
-  environment: 'sandbox' | 'production'
+function credentialHeaders(): Record<string, string> {
+  const { clientId, clientSecret } = useCredentialsStore.getState()
+  return {
+    'x-paypal-client-id': clientId,
+    'x-paypal-client-secret': clientSecret,
+  }
 }
 
 export interface CreateOrderResponse {
@@ -26,12 +30,6 @@ export interface CaptureOrderResponse {
   [key: string]: unknown
 }
 
-export async function fetchApplePayConfig(): Promise<ApplePayConfig> {
-  const res = await fetch(`${BASE_URL}/api/apple-pay/config`)
-  if (!res.ok) throw new Error(`Config fetch failed: ${res.status}`)
-  return res.json() as Promise<ApplePayConfig>
-}
-
 export async function createApplePayOrder(params: {
   scenario: ApplePayScenario
   amount: string
@@ -40,7 +38,7 @@ export async function createApplePayOrder(params: {
 }): Promise<CreateOrderResponse> {
   const res = await fetch(`${BASE_URL}/api/apple-pay/create-order`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...credentialHeaders() },
     body: JSON.stringify(params),
   })
   const data = (await res.json()) as CreateOrderResponse & { error?: string }
@@ -51,7 +49,7 @@ export async function createApplePayOrder(params: {
 export async function captureApplePayOrder(orderId: string): Promise<CaptureOrderResponse> {
   const res = await fetch(`${BASE_URL}/api/apple-pay/capture-order/${orderId}`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...credentialHeaders() },
   })
   const data = (await res.json()) as CaptureOrderResponse & { error?: string }
   if (!res.ok) throw new Error(data.error ?? `Capture failed: ${res.status}`)

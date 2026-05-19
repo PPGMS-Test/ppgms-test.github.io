@@ -1,5 +1,5 @@
 import { CheckoutPaymentIntent } from '@paypal/paypal-server-sdk'
-import type { OrderRequest } from '@paypal/paypal-server-sdk'
+import type { OrderRequest, OrdersController } from '@paypal/paypal-server-sdk'
 import { createOrder } from './order-scenarios'
 
 export type ApplePayScenario = 'one-time-basic' | 'one-time-vault' | 'recurring-vault'
@@ -9,6 +9,8 @@ export interface ApplePayOrderParams {
   amount: string
   currencyCode?: string
   vaultId?: string
+  /** Optional per-request controller built from caller-supplied credentials */
+  controller?: OrdersController
 }
 
 function buildApplePayOrderBody(params: ApplePayOrderParams): OrderRequest {
@@ -73,6 +75,7 @@ function buildApplePayOrderBody(params: ApplePayOrderParams): OrderRequest {
 }
 
 export async function createApplePayOrder(params: ApplePayOrderParams) {
-  const orderRequestBody = buildApplePayOrderBody(params)
-  return createOrder({ orderRequestBody })
+  const { controller, ...rest } = params
+  const orderRequestBody = buildApplePayOrderBody(rest)
+  return createOrder({ orderRequestBody, controller })
 }

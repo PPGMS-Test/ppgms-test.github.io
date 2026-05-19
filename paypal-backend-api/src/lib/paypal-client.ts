@@ -46,6 +46,15 @@ export const ordersController = new OrdersController(sandboxClient)
 export const oAuthController = new OAuthAuthorizationController(sandboxClient)
 export const vaultController = new VaultController(sandboxClient)
 
+// Build a per-request OrdersController from caller-supplied credentials.
+// Falls back to the singleton sandbox client when credentials are absent.
+export function buildOrdersController(clientId?: string | null, clientSecret?: string | null) {
+  if (clientId && clientSecret) {
+    return new OrdersController(buildClient(clientId, clientSecret, Environment.Sandbox))
+  }
+  return ordersController
+}
+
 async function fetchClientToken(
   oAuth: OAuthAuthorizationController,
   clientId: string,
