@@ -1,18 +1,40 @@
+/**
+ * scenarios/types.ts
+ *
+ * 作用：定义三种测试场景的类型和元数据，以及全局货币常量。
+ *
+ * 使用方：
+ *   - src/scenarios/index.ts        — 构建 Apple Pay Payment Request 时判断场景
+ *   - src/lib/apple-pay.ts          — 构建 Apple Pay session 时传入场景
+ *   - src/lib/api.ts                — 调用后端接口时传入场景
+ *   - src/lib/paypal-sdk.ts         — 使用 PAYMENT_CURRENCY 加载 SDK
+ *   - src/hooks/usePaymentFlow.ts   — 判断场景决定初始化/支付流程分支
+ *   - src/components/ScenarioSelector.tsx — 渲染场景选择卡片
+ *   - src/components/ConfigPanel.tsx      — 根据场景显示/隐藏相关配置项
+ */
+
+/** 三种测试场景的标识符 */
 export type ApplePayScenario = 'one-time-basic' | 'one-time-vault' | 'recurring-vault'
 
-// Single source of truth — PayPal SDK URL, Apple Pay session, and backend order body must all agree
+/**
+ * 统一货币代码。PayPal JS SDK URL、Apple Pay session、后端 Order body
+ * 三处必须保持一致，所以只在这里定义一次。
+ */
 export const PAYMENT_CURRENCY = 'USD'
 
+/** 场景的 UI 元数据，用于 ScenarioSelector 渲染卡片 */
 export interface ScenarioMeta {
   id: ApplePayScenario
   label: string
   description: string
   badge: string
   badgeColor: 'blue' | 'green' | 'purple'
+  /** 是否需要在 ConfigPanel 中显示 Vault ID 输入框 */
   requiresVaultId: boolean
   showSavePaymentOption: boolean
 }
 
+/** 三种场景的完整定义，顺序即 UI 中的展示顺序 */
 export const SCENARIOS: ScenarioMeta[] = [
   {
     id: 'one-time-basic',

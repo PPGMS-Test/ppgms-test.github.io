@@ -1,3 +1,17 @@
+/**
+ * 支付结果展示组件。
+ *
+ * 作用：
+ *   在支付完成后（成功或支付级别失败）显示结果卡片：
+ *   - 成功：绿色卡片 + Transaction ID（可复制）+ 重新测试按钮
+ *   - 失败（支付阶段）：红色卡片 + 错误信息 + 重试按钮
+ *   - 初始化失败（result === null 的 error）或非终态：不渲染任何内容
+ *
+ * 被使用处：
+ *   - src/App.tsx — 页面底部渲染，onReset 回调触发 usePaymentFlow 的 reset()
+ *
+ * 注意：初始化错误（SDK 加载失败等）由 App.tsx 单独渲染内联错误卡片，不经过此组件。
+ */
 import { CheckCircle2, XCircle, Copy } from 'lucide-react'
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'

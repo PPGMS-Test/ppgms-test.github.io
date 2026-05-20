@@ -1,3 +1,21 @@
+/**
+ * 支付流程状态机 Hook。
+ *
+ * 作用：
+ *   管理从"空闲"到"加载 SDK → 就绪 → 支付中 → 成功/失败"的完整状态流转，
+ *   对外暴露 initialize / startPayment / startRecurringPayment / reset 四个操作，
+ *   以及 status / error / result / sdkConfig 四个状态字段。
+ *
+ * 被使用处：
+ *   - src/App.tsx — 唯一调用方，解构所有返回值驱动 UI 渲染与交互
+ *
+ * 状态流转：
+ *   idle → (initialize) → loading → ready
+ *                                 → error（SDK 加载失败 / 不支持 Apple Pay）
+ *   ready → (startPayment / startRecurringPayment) → processing → success
+ *                                                              → error（支付失败）
+ *   任意状态 → (reset) → idle
+ */
 import { useState, useCallback } from 'react'
 import { getActiveCredentials } from '@/store/credentials'
 import {
@@ -10,6 +28,10 @@ import { createApplePaySession } from '@/lib/apple-pay'
 import type { ApplePayScenario } from '@/scenarios/types'
 import type { ApplePayCDNVersion } from '@/lib/paypal-sdk'
 
+/**
+ * 支付流程各阶段状态：
+ * idle=初始 | loading=加载SDK | ready=就绪可支付 | processing=支付中 | success=成功 | error=失败
+ */
 export type PaymentStatus =
   | 'idle'
   | 'loading'
@@ -18,18 +40,22 @@ export type PaymentStatus =
   | 'success'
   | 'error'
 
+/** 支付成功后的结果，包含 PayPal 交易 ID 和完整 capture 响应体 */
 export interface PaymentResult {
   transactionId: string
   captureData: unknown
 }
 
+/** 每次 initialize / startPayment 调用时传入的配置 */
 export interface PaymentFlowConfig {
   scenario: ApplePayScenario
   amount: string
+  /** 仅 one-time-vault / recurring-vault 场景使用 */
   vaultId?: string
   cdnVersion: ApplePayCDNVersion
 }
 
+/** 将任意类型的错误转换为可展示的字符串，无法识别时返回 fallback */
 function toErrorMessage(err: unknown, fallback: string): string {
   if (err instanceof Error) return err.message
   if (typeof err === 'string') return err
@@ -46,6 +72,10 @@ export function usePaymentFlow() {
   const [result, setResult] = useState<PaymentResult | null>(null)
   const [sdkConfig, setSdkConfig] = useState<PayPalApplepayConfig | null>(null)
 
+  /**
+   * 初始化 SDK：按顺序加载 PayPal SDK → Apple Pay SDK → 检测支持性 → 获取配置。
+   * recurring-vault 场景不需要 Apple Pay，直接置为 ready。
+   */
   const initialize = useCallback(async (config: PaymentFlowConfig) => {
     setStatus('loading')
     setError(null)
@@ -83,6 +113,11 @@ export function usePaymentFlow() {
     }
   }, [])
 
+  /**
+   * 触发 Apple Pay 支付（one-time-basic / one-time-vault 场景）。
+   * 须在 initialize() 成功后调用（sdkConfig 非 null），否则置为 error 状态。
+   * 内部创建 ApplePaySession 并调用 session.begin() 弹出系统支付面板。
+   */
   const startPayment = useCallback(
     (config: PaymentFlowConfig) => {
       if (!sdkConfig) {
@@ -115,6 +150,10 @@ export function usePaymentFlow() {
     [sdkConfig],
   )
 
+  /**
+   * 触发 MIT 定期扣款（recurring-vault 场景）。
+   * 不需要 Apple Pay session，直接调后端 createOrder + captureOrder。
+   */
   const startRecurringPayment = useCallback(async (config: PaymentFlowConfig) => {
     if (config.scenario !== 'recurring-vault') return
 
@@ -144,6 +183,7 @@ export function usePaymentFlow() {
     }
   }, [])
 
+  /** 重置所有状态到 idle，允许用户重新选择场景或重新初始化 */
   const reset = useCallback(() => {
     setStatus('idle')
     setError(null)

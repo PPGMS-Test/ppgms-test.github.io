@@ -1,3 +1,20 @@
+/**
+ * 配置面板组件。
+ *
+ * 作用：
+ *   提供支付所需的全部参数配置 UI，包括：
+ *   - 金额输入
+ *   - Apple Pay CDN 版本切换（非 recurring 场景）
+ *   - Vault ID / Customer ID 输入（requiresVaultId 场景）
+ *   - 可折叠凭据区：环境（sandbox/production）、集成模式、clientId/secret 等
+ *   点击"确认配置并初始化 SDK"按钮触发 onSubmit，由 App.tsx 调用 initialize()。
+ *
+ * 被使用处：
+ *   - src/App.tsx — 在未完成支付时持续显示，允许用户修改配置后重试
+ *
+ * 凭据字段直接读写 src/store/credentials.ts 的 Zustand store，
+ * 其余字段（amount / vaultId / cdnVersion 等）通过 onChange(config) 回传给 App。
+ */
 import { useState } from 'react'
 import { Settings, ChevronDown, ChevronRight, KeyRound, RotateCcw, Globe } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -11,18 +28,24 @@ import type { ApplePayScenario } from '@/scenarios/types'
 import type { ApplePayCDNVersion } from '@/lib/paypal-sdk'
 import type { PayPalEnvironment, IntegrationMode } from '@/store/credentials'
 
+/** 面板管理的完整配置对象，由 App.tsx 维护并通过 onChange 回传 */
 export interface PaymentConfig {
   scenario: ApplePayScenario
   amount: string
+  /** 仅 one-time-vault / recurring-vault 场景需要填写 */
   vaultId: string
+  /** 仅 recurring-vault 场景需要填写 */
   customerId: string
   cdnVersion: ApplePayCDNVersion
 }
 
 interface ConfigPanelProps {
   config: PaymentConfig
+  /** 任意字段变更时回调，App.tsx 用新 config 替换旧值 */
   onChange: (config: PaymentConfig) => void
+  /** 点击"确认配置并初始化 SDK"按钮时触发，由 App.tsx 调用 initialize() */
   onSubmit: () => void
+  /** 初始化进行中时显示按钮 loading 状态 */
   loading?: boolean
 }
 
@@ -31,6 +54,10 @@ const CDN_OPTIONS: { value: ApplePayCDNVersion; label: string }[] = [
   { value: 'v1', label: 'v1 (仅 Safari)' },
 ]
 
+/**
+ * 通用切换按钮组，用于 环境/模式/CDN版本 等二选一或多选一场景。
+ * 当前选中项高亮显示，点击即切换。
+ */
 function ToggleGroup<T extends string>({
   value,
   options,

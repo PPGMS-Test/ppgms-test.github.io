@@ -1,3 +1,19 @@
+/**
+ * 应用根组件 — PayPal Apple Pay 测试面板入口。
+ *
+ * 作用：
+ *   组装整个页面布局，协调以下子模块：
+ *   - ScenarioSelector：场景选择（场景切换会自动重置 SDK 状态）
+ *   - ConfigPanel：参数配置 + 凭据管理 + 初始化触发
+ *   - ApplePayButton / RecurringButton：根据场景渲染对应支付按钮
+ *   - PaymentResult：展示支付成功或支付级别失败结果
+ *
+ *   状态完全由 usePaymentFlow hook 管理，App 仅做条件渲染：
+ *   - isLoading：显示加载指示器
+ *   - isInitError：显示初始化错误横幅（ConfigPanel 保持可见供重试）
+ *   - isReady：显示支付按钮
+ *   - isPaymentDone：隐藏 ConfigPanel，显示 PaymentResult
+ */
 import { useEffect, useState } from 'react'
 import { Loader2, RefreshCw, AlertCircle } from 'lucide-react'
 import { ScenarioSelector } from '@/components/ScenarioSelector'
@@ -10,6 +26,7 @@ import { Button } from '@/components/ui/button'
 import { usePaymentFlow } from '@/hooks/usePaymentFlow'
 import type { PaymentConfig } from '@/components/ConfigPanel'
 
+/** 页面初始默认配置，含 sandbox 测试用 Vault ID 和 Customer ID */
 const DEFAULT_CONFIG: PaymentConfig = {
   scenario: 'one-time-basic',
   amount: '10.00',
@@ -48,9 +65,9 @@ export default function App() {
   const isLoading = status === 'loading'
   const isReady = status === 'ready'
   const isProcessing = status === 'processing'
-  // Payment-level done: success, or error that happened after a payment attempt (result != null)
+  // 支付级别完成：成功，或支付尝试后的失败（result 非 null 说明曾发起过支付）
   const isPaymentDone = status === 'success' || (status === 'error' && result !== null)
-  // Init-level error: error before any payment was attempted
+  // 初始化级别错误：错误发生在任何支付尝试之前（result 仍为 null）
   const isInitError = status === 'error' && result === null
 
   return (

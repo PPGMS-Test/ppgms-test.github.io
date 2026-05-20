@@ -1,6 +1,18 @@
-// Renders the native <apple-pay-button> web component
-// Uses an invisible overlay <button> on top because the Web Component's
-// Shadow DOM click events don't reliably bubble to the light DOM parent.
+/**
+ * Apple Pay 支付按钮组件。
+ *
+ * 作用：
+ *   渲染原生 <apple-pay-button> Web Component（由 Apple Pay JS SDK 注册），
+ *   并在其上叠加一个透明的普通 <button> 作为点击代理。
+ *
+ *   之所以需要透明遮罩层：Web Component 内部使用 Shadow DOM，
+ *   其 click 事件不能可靠地冒泡到 React 的合成事件系统，
+ *   用普通 DOM button 覆盖后即可正常触发 React onClick。
+ *
+ * 被使用处：
+ *   - src/App.tsx — status === 'ready' 且场景不是 recurring-vault 时渲染，
+ *     onPay 回调绑定到 usePaymentFlow 的 startPayment()
+ */
 
 import { AlertCircle } from 'lucide-react'
 import type { PaymentFlowConfig } from '@/hooks/usePaymentFlow'

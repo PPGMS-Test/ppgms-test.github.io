@@ -1,3 +1,16 @@
+/**
+ * 支付场景选择器组件。
+ *
+ * 作用：
+ *   以卡片网格形式展示三种支付场景（one-time-basic / one-time-vault / recurring-vault），
+ *   用户点击卡片即切换场景。选中态显示彩色边框和勾选图标。
+ *
+ * 被使用处：
+ *   - src/App.tsx — 页面顶部始终渲染，场景变更时 App 会重置 SDK 状态
+ *
+ * 数据来源：
+ *   - src/scenarios/types.ts 导出的 SCENARIOS 常量（含 label / description / badgeColor 等元数据）
+ */
 import { CheckCircle2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
@@ -5,8 +18,11 @@ import { SCENARIOS } from '@/scenarios/types'
 import type { ApplePayScenario, ScenarioMeta } from '@/scenarios/types'
 
 interface ScenarioSelectorProps {
+  /** 当前选中的场景 ID */
   value: ApplePayScenario
+  /** 用户切换场景时的回调，由 App.tsx 处理并同步更新 config */
   onChange: (scenario: ApplePayScenario) => void
+  /** 加载或支付进行中时禁用所有卡片，防止中途切换 */
   disabled?: boolean
 }
 
