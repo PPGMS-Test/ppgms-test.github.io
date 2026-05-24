@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <rect width="32" height="32" rx="6" fill="#003087"/>
+  <path d="M16.5 7.5c-.8 0-1.5.35-2 1h4c-.5-.65-1.2-1-2-1z" fill="#009CDE"/>
+  <text x="16" y="20" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="7" font-weight="500" fill="white" text-anchor="middle">PAY</text>
+  <path d="M14 23c-.6.6-1.5 1-2.5 1H10c-.6 0-1-.4-1-1v-1c0-.6.4-1 1-1h1.5c.8 0 1.5.35 2 1H14c.6 0 1 .4 1 1v1c0 .6-.4 1-1 1z" fill="#009CDE"/>
+  <text x="18" y="23" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="5" font-weight="500" fill="#009CDE" text-anchor="middle">PAY</text>
+  <text x="18" y="26" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="5" font-weight="500" fill="#009CDE" text-anchor="middle">PAL</text>
+</svg>
