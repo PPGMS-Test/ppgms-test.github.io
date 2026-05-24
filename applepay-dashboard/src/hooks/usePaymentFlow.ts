@@ -161,7 +161,7 @@ export function usePaymentFlow() {
     setError(null)
 
     try {
-      const { createApplePayOrder, captureApplePayOrder, extractTransactionId } = await import(
+      const { createApplePayOrder, captureApplePayOrder } = await import(
         '@/lib/api'
       )
       const order = await createApplePayOrder({
