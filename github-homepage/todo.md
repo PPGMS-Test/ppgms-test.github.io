@@ -1,12 +1,12 @@
 # Todo
 
 - [ ] ecs playground的开发 ⏫
-- [ ] Pay Later Message被script注入的问题 🔼
+- [x] Pay Later Message被script注入的问题. 单个的HTML页面已经重构, 现在不会发生问题了, 不知道为什么之前会有错误. 我怀疑是个bug 🔼 ✅ 2026-05-24
 - [x] JSv6 Subscription scenario 🔼
 - [x] JSv6 check Eligible 在后端的情况 ⏫ ✅ 2026-05-11
 - [x] JSv6 有check eligible 和没有的对比情况 ⏫ ✅ 2026-05-10
 - [x] Cross Border Message在Partner解决方案下的测试demo讨论 (ISU方案也可以拿到client-id, 只是拿不到secret) 🔽
-- [x] JSv6 Cross Boarder PLM 🔼
+- [x] JSv6 Cross Boarder PLM 🔼 ✅ 2026-05-24
 - [ ] Apple Pay Test Page 重构,用以测试recurring情况 ⏫ ✅ 2026-05-12
 - [x] Vault PlayGround 重构 🔼 ✅ 2026-05-12
 - [ ] JSv6 Fastlane scenario 🔼
