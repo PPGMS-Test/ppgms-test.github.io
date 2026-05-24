@@ -8,7 +8,13 @@
       "mcp__plugin_everything-claude-code_playwright__browser_install",
       "Bash(git pull *)",
       "Bash(git stash *)",
-      "Bash(git config *)"
+      "Bash(git config *)",
+      "WebFetch(domain:www.skills.sh)",
+      "Bash(npx skillsadd:*)",
+      "WebSearch",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(npx skills:*)"
     ]
   }
 }

@@ -7,7 +7,7 @@
 - [x] JSv6 有check eligible 和没有的对比情况 ⏫ ✅ 2026-05-10
 - [x] Cross Border Message在Partner解决方案下的测试demo讨论 (ISU方案也可以拿到client-id, 只是拿不到secret) 🔽
 - [x] JSv6 Cross Boarder PLM 🔼 ✅ 2026-05-24
-- [ ] Apple Pay Test Page 重构,用以测试recurring情况 ⏫ ✅ 2026-05-12
+- [x] Apple Pay Test Page 重构,用以测试recurring情况 ⏫ ✅ 2026-05-12
 - [x] Vault PlayGround 重构 🔼 ✅ 2026-05-12
 - [ ] JSv6 Fastlane scenario 🔼
 - [x] JSv6 Vault First Time scenario ⏫ ✅ 2026-05-12
