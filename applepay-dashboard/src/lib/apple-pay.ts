@@ -63,7 +63,7 @@ export function createApplePaySession(
   const { onSuccess, onFailure, onCancel } = callbacks
 
   const paymentRequest = buildApplePayRequest({ scenario, amount, sdkConfig })
-  console.log('[ApplePay] building payment request body:', JSON.stringify(paymentRequest))
+  console.log('[ApplePay] building payment request body:', JSON.stringify(paymentRequest,null,2))
   
   const session = new window.ApplePaySession(4, paymentRequest)
   const applepay = window.paypal.Applepay()
@@ -75,7 +75,12 @@ export function createApplePaySession(
     applepay
       .validateMerchant({ validationUrl: event.validationURL })
       .then((payload) => {
-        console.log('[ApplePay] validateMerchant success — merchantSession:', JSON.stringify(payload.merchantSession))
+        const ms = payload.merchantSession as Record<string, unknown>
+        const preview = { ...ms }
+        if (typeof preview.signature === 'string') {
+          preview.signature = `x--x${preview.signature.slice(0, 20)}...x--x`
+        }
+        console.log('[ApplePay] validateMerchant success — merchantSession:', JSON.stringify(preview))
         session.completeMerchantValidation(payload.merchantSession)
       })
       .catch((err) => {
