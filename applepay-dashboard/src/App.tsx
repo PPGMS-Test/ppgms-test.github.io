@@ -153,7 +153,7 @@ export default function App() {
 
         {/* Version badge */}
         <p className="text-center text-xs text-muted-foreground">
-          v1 · {new Date().toISOString().slice(0, 10)}
+          v{__APP_VERSION__} · {new Date().toISOString().slice(0, 10)}
         </p>
       </div>
     </div>
