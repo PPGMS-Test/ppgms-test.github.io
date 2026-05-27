@@ -45,34 +45,37 @@ export function buildApplePayRequest(params: BuildRequestParams): ApplePayPaymen
     },
   }
 
-  if (scenario === 'one-time-basic' || scenario === 'one-time-vault') {
+  if (scenario === 'one-time-basic') {
     return baseRequest
+  } else {
+    // scenario === one-time-vault  需要在 Order 创建时指定 vault 参数，
+    return {
+      ...baseRequest,
+      total: { ...baseRequest.total, paymentTiming: 'recurring' },
+      lineItems: [
+        {
+          label: 'Recurring Subscription',
+          amount,
+          paymentTiming: 'recurring',
+          recurringPaymentStartDate: new Date().toISOString(),
+          calendarUnit: 'month',
+          calendarUnitCount: 1,
+        },
+      ],
+      recurringPaymentRequest: {
+        paymentDescription: 'Monthly subscription via Apple Pay',
+        regularBilling: {
+          label: 'Monthly Plan',
+          amount,
+          calendarUnit: 'month',
+          calendarUnitCount: 1,
+        },
+        billingAgreement: 'You authorize recurring charges until you cancel.',
+        managementURL: 'https://ppgms-test.github.io',
+      },
+    }
   }
 
-  // recurring-vault：弹窗需要展示订阅信息
-  return {
-    ...baseRequest,
-    total: { ...baseRequest.total, paymentTiming: 'recurring' },
-    lineItems: [
-      {
-        label: 'Recurring Subscription',
-        amount,
-        paymentTiming: 'recurring',
-        recurringPaymentStartDate: new Date().toISOString(),
-        calendarUnit: 'month',
-        calendarUnitCount: 1,
-      },
-    ],
-    recurringPaymentRequest: {
-      paymentDescription: 'Monthly subscription via Apple Pay',
-      regularBilling: {
-        label: 'Monthly Plan',
-        amount,
-        calendarUnit: 'month',
-        calendarUnitCount: 1,
-      },
-      billingAgreement: 'You authorize recurring charges until you cancel.',
-      managementURL: 'https://ppgms-test.github.io',
-    },
-  }
+  // recurring-vault：为MIT, 不需要Apple Pay Session.
+
 }
