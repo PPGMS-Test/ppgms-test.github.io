@@ -174,7 +174,7 @@ export function createApplePaySession(
 
         console.log('[ApplePay](capturing order) — orderId:', orderId)
         const captureResult = await captureApplePayOrder(orderId)
-        console.log('[ApplePay](captureOrder) response:', JSON.stringify(captureResult))
+        console.log('[ApplePay](captureOrder) response:', JSON.stringify(captureResult,null,2))
         const captureId = assertCaptureCompleted(captureResult)
 
         session.completePayment({ status: window.ApplePaySession.STATUS_SUCCESS })
