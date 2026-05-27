@@ -91,12 +91,19 @@ async function proxyCreateOrder(params: {
   currencyCode?: string
   vaultId?: string
 }): Promise<CreateOrderResponse> {
-  console.log('[API][proxy][1] POST create-order — headers:', JSON.stringify(credentialHeaders(), null, 2))
+  const extraHeaders: Record<string, string> = {}
+  if (params.scenario === 'recurring-vault') {
+    const requestId = crypto.randomUUID()
+    extraHeaders['x-paypal-request-id'] = requestId
+    console.log('[API][proxy] PayPal-Request-Id (MIT):', requestId)
+  }
+
+  console.log('[API][proxy][1] POST create-order — headers:', JSON.stringify({ ...credentialHeaders(), ...extraHeaders }, null, 2))
   console.log('[API][proxy][2] POST create-order — body:', JSON.stringify(params, null, 2))
 
   const res = await fetch(`${PROXY_BASE_URL}/api/apple-pay/create-order`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...credentialHeaders() },
+    headers: { 'Content-Type': 'application/json', ...credentialHeaders(), ...extraHeaders },
     body: JSON.stringify(params),
   })
   console.log('[API][proxy][3] POST create-order — HTTP status:', res.status)

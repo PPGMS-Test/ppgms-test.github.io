@@ -170,6 +170,13 @@ export async function directCreateOrder(params: {
   const headers = await buildAuthHeaders()
   const body = buildOrderBody(params)
 
+  // MIT 场景需要 PayPal-Request-Id 保证幂等性，防止网络重试导致重复扣款
+  if (params.scenario === 'recurring-vault') {
+    const requestId = crypto.randomUUID()
+    headers['PayPal-Request-Id'] = requestId
+    console.log('[PayPal] PayPal-Request-Id (MIT):', requestId)
+  }
+
   console.log('[PayPal] POST /v2/checkout/orders — body:', JSON.stringify(body, null, 2))
   const res = await fetch(`${base}/v2/checkout/orders`, {
     method: 'POST',

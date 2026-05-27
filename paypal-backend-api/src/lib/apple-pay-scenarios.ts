@@ -12,6 +12,8 @@ export interface ApplePayOrderParams {
   /** Optional per-request controller built from caller-supplied credentials */
   controller?: OrdersController
   paypalAuthAssertion?: string
+  /** MIT 幂等性 ID，recurring-vault 场景必传，防止重复扣款 */
+  paypalRequestId?: string
 }
 
 function buildApplePayOrderBody(params: ApplePayOrderParams): OrderRequest {
@@ -78,7 +80,7 @@ function buildApplePayOrderBody(params: ApplePayOrderParams): OrderRequest {
 }
 
 export async function createApplePayPayPalOrder(params: ApplePayOrderParams) {
-  const { controller, paypalAuthAssertion, ...rest } = params
+  const { controller, paypalAuthAssertion, paypalRequestId, ...rest } = params
   const orderRequestBody = buildApplePayOrderBody(rest)
-  return createOrder({ orderRequestBody, controller, paypalAuthAssertion })
+  return createOrder({ orderRequestBody, controller, paypalAuthAssertion, paypalRequestId })
 }
