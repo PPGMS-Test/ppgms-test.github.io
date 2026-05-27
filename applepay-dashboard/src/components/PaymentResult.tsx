@@ -16,6 +16,7 @@ import { CheckCircle2, XCircle, Copy } from 'lucide-react'
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
+import { useCredentialsStore } from '@/store/credentials'
 import type { PaymentResult as Result, PaymentStatus } from '@/hooks/usePaymentFlow'
 
 interface PaymentResultProps {
@@ -27,6 +28,7 @@ interface PaymentResultProps {
 
 export function PaymentResult({ status, result, error, onReset }: PaymentResultProps) {
   const [copied, setCopied] = useState(false)
+  const { lastVaultId, lastCustomerId } = useCredentialsStore()
 
   // Only show for payment-level outcomes, not initialization errors
   if (status !== 'success' && status !== 'error') return null
@@ -60,6 +62,24 @@ export function PaymentResult({ status, result, error, onReset }: PaymentResultP
             </button>
           </div>
           {copied && <p className="text-xs text-green-600">已复制到剪贴板</p>}
+
+          {/* Vault 信息回显 — 仅 one-time-vault 成功后有值 */}
+          {lastVaultId && (
+            <div className="w-full max-w-sm mx-auto space-y-1.5 text-left">
+              <p className="text-xs font-medium text-green-700">Vault 信息（已自动填入 MIT 配置）</p>
+              <div className="flex items-center gap-2 bg-white rounded-lg border border-green-200 px-3 py-2">
+                <span className="text-xs text-muted-foreground flex-shrink-0 w-20">Vault ID:</span>
+                <code className="text-xs font-mono flex-1 truncate">{lastVaultId}</code>
+              </div>
+              {lastCustomerId && (
+                <div className="flex items-center gap-2 bg-white rounded-lg border border-green-200 px-3 py-2">
+                  <span className="text-xs text-muted-foreground flex-shrink-0 w-20">Customer ID:</span>
+                  <code className="text-xs font-mono flex-1 truncate">{lastCustomerId}</code>
+                </div>
+              )}
+            </div>
+          )}
+
           <Button variant="outline" size="sm" onClick={onReset}>
             重新测试
           </Button>

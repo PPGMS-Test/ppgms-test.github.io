@@ -36,7 +36,26 @@ export interface CaptureOrderResponse {
       authorizations?: Array<{ id: string; status: string }>
     }
   }>
+  /** one-time-vault 场景下 PayPal 会在此返回 vault ID 和 customer ID */
+  payment_source?: {
+    apple_pay?: {
+      attributes?: {
+        vault?: {
+          id?: string
+          status?: string
+          customer?: { id?: string }
+        }
+      }
+    }
+  }
   [key: string]: unknown
+}
+
+/** 从 capture 响应中提取 vault 信息，仅 one-time-vault 场景有值 */
+export function extractVaultInfo(res: CaptureOrderResponse): { vaultId: string; customerId: string } | null {
+  const vault = res.payment_source?.apple_pay?.attributes?.vault
+  if (!vault?.id) return null
+  return { vaultId: vault.id, customerId: vault.customer?.id ?? '' }
 }
 
 // ── Proxy mode (backend at Cloudflare Pages) ────────────────────────────────

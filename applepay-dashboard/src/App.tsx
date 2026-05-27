@@ -24,6 +24,7 @@ import { RecurringButton } from '@/components/payment/RecurringButton'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { usePaymentFlow } from '@/hooks/usePaymentFlow'
+import { useCredentialsStore } from '@/store/credentials'
 import type { PaymentConfig } from '@/components/ConfigPanel'
 
 /** 页面初始默认配置，含 sandbox 测试用 Vault ID 和 Customer ID */
@@ -87,7 +88,14 @@ export default function App() {
         {/* Scenario selector — always visible */}
         <ScenarioSelector
           value={config.scenario}
-          onChange={(scenario) => setConfig((c) => ({ ...c, scenario }))}
+          onChange={(scenario) => {
+            const { lastVaultId, lastCustomerId } = useCredentialsStore.getState()
+            if (scenario === 'recurring-vault' && lastVaultId) {
+              setConfig((c) => ({ ...c, scenario, vaultId: lastVaultId, customerId: lastCustomerId }))
+            } else {
+              setConfig((c) => ({ ...c, scenario }))
+            }
+          }}
           disabled={isLoading || isProcessing}
         />
 

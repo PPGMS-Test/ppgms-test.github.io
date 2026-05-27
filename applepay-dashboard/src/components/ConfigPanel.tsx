@@ -97,6 +97,7 @@ export function ConfigPanel({ config, onChange, onSubmit, loading }: ConfigPanel
   const [credsOpen, setCredsOpen] = useState(false)
   const {
     environment, mode, apiRequestMode, proxyPostSession,
+    lastVaultId, lastCustomerId,
     clientId, clientSecret,
     partnerClientId, partnerClientSecret, partnerMerchantId,
     setEnvironment, setMode, setApiRequestMode, setProxyPostSession,
@@ -104,6 +105,15 @@ export function ConfigPanel({ config, onChange, onSubmit, loading }: ConfigPanel
     setPartnerClientId, setPartnerClientSecret, setPartnerMerchantId,
     reset: resetCreds,
   } = useCredentialsStore()
+
+  // 切换到 recurring-vault 时，若 store 有上次 vault 信息则自动填入
+  const handleScenarioChange = (scenario: ApplePayScenario) => {
+    if (scenario === 'recurring-vault' && lastVaultId) {
+      onChange({ ...config, scenario, vaultId: lastVaultId, customerId: lastCustomerId })
+    } else {
+      set('scenario', scenario)
+    }
+  }
 
   const isPartner = mode === 'partner'
   const headerLabel = `PayPal 凭据 · ${environment === 'sandbox' ? 'Sandbox' : 'Production'} · ${isPartner ? '三方' : '一方'}`

@@ -55,6 +55,10 @@ interface CredentialsState {
   setMode: (mode: IntegrationMode) => void
   setApiRequestMode: (mode: ApiRequestMode) => void
   setProxyPostSession: (v: boolean) => void
+  /** one-time-vault 成功后自动写入，供 recurring-vault 场景读取 */
+  lastVaultId: string
+  lastCustomerId: string
+  setLastVaultInfo: (vaultId: string, customerId: string) => void
   setClientId: (id: string) => void
   setClientSecret: (secret: string) => void
   setPartnerClientId: (id: string) => void
@@ -69,6 +73,8 @@ const INITIAL_STATE = {
   mode: 'merchant' as IntegrationMode,
   apiRequestMode: 'direct' as ApiRequestMode,
   proxyPostSession: false,
+  lastVaultId: '',
+  lastCustomerId: '',
   clientId: SANDBOX_MERCHANT_DEFAULTS.clientId,
   clientSecret: SANDBOX_MERCHANT_DEFAULTS.clientSecret,
   // Partner defaults — placeholder values only (same as original HTML)
@@ -91,6 +97,7 @@ export const useCredentialsStore = create<CredentialsState>((set) => ({
   setMode: (mode) => set({ mode }),
   setApiRequestMode: (apiRequestMode) => set({ apiRequestMode }),
   setProxyPostSession: (proxyPostSession) => set({ proxyPostSession }),
+  setLastVaultInfo: (lastVaultId, lastCustomerId) => set({ lastVaultId, lastCustomerId }),
   setClientId: (clientId) => set({ clientId }),
   setClientSecret: (clientSecret) => set({ clientSecret }),
   setPartnerClientId: (partnerClientId) => set({ partnerClientId }),

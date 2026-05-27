@@ -17,7 +17,8 @@
  *   任意状态 → (reset) → idle
  */
 import { useState, useCallback } from 'react'
-import { getActiveCredentials } from '@/store/credentials'
+import { getActiveCredentials, useCredentialsStore } from '@/store/credentials'
+import { extractVaultInfo } from '@/lib/api'
 import {
   loadPayPalSDK,
   loadApplePaySDK,
@@ -136,6 +137,14 @@ export function usePaymentFlow() {
         { scenario: config.scenario, amount: config.amount, vaultId: config.vaultId, sdkConfig },
         {
           onSuccess: (transactionId, captureData) => {
+            // one-time-vault 成功后提取 vault info 并存入 store，供 recurring-vault 使用
+            if (config.scenario === 'one-time-vault') {
+              const vaultInfo = extractVaultInfo(captureData as Parameters<typeof extractVaultInfo>[0])
+              if (vaultInfo) {
+                console.log('[usePaymentFlow] vault info saved — vaultId:', vaultInfo.vaultId, '| customerId:', vaultInfo.customerId)
+                useCredentialsStore.getState().setLastVaultInfo(vaultInfo.vaultId, vaultInfo.customerId)
+              }
+            }
             setResult({ transactionId, captureData })
             setStatus('success')
           },
