@@ -8,8 +8,8 @@ interface ApplePayLineItem {
   paymentTiming?: 'immediate' | 'recurring' | 'deferred' | 'automaticReload'
   recurringPaymentStartDate?: string | Date
   recurringPaymentEndDate?: string | Date
-  calendarUnit?: 'minute' | 'hour' | 'day' | 'month' | 'year' | 'week'
-  calendarUnitCount?: number
+  recurringPaymentIntervalUnit?: 'minute' | 'hour' | 'day' | 'week' | 'month' | 'year'
+  recurringPaymentIntervalCount?: number
 }
 
 interface ApplePayRecurringPaymentRequest {
