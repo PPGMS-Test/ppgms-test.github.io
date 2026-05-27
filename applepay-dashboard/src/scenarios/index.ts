@@ -48,7 +48,7 @@ export function buildApplePayRequest(params: BuildRequestParams): ApplePayPaymen
   if (scenario === 'one-time-basic') {
     return baseRequest
   } else {
-    // scenario === one-time-vault  需要在 Order 创建时指定 vault 参数，
+    // scenario === one-time-vault：显示订阅弹窗让用户授权保存卡
     return {
       ...baseRequest,
       total: { ...baseRequest.total, paymentTiming: 'recurring' },
@@ -56,10 +56,10 @@ export function buildApplePayRequest(params: BuildRequestParams): ApplePayPaymen
         {
           label: 'Recurring Subscription',
           amount,
+          type: 'final',
           paymentTiming: 'recurring',
-          recurringPaymentStartDate: new Date().toISOString(),
-          calendarUnit: 'month',
-          calendarUnitCount: 1,
+          recurringPaymentIntervalUnit: 'month',
+          recurringPaymentIntervalCount: 1,
         },
       ],
       recurringPaymentRequest: {
@@ -67,8 +67,11 @@ export function buildApplePayRequest(params: BuildRequestParams): ApplePayPaymen
         regularBilling: {
           label: 'Monthly Plan',
           amount,
-          calendarUnit: 'month',
-          calendarUnitCount: 1,
+          type: 'final',
+          paymentTiming: 'recurring',              // Apple 要求必须设置为 'recurring'
+          recurringPaymentStartDate: new Date(),
+          recurringPaymentIntervalUnit: 'month',   // 正确字段名（非 calendarUnit）
+          recurringPaymentIntervalCount: 1,        // 正确字段名（非 calendarUnitCount）
         },
         billingAgreement: 'You authorize recurring charges until you cancel.',
         managementURL: 'https://ppgms-test.github.io',
