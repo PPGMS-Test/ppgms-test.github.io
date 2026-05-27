@@ -66,10 +66,16 @@ export function createApplePaySession(
   const session = new window.ApplePaySession(4, paymentRequest)
   const applepay = window.paypal.Applepay()
 
+  console.log('[ApplePay] session created — scenario:', scenario, '| amount:', amount)
+
   session.onvalidatemerchant = (event) => {
+    console.log('[ApplePay] onvalidatemerchant — validationURL:', event.validationURL)
     applepay
       .validateMerchant({ validationUrl: event.validationURL })
-      .then((payload) => session.completeMerchantValidation(payload.merchantSession))
+      .then((payload) => {
+        console.log('[ApplePay] validateMerchant success — merchantSession:', JSON.stringify(payload.merchantSession))
+        session.completeMerchantValidation(payload.merchantSession)
+      })
       .catch((err) => {
         console.error('[ApplePay] validateMerchant error', err)
         session.abort()
@@ -77,14 +83,19 @@ export function createApplePaySession(
   }
 
   session.onpaymentmethodselected = () => {
+    console.log('[ApplePay] onpaymentmethodselected — total:', JSON.stringify(paymentRequest.total))
     session.completePaymentMethodSelection({ newTotal: paymentRequest.total })
   }
 
   session.onpaymentauthorized = async (event) => {
+    console.log('[ApplePay] onpaymentauthorized — token type:', event.payment.token?.paymentMethod?.type)
     try {
+      console.log('[ApplePay] creating order — scenario:', scenario, '| amount:', amount, '| vaultId:', vaultId)
       const order = await createApplePayOrder({ scenario, amount, vaultId })
       const orderId = order.id
+      console.log('[ApplePay] order created — orderId:', orderId, '| status:', order.status)
 
+      console.log('[ApplePay] confirming order — orderId:', orderId, '| email:', event.payment.shippingContact?.emailAddress)
       await applepay.confirmOrder({
         orderId,
         token: event.payment.token,
@@ -92,12 +103,15 @@ export function createApplePaySession(
         shippingContact: event.payment.shippingContact,
         email: event.payment.shippingContact?.emailAddress,
       })
+      console.log('[ApplePay] confirmOrder success')
 
+      console.log('[ApplePay] capturing order — orderId:', orderId)
       const captureResult = await captureApplePayOrder(orderId)
-      // Verify PayPal actually settled — HTTP 200 can still carry status DECLINED
+      console.log('[ApplePay] captureOrder response:', JSON.stringify(captureResult))
       const captureId = assertCaptureCompleted(captureResult)
 
       session.completePayment({ status: window.ApplePaySession.STATUS_SUCCESS })
+      console.log('[ApplePay] ✓ payment SUCCESS — captureId:', captureId)
       onSuccess(captureId, captureResult)
     } catch (err) {
       console.error('[ApplePay] payment authorization error', err)
@@ -107,7 +121,7 @@ export function createApplePaySession(
   }
 
   session.oncancel = () => {
-    console.log('[ApplePay] session cancelled')
+    console.log('[ApplePay] session cancelled by user')
     onCancel()
   }
 

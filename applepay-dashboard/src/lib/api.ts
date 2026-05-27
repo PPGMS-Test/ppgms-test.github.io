@@ -80,13 +80,18 @@ export async function createApplePayOrder(params: {
   currencyCode?: string
   vaultId?: string
 }): Promise<CreateOrderResponse> {
+  console.log('[API] POST create-order — params:', JSON.stringify(params))
   const res = await fetch(`${BASE_URL}/api/apple-pay/create-order`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...credentialHeaders() },
     body: JSON.stringify(params),
   })
   const data = (await res.json()) as CreateOrderResponse & PayPalErrorBody
-  if (!res.ok) throw new Error(extractPayPalError(data, `Create order failed: ${res.status}`))
+  if (!res.ok) {
+    console.error('[API] create-order failed —', res.status, JSON.stringify(data))
+    throw new Error(extractPayPalError(data, `Create order failed: ${res.status}`))
+  }
+  console.log('[API] create-order success — orderId:', data.id, '| status:', data.status)
   return data
 }
 
@@ -95,12 +100,17 @@ export async function createApplePayOrder(params: {
  * HTTP 200 但 capture.status !== 'COMPLETED' 时仍视为失败，由调用方检查。
  */
 export async function captureApplePayOrder(orderId: string): Promise<CaptureOrderResponse> {
+  console.log('[API] POST capture-order — orderId:', orderId)
   const res = await fetch(`${BASE_URL}/api/apple-pay/capture-order/${orderId}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...credentialHeaders() },
   })
   const data = (await res.json()) as CaptureOrderResponse & PayPalErrorBody
-  if (!res.ok) throw new Error(extractPayPalError(data, `Capture failed: ${res.status}`))
+  if (!res.ok) {
+    console.error('[API] capture-order failed —', res.status, JSON.stringify(data))
+    throw new Error(extractPayPalError(data, `Capture failed: ${res.status}`))
+  }
+  console.log('[API] capture-order success — status:', data.status)
   return data
 }
 

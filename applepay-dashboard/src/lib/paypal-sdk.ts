@@ -35,20 +35,27 @@ import { PAYMENT_CURRENCY } from '@/scenarios/types'
  */
 export function loadPayPalSDK(clientId: string, currency = PAYMENT_CURRENCY): Promise<void> {
   return new Promise((resolve, reject) => {
-    // Remove old script and clear window.paypal so the reload starts clean.
-    // Without this, the old Applepay() instance may linger in closures.
     document.getElementById(PAYPAL_SCRIPT_ID)?.remove()
     if ('paypal' in window) {
       // @ts-expect-error — intentionally clearing stale SDK instance before reload
       delete window.paypal
     }
 
+    const src = `https://www.paypal.com/sdk/js?client-id=${clientId}&buyer-country=US&currency=${currency}&components=applepay,buttons`
+    console.log('[PayPal SDK] loading', src)
+
     const script = document.createElement('script')
     script.id = PAYPAL_SCRIPT_ID
-    script.src = `https://www.paypal.com/sdk/js?client-id=${clientId}&buyer-country=US&currency=${currency}&components=applepay,buttons`
+    script.src = src
     script.crossOrigin = 'anonymous'
-    script.onload = () => resolve()
-    script.onerror = () => reject(new Error('PayPal SDK failed to load'))
+    script.onload = () => {
+      console.log('[PayPal SDK] loaded ✓')
+      resolve()
+    }
+    script.onerror = () => {
+      console.error('[PayPal SDK] failed to load')
+      reject(new Error('PayPal SDK failed to load'))
+    }
     document.head.appendChild(script)
   })
 }
@@ -64,23 +71,30 @@ export function loadApplePaySDK(version: ApplePayCDNVersion): Promise<void> {
     const existing = document.getElementById(APPLE_PAY_SCRIPT_ID) as HTMLScriptElement | null
 
     if (existing) {
-      // Apple Pay SDK mutates window state and cannot be safely reloaded mid-session.
       if (existing.src === APPLE_PAY_CDN[version]) {
-        resolve() // same version already loaded — ok
+        console.log('[Apple Pay SDK] already loaded (same version)', version)
+        resolve()
       } else {
-        reject(
-          new Error(`Apple Pay CDN 版本已切换为 ${version}，请刷新页面后重新初始化。`),
-        )
+        const msg = `Apple Pay CDN 版本已切换为 ${version}，请刷新页面后重新初始化。`
+        console.error('[Apple Pay SDK]', msg)
+        reject(new Error(msg))
       }
       return
     }
 
+    console.log('[Apple Pay SDK] loading version', version, APPLE_PAY_CDN[version])
     const script = document.createElement('script')
     script.id = APPLE_PAY_SCRIPT_ID
     script.src = APPLE_PAY_CDN[version]
     script.async = true
-    script.onload = () => resolve()
-    script.onerror = () => reject(new Error('Apple Pay SDK failed to load'))
+    script.onload = () => {
+      console.log('[Apple Pay SDK] loaded ✓')
+      resolve()
+    }
+    script.onerror = () => {
+      console.error('[Apple Pay SDK] failed to load')
+      reject(new Error('Apple Pay SDK failed to load'))
+    }
     document.head.appendChild(script)
   })
 }
@@ -91,12 +105,15 @@ export function loadApplePaySDK(version: ApplePayCDNVersion): Promise<void> {
  * 非 Safari / 非 Apple 设备会返回 false。
  */
 export function isApplePaySupported(): boolean {
-  return (
-    typeof window !== 'undefined' &&
-    'ApplePaySession' in window &&
-    window.ApplePaySession.supportsVersion(4) &&
-    window.ApplePaySession.canMakePayments()
-  )
+  const hasSession = typeof window !== 'undefined' && 'ApplePaySession' in window
+  if (!hasSession) {
+    console.warn('[Apple Pay] ApplePaySession not available (non-Safari or non-Apple device)')
+    return false
+  }
+  const supportsV4 = window.ApplePaySession.supportsVersion(4)
+  const canPay = window.ApplePaySession.canMakePayments()
+  console.log('[Apple Pay] supportsVersion(4):', supportsV4, '| canMakePayments():', canPay)
+  return supportsV4 && canPay
 }
 
 /**
@@ -104,5 +121,8 @@ export function isApplePaySupported(): boolean {
  * 须在 loadPayPalSDK() 完成后调用，否则 window.paypal 不存在会抛错。
  */
 export async function getApplePaySDKConfig(): Promise<PayPalApplepayConfig> {
-  return window.paypal.Applepay().config()
+  console.log('[PayPal SDK] fetching Applepay config...')
+  const config = await window.paypal.Applepay().config()
+  console.log('[PayPal SDK] Applepay config:', JSON.stringify(config, null, 2))
+  return config
 }

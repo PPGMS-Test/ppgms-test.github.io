@@ -90,6 +90,7 @@ export function usePaymentFlow() {
       }
 
       const { clientId } = getActiveCredentials()
+      console.log('[usePaymentFlow] initialize — scenario:', config.scenario, '| cdnVersion:', config.cdnVersion, '| clientId:', clientId)
       await loadPayPalSDK(clientId)
       await loadApplePaySDK(config.cdnVersion)
 
@@ -100,12 +101,14 @@ export function usePaymentFlow() {
       }
 
       const applePayCfg = await getApplePaySDKConfig()
+      console.log('[usePaymentFlow] isEligible:', applePayCfg.isEligible)
       if (!applePayCfg.isEligible) {
         throw new Error('Apple Pay is not eligible for this merchant/region.')
       }
 
       setSdkConfig(applePayCfg)
       setStatus('ready')
+      console.log('[usePaymentFlow] initialization complete ✓')
     } catch (err) {
       console.error('[usePaymentFlow] Initialization error:', err)
       setError(toErrorMessage(err, 'Initialization failed'))
@@ -164,16 +167,20 @@ export function usePaymentFlow() {
       const { createApplePayOrder, captureApplePayOrder } = await import(
         '@/lib/api'
       )
+      console.log('[usePaymentFlow] recurring payment — amount:', config.amount, '| vaultId:', config.vaultId)
       const order = await createApplePayOrder({
         scenario: 'recurring-vault',
         amount: config.amount,
         vaultId: config.vaultId,
       })
+      console.log('[usePaymentFlow] recurring order created — orderId:', order.id)
       const captureData = await captureApplePayOrder(order.id)
+      console.log('[usePaymentFlow] recurring capture response:', JSON.stringify(captureData))
       const capture = captureData.purchase_units?.[0]?.payments?.captures?.[0]
       if (!capture || capture.status !== 'COMPLETED') {
         throw new Error(`Capture not completed — PayPal status: ${capture?.status ?? 'unknown'}`)
       }
+      console.log('[usePaymentFlow] ✓ recurring payment SUCCESS — captureId:', capture.id)
       setResult({ transactionId: capture.id, captureData })
       setStatus('success')
     } catch (err) {
