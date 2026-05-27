@@ -164,7 +164,8 @@ export function usePaymentFlow() {
 
   /**
    * 触发 MIT 定期扣款（recurring-vault 场景）。
-   * 不需要 Apple Pay session，直接调后端 createOrder + captureOrder。
+   * 不需要 Apple Pay session，也不需要 capture — createOrder 即完成扣款，
+   * 直接取 purchase_units 下的 payments.captures/authorizations 作为交易结果。
    */
   const startRecurringPayment = useCallback(async (config: PaymentFlowConfig) => {
     if (config.scenario !== 'recurring-vault') return
@@ -173,24 +174,20 @@ export function usePaymentFlow() {
     setError(null)
 
     try {
-      const { createApplePayPayPalOrder, captureApplePayOrder } = await import(
-        '@/lib/api'
-      )
+      const { createApplePayPayPalOrder } = await import('@/lib/api')
       console.log('[usePaymentFlow] recurring payment — amount:', config.amount, '| vaultId:', config.vaultId)
       const order = await createApplePayPayPalOrder({
         scenario: 'recurring-vault',
         amount: config.amount,
         vaultId: config.vaultId,
       })
-      console.log('[usePaymentFlow] recurring order created — orderId:', order.id)
-      const captureData = await captureApplePayOrder(order.id)
-      console.log('[usePaymentFlow] recurring capture response:', JSON.stringify(captureData))
-      const capture = captureData.purchase_units?.[0]?.payments?.captures?.[0]
-      if (!capture || capture.status !== 'COMPLETED') {
-        throw new Error(`Capture not completed — PayPal status: ${capture?.status ?? 'unknown'}`)
-      }
-      console.log('[usePaymentFlow] ✓ recurring payment SUCCESS — captureId:', capture.id)
-      setResult({ transactionId: capture.id, captureData })
+      console.log('[usePaymentFlow] recurring order response:', JSON.stringify(order))
+      const txn =
+        order.purchase_units?.[0]?.payments?.captures?.[0] ??
+        order.purchase_units?.[0]?.payments?.authorizations?.[0]
+      const transactionId = txn?.id ?? order.id
+      console.log('[usePaymentFlow] ✓ recurring payment SUCCESS — transactionId:', transactionId)
+      setResult({ transactionId, captureData: order })
       setStatus('success')
     } catch (err) {
       console.error('[usePaymentFlow] Recurring payment error:', err)

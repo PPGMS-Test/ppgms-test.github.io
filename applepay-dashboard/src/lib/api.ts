@@ -23,6 +23,13 @@ import { directCreateOrder, directCaptureOrder } from '@/lib/paypal-utils'
 export interface CreateOrderResponse {
   id: string
   status?: string
+  /** MIT recurring-vault 场景下 create order 响应中直接包含交易结果 */
+  purchase_units?: Array<{
+    payments?: {
+      captures?: Array<{ id: string; status: string }>
+      authorizations?: Array<{ id: string; status: string }>
+    }
+  }>
   [key: string]: unknown
 }
 
