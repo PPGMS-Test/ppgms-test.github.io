@@ -111,36 +111,42 @@ export function createApplePaySession(
       // 先关闭 Apple Pay 面板，解除 Safari 的同域限制，再发起后端代理请求。
       // 注意：此时向用户展示"成功"，若后续请求失败则 UI 会切换到 error 状态。
       const savedPayment = event.payment
-      console.log('[ApplePay][post-session] completing session immediately — Safari cross-origin restriction will be lifted')
+      console.log('[ApplePay][post-session] completing session — API calls deferred to next event loop tick')
       session.completePayment({ status: window.ApplePaySession.STATUS_SUCCESS })
 
-      try {
-        console.log('[ApplePay][post-session] creating order — scenario:', scenario, '| amount:', amount, '| vaultId:', vaultId)
-        const order = await createApplePayPayPalOrder({ scenario, amount, vaultId })
-        const orderId = order.id
-        console.log('[ApplePay][post-session] order created — orderId:', orderId, '| status:', order.status)
+      // setTimeout(0) 确保在 onpaymentauthorized 完全退出后再发请求。
+      // Safari 在函数返回前不会解除同域限制，仅调用 completePayment() 还不够。
+      setTimeout(() => {
+        ;(async () => {
+          try {
+            console.log('[ApplePay][post-session] creating order — scenario:', scenario, '| amount:', amount, '| vaultId:', vaultId)
+            const order = await createApplePayPayPalOrder({ scenario, amount, vaultId })
+            const orderId = order.id
+            console.log('[ApplePay][post-session] order created — orderId:', orderId, '| status:', order.status)
 
-        console.log('[ApplePay][post-session] confirming order — orderId:', orderId)
-        await applepay.confirmOrder({
-          orderId,
-          token: savedPayment.token,
-          billingContact: savedPayment.billingContact,
-          shippingContact: savedPayment.shippingContact,
-          email: savedPayment.shippingContact?.emailAddress,
-        })
-        console.log('[ApplePay][post-session] confirmOrder success')
+            console.log('[ApplePay][post-session] confirming order — orderId:', orderId)
+            await applepay.confirmOrder({
+              orderId,
+              token: savedPayment.token,
+              billingContact: savedPayment.billingContact,
+              shippingContact: savedPayment.shippingContact,
+              email: savedPayment.shippingContact?.emailAddress,
+            })
+            console.log('[ApplePay][post-session] confirmOrder success')
 
-        console.log('[ApplePay][post-session] capturing order — orderId:', orderId)
-        const captureResult = await captureApplePayOrder(orderId)
-        console.log('[ApplePay][post-session] captureOrder response:', JSON.stringify(captureResult))
-        const captureId = assertCaptureCompleted(captureResult)
+            console.log('[ApplePay][post-session] capturing order — orderId:', orderId)
+            const captureResult = await captureApplePayOrder(orderId)
+            console.log('[ApplePay][post-session] captureOrder response:', JSON.stringify(captureResult))
+            const captureId = assertCaptureCompleted(captureResult)
 
-        console.log('[ApplePay][post-session] ✓ payment SUCCESS — captureId:', captureId)
-        onSuccess(captureId, captureResult)
-      } catch (err) {
-        console.error('[ApplePay][post-session] payment failed after session closed', err)
-        onFailure(err)
-      }
+            console.log('[ApplePay][post-session] ✓ payment SUCCESS — captureId:', captureId)
+            onSuccess(captureId, captureResult)
+          } catch (err) {
+            console.error('[ApplePay][post-session] payment failed after session closed', err)
+            onFailure(err)
+          }
+        })()
+      }, 0)
     } else {
       // ── 标准模式 ──────────────────────────────────────────────────────
       // 在 session 活跃期间完成所有请求，最后再 completePayment。
