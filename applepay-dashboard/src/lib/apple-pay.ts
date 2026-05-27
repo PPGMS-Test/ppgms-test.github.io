@@ -17,6 +17,7 @@ import { createApplePayPayPalOrder, captureApplePayOrder } from '@/lib/api'
 import type { ApplePayScenario } from '@/scenarios/types'
 import { buildApplePayRequest } from '@/scenarios'
 import type { CaptureOrderResponse } from '@/lib/api'
+import { useCredentialsStore } from '@/store/credentials'
 
 /** session 结果回调接口，由 usePaymentFlow 提供实现以更新 React 状态 */
 export interface ApplePaySessionCallbacks {
@@ -101,36 +102,77 @@ export function createApplePaySession(
 
   session.onpaymentauthorized = async (event) => {
     console.log('[ApplePay](onpaymentauthorized) — event:', JSON.stringify(event, null, 2))
-    try {
-      console.log('[ApplePay](creating PayPal order) — scenario:', scenario, '| amount:', amount, '| vaultId:', vaultId)
-      const order = await createApplePayPayPalOrder({ scenario, amount, vaultId })
-      const orderId = order.id
-      console.log('[ApplePay](order created) — orderId:', orderId, '| status:', order.status)
 
-      console.log('[ApplePay](confirming order) — orderId:', orderId, '| email:', event.payment.shippingContact?.emailAddress)
-      await applepay.confirmOrder({
-        orderId,
-        token: event.payment.token,
-        billingContact: event.payment.billingContact,
-        shippingContact: event.payment.shippingContact,
-        email: event.payment.shippingContact?.emailAddress,
-      })
-      console.log('[ApplePay] confirmOrder success')
+    const { apiRequestMode, proxyPostSession } = useCredentialsStore.getState()
+    const isPostSession = apiRequestMode === 'proxy' && proxyPostSession
 
-      console.log('[ApplePay](capturing order) — orderId:', orderId)
-      const captureResult = await captureApplePayOrder(orderId)
-
-      console.log('[ApplePay](captureOrder) response:', JSON.stringify(captureResult))
-      const captureId = assertCaptureCompleted(captureResult)
-
+    if (isPostSession) {
+      // ── Post-session 模式 ──────────────────────────────────────────────
+      // 先关闭 Apple Pay 面板，解除 Safari 的同域限制，再发起后端代理请求。
+      // 注意：此时向用户展示"成功"，若后续请求失败则 UI 会切换到 error 状态。
+      const savedPayment = event.payment
+      console.log('[ApplePay][post-session] completing session immediately — Safari cross-origin restriction will be lifted')
       session.completePayment({ status: window.ApplePaySession.STATUS_SUCCESS })
-      
-      console.log('[ApplePay] ✓ payment SUCCESS — captureId:', captureId)
-      onSuccess(captureId, captureResult)
-    } catch (err) {
-      console.error('[ApplePay] payment authorization error', err)
-      session.completePayment({ status: window.ApplePaySession.STATUS_FAILURE })
-      onFailure(err)
+
+      try {
+        console.log('[ApplePay][post-session] creating order — scenario:', scenario, '| amount:', amount, '| vaultId:', vaultId)
+        const order = await createApplePayPayPalOrder({ scenario, amount, vaultId })
+        const orderId = order.id
+        console.log('[ApplePay][post-session] order created — orderId:', orderId, '| status:', order.status)
+
+        console.log('[ApplePay][post-session] confirming order — orderId:', orderId)
+        await applepay.confirmOrder({
+          orderId,
+          token: savedPayment.token,
+          billingContact: savedPayment.billingContact,
+          shippingContact: savedPayment.shippingContact,
+          email: savedPayment.shippingContact?.emailAddress,
+        })
+        console.log('[ApplePay][post-session] confirmOrder success')
+
+        console.log('[ApplePay][post-session] capturing order — orderId:', orderId)
+        const captureResult = await captureApplePayOrder(orderId)
+        console.log('[ApplePay][post-session] captureOrder response:', JSON.stringify(captureResult))
+        const captureId = assertCaptureCompleted(captureResult)
+
+        console.log('[ApplePay][post-session] ✓ payment SUCCESS — captureId:', captureId)
+        onSuccess(captureId, captureResult)
+      } catch (err) {
+        console.error('[ApplePay][post-session] payment failed after session closed', err)
+        onFailure(err)
+      }
+    } else {
+      // ── 标准模式 ──────────────────────────────────────────────────────
+      // 在 session 活跃期间完成所有请求，最后再 completePayment。
+      try {
+        console.log('[ApplePay](creating PayPal order) — scenario:', scenario, '| amount:', amount, '| vaultId:', vaultId)
+        const order = await createApplePayPayPalOrder({ scenario, amount, vaultId })
+        const orderId = order.id
+        console.log('[ApplePay](order created) — orderId:', orderId, '| status:', order.status)
+
+        console.log('[ApplePay](confirming order) — orderId:', orderId, '| email:', event.payment.shippingContact?.emailAddress)
+        await applepay.confirmOrder({
+          orderId,
+          token: event.payment.token,
+          billingContact: event.payment.billingContact,
+          shippingContact: event.payment.shippingContact,
+          email: event.payment.shippingContact?.emailAddress,
+        })
+        console.log('[ApplePay] confirmOrder success')
+
+        console.log('[ApplePay](capturing order) — orderId:', orderId)
+        const captureResult = await captureApplePayOrder(orderId)
+        console.log('[ApplePay](captureOrder) response:', JSON.stringify(captureResult))
+        const captureId = assertCaptureCompleted(captureResult)
+
+        session.completePayment({ status: window.ApplePaySession.STATUS_SUCCESS })
+        console.log('[ApplePay] ✓ payment SUCCESS — captureId:', captureId)
+        onSuccess(captureId, captureResult)
+      } catch (err) {
+        console.error('[ApplePay] payment authorization error', err)
+        session.completePayment({ status: window.ApplePaySession.STATUS_FAILURE })
+        onFailure(err)
+      }
     }
   }
 

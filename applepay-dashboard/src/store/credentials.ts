@@ -33,6 +33,12 @@ interface CredentialsState {
   mode: IntegrationMode
   /** 请求路由模式：direct=前端直调 PayPal API，proxy=经由后端代理 */
   apiRequestMode: ApiRequestMode
+  /**
+   * 后端代理延迟模式：仅在 apiRequestMode==='proxy' 时生效。
+   * true  → 先 session.completePayment() 关闭 Apple Pay 面板，再发起后端请求（绕过跨域限制）
+   * false → 标准流程，在 session 活跃期间发起请求
+   */
+  proxyPostSession: boolean
 
   // 一方（merchant）凭据
   clientId: string
@@ -48,6 +54,7 @@ interface CredentialsState {
   setEnvironment: (env: PayPalEnvironment) => void
   setMode: (mode: IntegrationMode) => void
   setApiRequestMode: (mode: ApiRequestMode) => void
+  setProxyPostSession: (v: boolean) => void
   setClientId: (id: string) => void
   setClientSecret: (secret: string) => void
   setPartnerClientId: (id: string) => void
@@ -61,6 +68,7 @@ const INITIAL_STATE = {
   environment: 'sandbox' as PayPalEnvironment,
   mode: 'merchant' as IntegrationMode,
   apiRequestMode: 'direct' as ApiRequestMode,
+  proxyPostSession: false,
   clientId: SANDBOX_MERCHANT_DEFAULTS.clientId,
   clientSecret: SANDBOX_MERCHANT_DEFAULTS.clientSecret,
   // Partner defaults — placeholder values only (same as original HTML)
@@ -82,6 +90,7 @@ export const useCredentialsStore = create<CredentialsState>((set) => ({
   },
   setMode: (mode) => set({ mode }),
   setApiRequestMode: (apiRequestMode) => set({ apiRequestMode }),
+  setProxyPostSession: (proxyPostSession) => set({ proxyPostSession }),
   setClientId: (clientId) => set({ clientId }),
   setClientSecret: (clientSecret) => set({ clientSecret }),
   setPartnerClientId: (partnerClientId) => set({ partnerClientId }),

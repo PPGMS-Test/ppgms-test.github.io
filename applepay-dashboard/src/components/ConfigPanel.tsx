@@ -96,10 +96,10 @@ export function ConfigPanel({ config, onChange, onSubmit, loading }: ConfigPanel
 
   const [credsOpen, setCredsOpen] = useState(false)
   const {
-    environment, mode, apiRequestMode,
+    environment, mode, apiRequestMode, proxyPostSession,
     clientId, clientSecret,
     partnerClientId, partnerClientSecret, partnerMerchantId,
-    setEnvironment, setMode, setApiRequestMode,
+    setEnvironment, setMode, setApiRequestMode, setProxyPostSession,
     setClientId, setClientSecret,
     setPartnerClientId, setPartnerClientSecret, setPartnerMerchantId,
     reset: resetCreds,
@@ -188,6 +188,37 @@ export function ConfigPanel({ config, onChange, onSubmit, loading }: ConfigPanel
               : '⚠ 经由 Cloudflare Pages 代理 — Apple Pay session 内可能被 Safari 跨域 block'}
           </p>
         </div>
+
+        {/* Post-session 开关 — 仅 proxy 模式下可见 */}
+        {apiRequestMode === 'proxy' && (
+          <div className="flex items-start gap-3 rounded-lg border border-dashed border-amber-300 bg-amber-50/50 px-3 py-2.5">
+            <button
+              type="button"
+              role="switch"
+              aria-checked={proxyPostSession}
+              onClick={() => setProxyPostSession(!proxyPostSession)}
+              className={cn(
+                'mt-0.5 relative inline-flex h-5 w-9 flex-shrink-0 rounded-full border-2 border-transparent transition-colors duration-200',
+                proxyPostSession ? 'bg-amber-500' : 'bg-muted',
+              )}
+            >
+              <span
+                className={cn(
+                  'inline-block h-4 w-4 rounded-full bg-white shadow transition-transform duration-200',
+                  proxyPostSession ? 'translate-x-4' : 'translate-x-0',
+                )}
+              />
+            </button>
+            <div className="space-y-0.5">
+              <p className="text-xs font-medium text-amber-800">Session 关闭后再发请求</p>
+              <p className="text-xs text-amber-700">
+                {proxyPostSession
+                  ? '先 completePayment() 关闭面板，再调后端 — 绕过跨域限制'
+                  : '标准流程：session 活跃期间调后端（可能被 block）'}
+              </p>
+            </div>
+          </div>
+        )}
 
         {/* ── Collapsible credentials section ── */}
         <div className="rounded-lg border border-dashed border-border overflow-hidden">
