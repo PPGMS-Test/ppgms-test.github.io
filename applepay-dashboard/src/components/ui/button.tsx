@@ -7,7 +7,12 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 const variantStyles = {
-  default: 'bg-primary text-primary-foreground hover:bg-primary/90',
+  default: [
+    'bg-primary text-primary-foreground',
+    'shadow-[0_4px_14px_0_rgba(0,0,0,0.25)]',
+    'hover:bg-primary/90 hover:shadow-[0_6px_20px_0_rgba(0,0,0,0.35)] hover:scale-[1.03]',
+    'active:scale-[0.97] active:shadow-[0_2px_8px_0_rgba(0,0,0,0.2)]',
+  ].join(' '),
   outline: 'border border-input bg-background hover:bg-accent hover:text-accent-foreground',
   ghost: 'hover:bg-accent hover:text-accent-foreground',
   destructive: 'bg-destructive text-destructive-foreground hover:bg-destructive/90',
@@ -28,8 +33,9 @@ export function Button({
     <button
       className={cn(
         'inline-flex items-center justify-center gap-2 rounded-md font-medium ring-offset-background',
-        'transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
-        'disabled:pointer-events-none disabled:opacity-50',
+        'transition-all duration-200 ease-out',
+        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+        'disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none disabled:scale-100',
         variantStyles[variant],
         sizeStyles[size],
         className,

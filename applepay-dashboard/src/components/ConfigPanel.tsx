@@ -293,7 +293,7 @@ export function ConfigPanel({ config, onChange, onSubmit, loading }: ConfigPanel
           </div>
         </div>
 
-        <Button className="w-full" onClick={onSubmit} loading={loading} size="lg">
+        <Button className="w-full rounded-full tracking-wide" onClick={onSubmit} loading={loading} size="lg">
           确认配置并初始化 SDK
         </Button>
       </CardContent>
