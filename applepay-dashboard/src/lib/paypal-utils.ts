@@ -170,7 +170,7 @@ export async function directCreateOrder(params: {
   const headers = await buildAuthHeaders()
   const body = buildOrderBody(params)
 
-  console.log('[PayPal] POST /v2/checkout/orders — body:', JSON.stringify(body))
+  console.log('[PayPal] POST /v2/checkout/orders — body:', JSON.stringify(body, null, 2))
   const res = await fetch(`${base}/v2/checkout/orders`, {
     method: 'POST',
     headers,
@@ -178,6 +178,8 @@ export async function directCreateOrder(params: {
   })
 
   const data = await res.json() as CreateOrderResponse & { message?: string; name?: string }
+  console.log('[PayPal] POST /v2/checkout/orders — response:', JSON.stringify(data, null, 2))
+  
   if (!res.ok) throw new Error(data.message ?? data.name ?? `Create order failed: ${res.status}`)
   return data
 }
