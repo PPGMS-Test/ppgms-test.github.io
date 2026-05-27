@@ -7,7 +7,8 @@
   },
   "tags": [
     { "name": "Auth", "description": "Client token endpoints" },
-    { "name": "Orders", "description": "Order creation and management" }
+    { "name": "Orders", "description": "Order creation and management" },
+    { "name": "Apple Pay", "description": "Apple Pay + PayPal integration endpoints" }
   ],
   "paths": {
     "/api/auth/sandbox-client-token": {
@@ -41,6 +42,86 @@
               }
             }
           }
+        }
+      }
+    },
+    "/api/apple-pay/config": {
+      "get": {
+        "tags": ["Apple Pay"],
+        "summary": "Get Apple Pay config",
+        "description": "Returns the sandbox client ID and environment for Apple Pay SDK initialization. No credentials required.",
+        "responses": {
+          "200": {
+            "description": "Apple Pay config",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "clientId": { "type": "string" },
+                    "environment": { "type": "string", "example": "sandbox" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/apple-pay/create-order": {
+      "post": {
+        "tags": ["Apple Pay"],
+        "summary": "Create Apple Pay PayPal order",
+        "description": "Creates a PayPal order for Apple Pay checkout. Supports one-time, vault save, and MIT recurring scenarios. Pass credentials via request headers.",
+        "parameters": [
+          { "name": "x-paypal-client-id", "in": "header", "required": true, "schema": { "type": "string" } },
+          { "name": "x-paypal-client-secret", "in": "header", "required": true, "schema": { "type": "string" } },
+          { "name": "x-paypal-environment", "in": "header", "schema": { "type": "string", "enum": ["sandbox", "production"], "default": "sandbox" } },
+          { "name": "x-paypal-auth-assertion", "in": "header", "description": "Required for Partner (3rd-party) mode", "schema": { "type": "string" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["scenario", "amount"],
+                "properties": {
+                  "scenario": {
+                    "type": "string",
+                    "enum": ["one-time-basic", "one-time-vault", "recurring-vault"],
+                    "description": "Payment scenario"
+                  },
+                  "amount": { "type": "string", "example": "10.00" },
+                  "currencyCode": { "type": "string", "example": "USD" },
+                  "vaultId": { "type": "string", "description": "Required for one-time-vault and recurring-vault scenarios" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Order created", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Order" } } } },
+          "400": { "description": "Missing required fields" },
+          "500": { "description": "Order creation failed" }
+        }
+      }
+    },
+    "/api/apple-pay/capture-order/{orderId}": {
+      "post": {
+        "tags": ["Apple Pay"],
+        "summary": "Capture Apple Pay order",
+        "description": "Captures (settles) a PayPal order that was confirmed via Apple Pay. Pass credentials via request headers.",
+        "parameters": [
+          { "name": "orderId", "in": "path", "required": true, "schema": { "type": "string" }, "example": "3JR90341RV502671K" },
+          { "name": "x-paypal-client-id", "in": "header", "required": true, "schema": { "type": "string" } },
+          { "name": "x-paypal-client-secret", "in": "header", "required": true, "schema": { "type": "string" } },
+          { "name": "x-paypal-environment", "in": "header", "schema": { "type": "string", "enum": ["sandbox", "production"], "default": "sandbox" } },
+          { "name": "x-paypal-auth-assertion", "in": "header", "description": "Required for Partner (3rd-party) mode", "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Order captured", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Order" } } } },
+          "500": { "description": "Capture failed" }
         }
       }
     },
