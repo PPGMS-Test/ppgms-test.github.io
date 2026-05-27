@@ -26,7 +26,7 @@ import { SCENARIOS } from '@/scenarios/types'
 import { useCredentialsStore } from '@/store/credentials'
 import type { ApplePayScenario } from '@/scenarios/types'
 import type { ApplePayCDNVersion } from '@/lib/paypal-sdk'
-import type { PayPalEnvironment, IntegrationMode } from '@/store/credentials'
+import type { PayPalEnvironment, IntegrationMode, ApiRequestMode } from '@/store/credentials'
 
 /** 面板管理的完整配置对象，由 App.tsx 维护并通过 onChange 回传 */
 export interface PaymentConfig {
@@ -96,10 +96,10 @@ export function ConfigPanel({ config, onChange, onSubmit, loading }: ConfigPanel
 
   const [credsOpen, setCredsOpen] = useState(false)
   const {
-    environment, mode,
+    environment, mode, apiRequestMode,
     clientId, clientSecret,
     partnerClientId, partnerClientSecret, partnerMerchantId,
-    setEnvironment, setMode,
+    setEnvironment, setMode, setApiRequestMode,
     setClientId, setClientSecret,
     setPartnerClientId, setPartnerClientSecret, setPartnerMerchantId,
     reset: resetCreds,
@@ -170,6 +170,24 @@ export function ConfigPanel({ config, onChange, onSubmit, loading }: ConfigPanel
             </div>
           </>
         )}
+
+        {/* API 请求模式 */}
+        <div className="space-y-1.5">
+          <Label className="text-xs text-muted-foreground">API 请求模式</Label>
+          <ToggleGroup<ApiRequestMode>
+            value={apiRequestMode}
+            options={[
+              { value: 'direct', label: '直连 PayPal' },
+              { value: 'proxy', label: '后端代理' },
+            ]}
+            onChange={setApiRequestMode}
+          />
+          <p className="text-xs text-muted-foreground">
+            {apiRequestMode === 'direct'
+              ? '✓ 前端直调 PayPal API — Apple Pay session 内推荐'
+              : '⚠ 经由 Cloudflare Pages 代理 — Apple Pay session 内可能被 Safari 跨域 block'}
+          </p>
+        </div>
 
         {/* ── Collapsible credentials section ── */}
         <div className="rounded-lg border border-dashed border-border overflow-hidden">

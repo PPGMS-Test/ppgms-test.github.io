@@ -1,20 +1,23 @@
 /**
  * PayPal 订单 API 门面（facade）。
  *
- * 作用：
- *   对外暴露 createApplePayPayPalOrder / captureApplePayOrder 两个函数，
- *   底层实现委托给 paypal-utils.ts 直接调用 PayPal REST API。
- *
- *   绕过后端代理的原因：Apple Pay session 活跃期间，Safari 只允许向当前页面
- *   同域（ppgms-test.github.io）发起请求，跨域调 Cloudflare Pages 后端会被 block。
+ * 支持两种请求模式，由 credentials store 的 apiRequestMode 控制：
+ *   - direct：前端直调 PayPal REST API（绕过后端代理）
+ *             Apple Pay session 活跃期间 Safari 限制只能同域请求，必须用此模式
+ *   - proxy： 经由 Cloudflare Pages 后端代理（ppgms-test-github-io.pages.dev）
+ *             Apple Pay session 外的场景可用，便于对比排查
  *
  * 被使用处：
- *   - src/lib/apple-pay.ts — onpaymentauthorized 回调中调用 createApplePayPayPalOrder / captureApplePayOrder
- *   - src/hooks/usePaymentFlow.ts — startRecurringPayment() 中动态 import 并调用上述两个函数
+ *   - src/lib/apple-pay.ts — onpaymentauthorized 回调
+ *   - src/hooks/usePaymentFlow.ts — startRecurringPayment()
  */
 
 import type { ApplePayScenario } from '@/scenarios/types'
+import { useCredentialsStore, getActiveCredentials } from '@/store/credentials'
+import { generatePayPalAuthAssertion } from '@/lib/auth-assertion'
 import { directCreateOrder, directCaptureOrder } from '@/lib/paypal-utils'
+
+// ── Shared types ────────────────────────────────────────────────────────────
 
 /** 创建订单接口的响应结构，id 为 PayPal 订单号 */
 export interface CreateOrderResponse {
@@ -36,37 +39,92 @@ export interface CaptureOrderResponse {
   [key: string]: unknown
 }
 
-/**
- * 创建 Apple Pay 专用的 PayPal 订单。
- * 根据 scenario 构造不同的 payment_source.apple_pay 配置。
- */
+// ── Proxy mode (backend at Cloudflare Pages) ────────────────────────────────
+
+const PROXY_BASE_URL = 'https://ppgms-test-github-io.pages.dev'
+
+type PayPalErrorBody = { error?: string; message?: string; name?: string; details?: unknown[] }
+
+function extractPayPalError(data: PayPalErrorBody, fallback: string): string {
+  return data.error ?? data.message ?? data.name ?? fallback
+}
+
+function credentialHeaders(): Record<string, string> {
+  const { mode, environment, partnerMerchantId } = useCredentialsStore.getState()
+  const { clientId, clientSecret } = getActiveCredentials()
+
+  const headers: Record<string, string> = {
+    'x-paypal-client-id': clientId,
+    'x-paypal-client-secret': clientSecret,
+    'x-paypal-environment': environment,
+  }
+
+  if (mode === 'partner' && partnerMerchantId) {
+    headers['x-paypal-auth-assertion'] = generatePayPalAuthAssertion(clientId, partnerMerchantId)
+  }
+
+  return headers
+}
+
+async function proxyCreateOrder(params: {
+  scenario: ApplePayScenario
+  amount: string
+  currencyCode?: string
+  vaultId?: string
+}): Promise<CreateOrderResponse> {
+  console.log('[API][proxy][1] POST create-order — headers:', JSON.stringify(credentialHeaders(), null, 2))
+  console.log('[API][proxy][2] POST create-order — body:', JSON.stringify(params, null, 2))
+
+  const res = await fetch(`${PROXY_BASE_URL}/api/apple-pay/create-order`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...credentialHeaders() },
+    body: JSON.stringify(params),
+  })
+  console.log('[API][proxy][3] POST create-order — HTTP status:', res.status)
+
+  const data = (await res.json()) as CreateOrderResponse & PayPalErrorBody
+  if (!res.ok) {
+    console.error('[API][proxy][4] create-order failed —', res.status, JSON.stringify(data, null, 2))
+    throw new Error(extractPayPalError(data, `Create order failed: ${res.status}`))
+  }
+  console.log('[API][proxy][4] create-order success — orderId:', data.id, '| status:', data.status)
+  return data
+}
+
+async function proxyCaptureOrder(orderId: string): Promise<CaptureOrderResponse> {
+  console.log('[API][proxy][1] POST capture-order — orderId:', orderId)
+  const res = await fetch(`${PROXY_BASE_URL}/api/apple-pay/capture-order/${orderId}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...credentialHeaders() },
+  })
+  const data = (await res.json()) as CaptureOrderResponse & PayPalErrorBody
+  if (!res.ok) {
+    console.error('[API][proxy][2] capture-order failed —', res.status, JSON.stringify(data))
+    throw new Error(extractPayPalError(data, `Capture failed: ${res.status}`))
+  }
+  console.log('[API][proxy][2] capture-order success — status:', data.status)
+  return data
+}
+
+// ── Public facade ───────────────────────────────────────────────────────────
+
 export async function createApplePayPayPalOrder(params: {
   scenario: ApplePayScenario
   amount: string
   currencyCode?: string
   vaultId?: string
 }): Promise<CreateOrderResponse> {
-  console.log('[API] createApplePayPayPalOrder — params:', JSON.stringify(params))
-  const result = await directCreateOrder(params)
-  console.log('[API] createApplePayPayPalOrder — orderId:', result.id, '| status:', result.status)
-  return result
+  const { apiRequestMode } = useCredentialsStore.getState()
+  console.log('[API] createApplePayPayPalOrder — mode:', apiRequestMode)
+  return apiRequestMode === 'direct' ? directCreateOrder(params) : proxyCreateOrder(params)
 }
 
-/**
- * 捕获（完成结算）已通过 Apple Pay 授权的 PayPal 订单。
- * HTTP 200 但 capture.status !== 'COMPLETED' 时仍视为失败，由调用方检查。
- */
 export async function captureApplePayOrder(orderId: string): Promise<CaptureOrderResponse> {
-  console.log('[API] captureApplePayOrder — orderId:', orderId)
-  const result = await directCaptureOrder(orderId)
-  console.log('[API] captureApplePayOrder — status:', result.status)
-  return result
+  const { apiRequestMode } = useCredentialsStore.getState()
+  console.log('[API] captureApplePayOrder — mode:', apiRequestMode)
+  return apiRequestMode === 'direct' ? directCaptureOrder(orderId) : proxyCaptureOrder(orderId)
 }
 
-/**
- * 从 capture 响应中提取第一个 capture 或 authorization 的交易 ID。
- * 成功时返回 transaction ID 字符串，找不到时返回 null。
- */
 export function extractTransactionId(captureResult: CaptureOrderResponse): string | null {
   const unit = captureResult.purchase_units?.[0]
   const txn = unit?.payments?.captures?.[0] ?? unit?.payments?.authorizations?.[0]

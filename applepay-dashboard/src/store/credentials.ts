@@ -23,11 +23,16 @@ const SANDBOX_MERCHANT_DEFAULTS = {
   clientSecret: 'ENCbxo_xFeOFsq4uVGll5gDau005zIVG_c7AeBipt60sqbbOdA6netNgqQjd1DUacHj2QUD-4GFVqcU8',
 }
 
+/** API 请求模式：直连 PayPal / 经由后端代理 */
+export type ApiRequestMode = 'direct' | 'proxy'
+
 /** Zustand store 完整状态结构，包含字段和 action */
 interface CredentialsState {
   // 环境与模式
   environment: PayPalEnvironment
   mode: IntegrationMode
+  /** 请求路由模式：direct=前端直调 PayPal API，proxy=经由后端代理 */
+  apiRequestMode: ApiRequestMode
 
   // 一方（merchant）凭据
   clientId: string
@@ -42,6 +47,7 @@ interface CredentialsState {
   // Actions — 由 ConfigPanel 调用更新对应字段
   setEnvironment: (env: PayPalEnvironment) => void
   setMode: (mode: IntegrationMode) => void
+  setApiRequestMode: (mode: ApiRequestMode) => void
   setClientId: (id: string) => void
   setClientSecret: (secret: string) => void
   setPartnerClientId: (id: string) => void
@@ -54,6 +60,7 @@ interface CredentialsState {
 const INITIAL_STATE = {
   environment: 'sandbox' as PayPalEnvironment,
   mode: 'merchant' as IntegrationMode,
+  apiRequestMode: 'direct' as ApiRequestMode,
   clientId: SANDBOX_MERCHANT_DEFAULTS.clientId,
   clientSecret: SANDBOX_MERCHANT_DEFAULTS.clientSecret,
   // Partner defaults — placeholder values only (same as original HTML)
@@ -74,6 +81,7 @@ export const useCredentialsStore = create<CredentialsState>((set) => ({
     }
   },
   setMode: (mode) => set({ mode }),
+  setApiRequestMode: (apiRequestMode) => set({ apiRequestMode }),
   setClientId: (clientId) => set({ clientId }),
   setClientSecret: (clientSecret) => set({ clientSecret }),
   setPartnerClientId: (partnerClientId) => set({ partnerClientId }),
