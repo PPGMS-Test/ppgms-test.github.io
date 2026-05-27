@@ -63,6 +63,8 @@ export function createApplePaySession(
   const { onSuccess, onFailure, onCancel } = callbacks
 
   const paymentRequest = buildApplePayRequest({ scenario, amount, sdkConfig })
+  console.log('[ApplePay] building payment request body:', JSON.stringify(paymentRequest))
+  
   const session = new window.ApplePaySession(4, paymentRequest)
   const applepay = window.paypal.Applepay()
 
