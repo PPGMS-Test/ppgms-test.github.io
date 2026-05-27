@@ -80,7 +80,9 @@ export async function createApplePayPayPalOrder(params: {
   currencyCode?: string
   vaultId?: string
 }): Promise<CreateOrderResponse> {
-  console.log('[API] POST (create-order) — params:', JSON.stringify(params,null,2))
+  console.log('[API] POST (create-order) —Request Header params:', JSON.stringify(credentialHeaders(),null,2));
+  console.log('[API] POST (create-order) —Request Body params:', JSON.stringify(params,null,2));
+
   const res = await fetch(`${BASE_URL}/api/apple-pay/create-order`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...credentialHeaders() },
