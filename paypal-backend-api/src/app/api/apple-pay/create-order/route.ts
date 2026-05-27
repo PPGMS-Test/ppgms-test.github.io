@@ -1,7 +1,7 @@
 export const runtime = 'edge'
 
 import { corsJson, corsOptions } from '@/lib/cors'
-import { createApplePayOrder } from '@/lib/apple-pay-scenarios'
+import { createApplePayPayPalOrder } from '@/lib/apple-pay-scenarios'
 import { buildOrdersController } from '@/lib/paypal-client'
 import type { ApplePayOrderParams } from '@/lib/apple-pay-scenarios'
 
@@ -24,7 +24,7 @@ export async function POST(req: Request) {
     const paypalAuthAssertion = req.headers.get('x-paypal-auth-assertion') ?? undefined
     const controller = buildOrdersController(clientId, clientSecret, environment)
 
-    const { jsonResponse, httpStatusCode } = await createApplePayOrder({
+    const { jsonResponse, httpStatusCode } = await createApplePayPayPalOrder({
       scenario,
       amount,
       currencyCode,

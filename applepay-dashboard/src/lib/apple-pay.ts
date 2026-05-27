@@ -13,7 +13,7 @@
  * 注意：不支持 recurring-vault 场景（该场景不需要 Apple Pay session，直接调后端）。
  */
 
-import { createApplePayOrder, captureApplePayOrder } from '@/lib/api'
+import { createApplePayPayPalOrder, captureApplePayOrder } from '@/lib/api'
 import type { ApplePayScenario } from '@/scenarios/types'
 import { buildApplePayRequest } from '@/scenarios'
 import type { CaptureOrderResponse } from '@/lib/api'
@@ -100,14 +100,14 @@ export function createApplePaySession(
   }
 
   session.onpaymentauthorized = async (event) => {
-    console.log('[ApplePay] onpaymentauthorized — token type:', event.payment.token?.paymentMethod?.type)
+    console.log('[ApplePay](onpaymentauthorized) — event:', JSON.stringify(event, null, 2))
     try {
-      console.log('[ApplePay] creating order — scenario:', scenario, '| amount:', amount, '| vaultId:', vaultId)
-      const order = await createApplePayOrder({ scenario, amount, vaultId })
+      console.log('[ApplePay](creating PayPal order) — scenario:', scenario, '| amount:', amount, '| vaultId:', vaultId)
+      const order = await createApplePayPayPalOrder({ scenario, amount, vaultId })
       const orderId = order.id
-      console.log('[ApplePay] order created — orderId:', orderId, '| status:', order.status)
+      console.log('[ApplePay](order created) — orderId:', orderId, '| status:', order.status)
 
-      console.log('[ApplePay] confirming order — orderId:', orderId, '| email:', event.payment.shippingContact?.emailAddress)
+      console.log('[ApplePay](confirming order) — orderId:', orderId, '| email:', event.payment.shippingContact?.emailAddress)
       await applepay.confirmOrder({
         orderId,
         token: event.payment.token,
@@ -117,12 +117,14 @@ export function createApplePaySession(
       })
       console.log('[ApplePay] confirmOrder success')
 
-      console.log('[ApplePay] capturing order — orderId:', orderId)
+      console.log('[ApplePay](capturing order) — orderId:', orderId)
       const captureResult = await captureApplePayOrder(orderId)
-      console.log('[ApplePay] captureOrder response:', JSON.stringify(captureResult))
+
+      console.log('[ApplePay](captureOrder) response:', JSON.stringify(captureResult))
       const captureId = assertCaptureCompleted(captureResult)
 
       session.completePayment({ status: window.ApplePaySession.STATUS_SUCCESS })
+      
       console.log('[ApplePay] ✓ payment SUCCESS — captureId:', captureId)
       onSuccess(captureId, captureResult)
     } catch (err) {

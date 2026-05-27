@@ -2,8 +2,10 @@
     "liveServer.settings.port": 5502,
     "cSpell.words": [
         "applepay",
+        "creds",
         "onpaymentauthorized",
         "onpaymentmethodselected",
-        "onvalidatemerchant"
+        "onvalidatemerchant",
+        "ppgms"
     ]
 }

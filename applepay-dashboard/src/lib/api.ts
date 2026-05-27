@@ -8,7 +8,7 @@
  *   3. 统一处理错误响应，将 PayPal 错误体转换为 JS Error
  *
  * 被使用处：
- *   - src/lib/apple-pay.ts — onpaymentauthorized 回调中调用 createApplePayOrder / captureApplePayOrder
+ *   - src/lib/apple-pay.ts — onpaymentauthorized 回调中调用 createApplePayPayPalOrder / captureApplePayOrder
  *   - src/hooks/usePaymentFlow.ts — startRecurringPayment() 中动态 import 并调用上述两个函数
  *
  * 后端地址：https://ppgms-test-github-io.pages.dev
@@ -74,13 +74,13 @@ function extractPayPalError(data: PayPalErrorBody, fallback: string): string {
  * 调用后端 /api/apple-pay/create-order 创建 PayPal 订单。
  * 根据 scenario 不同，后端会创建不同类型的订单（单次/vault/recurring）。
  */
-export async function createApplePayOrder(params: {
+export async function createApplePayPayPalOrder(params: {
   scenario: ApplePayScenario
   amount: string
   currencyCode?: string
   vaultId?: string
 }): Promise<CreateOrderResponse> {
-  console.log('[API] POST create-order — params:', JSON.stringify(params))
+  console.log('[API] POST (create-order) — params:', JSON.stringify(params,null,2))
   const res = await fetch(`${BASE_URL}/api/apple-pay/create-order`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...credentialHeaders() },
@@ -88,10 +88,10 @@ export async function createApplePayOrder(params: {
   })
   const data = (await res.json()) as CreateOrderResponse & PayPalErrorBody
   if (!res.ok) {
-    console.error('[API] create-order failed —', res.status, JSON.stringify(data))
+    console.error('[API] (create-order) failed —', res.status, JSON.stringify(data,null,2))
     throw new Error(extractPayPalError(data, `Create order failed: ${res.status}`))
   }
-  console.log('[API] create-order success — orderId:', data.id, '| status:', data.status)
+  console.log('[API] (create-order) success — orderId:', data.id, '| status:', data.status)
   return data
 }
 

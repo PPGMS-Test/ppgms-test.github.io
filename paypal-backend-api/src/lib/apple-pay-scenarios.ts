@@ -72,7 +72,7 @@ function buildApplePayOrderBody(params: ApplePayOrderParams): OrderRequest {
   }
 }
 
-export async function createApplePayOrder(params: ApplePayOrderParams) {
+export async function createApplePayPayPalOrder(params: ApplePayOrderParams) {
   const { controller, paypalAuthAssertion, ...rest } = params
   const orderRequestBody = buildApplePayOrderBody(rest)
   return createOrder({ orderRequestBody, controller, paypalAuthAssertion })

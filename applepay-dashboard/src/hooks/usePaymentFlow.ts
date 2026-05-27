@@ -164,11 +164,11 @@ export function usePaymentFlow() {
     setError(null)
 
     try {
-      const { createApplePayOrder, captureApplePayOrder } = await import(
+      const { createApplePayPayPalOrder, captureApplePayOrder } = await import(
         '@/lib/api'
       )
       console.log('[usePaymentFlow] recurring payment — amount:', config.amount, '| vaultId:', config.vaultId)
-      const order = await createApplePayOrder({
+      const order = await createApplePayPayPalOrder({
         scenario: 'recurring-vault',
         amount: config.amount,
         vaultId: config.vaultId,
