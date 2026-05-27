@@ -100,7 +100,10 @@ export function createApplePaySession(
     session.completePaymentMethodSelection({ newTotal: paymentRequest.total })
   }
 
-  session.onpaymentauthorized = async (event) => {
+  // 注意：此处故意使用普通函数而非 async 函数。
+  // async handler 会返回一个 Promise，Safari 可能追踪该 Promise 并在其 resolve 前
+  // 维持 session 的跨域限制。普通函数同步返回后限制立即解除，post-session 模式依赖此行为。
+  session.onpaymentauthorized = (event) => {
     console.log('[ApplePay](onpaymentauthorized) — event:', JSON.stringify(event, null, 2))
 
     const { apiRequestMode, proxyPostSession } = useCredentialsStore.getState()
@@ -108,14 +111,13 @@ export function createApplePaySession(
 
     if (isPostSession) {
       // ── Post-session 模式 ──────────────────────────────────────────────
-      // 先关闭 Apple Pay 面板，解除 Safari 的同域限制，再发起后端代理请求。
-      // 注意：此时向用户展示"成功"，若后续请求失败则 UI 会切换到 error 状态。
+      // 1. completePayment → Apple Pay 面板关闭
+      // 2. 同步 return，handler 完全退出（无悬挂 Promise），Safari 解除跨域限制
+      // 3. setTimeout 里的 async IIFE 在新的 macrotask 中执行后端请求
       const savedPayment = event.payment
-      console.log('[ApplePay][post-session] completing session — API calls deferred to next event loop tick')
+      console.log('[ApplePay][post-session] completing session synchronously, API calls in next macrotask')
       session.completePayment({ status: window.ApplePaySession.STATUS_SUCCESS })
 
-      // setTimeout(0) 确保在 onpaymentauthorized 完全退出后再发请求。
-      // Safari 在函数返回前不会解除同域限制，仅调用 completePayment() 还不够。
       setTimeout(() => {
         ;(async () => {
           try {
@@ -147,9 +149,13 @@ export function createApplePaySession(
           }
         })()
       }, 0)
-    } else {
-      // ── 标准模式 ──────────────────────────────────────────────────────
-      // 在 session 活跃期间完成所有请求，最后再 completePayment。
+
+      return  // 同步退出，handler 无悬挂 Promise
+    }
+
+    // ── 标准模式 ──────────────────────────────────────────────────────
+    // 用内部 async IIFE 处理，handler 本身不是 async，不向 Safari 暴露 Promise。
+    ;(async () => {
       try {
         console.log('[ApplePay](creating PayPal order) — scenario:', scenario, '| amount:', amount, '| vaultId:', vaultId)
         const order = await createApplePayPayPalOrder({ scenario, amount, vaultId })
@@ -179,7 +185,7 @@ export function createApplePaySession(
         session.completePayment({ status: window.ApplePaySession.STATUS_FAILURE })
         onFailure(err)
       }
-    }
+    })()
   }
 
   session.oncancel = () => {
