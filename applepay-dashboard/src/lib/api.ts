@@ -80,20 +80,22 @@ export async function createApplePayPayPalOrder(params: {
   currencyCode?: string
   vaultId?: string
 }): Promise<CreateOrderResponse> {
-  console.log('[API] POST (create-order) —Request Header params:', JSON.stringify(credentialHeaders(),null,2));
-  console.log('[API] POST (create-order) —Request Body params:', JSON.stringify(params,null,2));
+  console.log('[API][1]POST (create-order) —Request Header params:', JSON.stringify(credentialHeaders(),null,2));
+  console.log('[API][2]POST (create-order) —Request Body params:', JSON.stringify(params,null,2));
 
   const res = await fetch(`${BASE_URL}/api/apple-pay/create-order`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...credentialHeaders() },
     body: JSON.stringify(params),
   })
+  console.log('[API][3]POST (create-order) —HTTP status code received:', res.status)
+  
   const data = (await res.json()) as CreateOrderResponse & PayPalErrorBody
   if (!res.ok) {
-    console.error('[API] (create-order) failed —', res.status, JSON.stringify(data,null,2))
+    console.error('[API][4] (create-order) failed —', res.status, JSON.stringify(data,null,2))
     throw new Error(extractPayPalError(data, `Create order failed: ${res.status}`))
   }
-  console.log('[API] (create-order) success — orderId:', data.id, '| status:', data.status)
+  console.log('[API][4] (create-order) success — orderId:', data.id, '| status:', data.status)
   return data
 }
 
@@ -102,17 +104,17 @@ export async function createApplePayPayPalOrder(params: {
  * HTTP 200 但 capture.status !== 'COMPLETED' 时仍视为失败，由调用方检查。
  */
 export async function captureApplePayOrder(orderId: string): Promise<CaptureOrderResponse> {
-  console.log('[API] POST capture-order — orderId:', orderId)
+  console.log('[API][1] POST capture-order — orderId:', orderId)
   const res = await fetch(`${BASE_URL}/api/apple-pay/capture-order/${orderId}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...credentialHeaders() },
   })
   const data = (await res.json()) as CaptureOrderResponse & PayPalErrorBody
   if (!res.ok) {
-    console.error('[API] capture-order failed —', res.status, JSON.stringify(data))
+    console.error('[API][2] capture-order failed —', res.status, JSON.stringify(data))
     throw new Error(extractPayPalError(data, `Capture failed: ${res.status}`))
   }
-  console.log('[API] capture-order success — status:', data.status)
+  console.log('[API][2] capture-order success — status:', data.status)
   return data
 }
 
