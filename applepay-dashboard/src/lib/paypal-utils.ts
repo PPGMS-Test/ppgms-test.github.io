@@ -127,7 +127,14 @@ function buildOrderBody(params: {
       ...base,
       payment_source: {
         apple_pay: {
-          attributes: { vault: { store_in_vault: 'ON_SUCCESS' } },
+          attributes: {
+            vault: { store_in_vault: 'ON_SUCCESS' },
+            stored_credential: {
+              payment_initiator: 'MERCHANT',
+              payment_type: 'RECURRING',
+              usage: 'SUBSEQUENT',
+            },
+          },
         },
       },
     }

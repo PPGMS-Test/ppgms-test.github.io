@@ -49,6 +49,11 @@ function buildApplePayOrderBody(params: ApplePayOrderParams): OrderRequest {
         applePay: {
           attributes: {
             vault: { storeInVault: 'ON_SUCCESS' as never },
+            storedCredential: {
+              paymentInitiator: 'MERCHANT' as never,
+              paymentType: 'RECURRING' as never,
+              usage: 'SUBSEQUENT' as never,
+            },
           },
         } as never,
       },
