@@ -51,6 +51,16 @@ function assertCaptureCompleted(captureResult: CaptureOrderResponse): string {
   return capture.id
 }
 
+/** 截断 merchantSession 中过长的 signature，仅保留前 20 字符作参考 */
+function previewMerchantSession(ms: unknown): unknown {
+  if (!ms || typeof ms !== 'object') return ms
+  const preview = { ...(ms as Record<string, unknown>) }
+  if (typeof preview.signature === 'string') {
+    preview.signature = `x--x${preview.signature.slice(0, 20)}...x--x`
+  }
+  return preview
+}
+
 /**
  * 构造并返回一个配置好所有事件回调的 ApplePaySession 实例。
  * 调用方在拿到返回值后执行 session.begin() 即可弹出 Apple Pay 支付面板。
@@ -75,12 +85,7 @@ export function createApplePaySession(
     applepay
       .validateMerchant({ validationUrl: event.validationURL })
       .then((payload) => {
-        const ms = payload.merchantSession as Record<string, unknown>
-        const preview = { ...ms }
-        if (typeof preview.signature === 'string') {
-          preview.signature = `x--x${preview.signature.slice(0, 20)}...x--x`
-        }
-        console.log('[ApplePay] validateMerchant success — merchantSession:', JSON.stringify(preview))
+        console.log('[ApplePay] validateMerchant success — merchantSession:', JSON.stringify(previewMerchantSession(payload.merchantSession)))
         session.completeMerchantValidation(payload.merchantSession)
       })
       .catch((err) => {
