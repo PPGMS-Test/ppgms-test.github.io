@@ -17,6 +17,7 @@
 import { useEffect, useState } from 'react'
 import { Loader2, RefreshCw, AlertCircle } from 'lucide-react'
 import { ScenarioSelector } from '@/components/ScenarioSelector'
+import { InfoPanel } from '@/components/InfoPanel'
 import { ConfigPanel } from '@/components/ConfigPanel'
 import { PaymentResult } from '@/components/PaymentResult'
 import { ApplePayButton } from '@/components/payment/ApplePayButton'
@@ -98,6 +99,9 @@ export default function App() {
           }}
           disabled={isLoading || isProcessing}
         />
+
+        {/* Info panel — checkout flow reference links for users without Apple test account */}
+        <InfoPanel />
 
         {/* Config panel — stays visible until payment succeeds so user can fix & retry */}
         {!isPaymentDone && (
