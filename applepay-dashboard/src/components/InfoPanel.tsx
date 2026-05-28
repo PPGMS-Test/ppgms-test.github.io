@@ -64,7 +64,7 @@ export function InfoPanel() {
 
         {/* flex-1：让文字占满中间剩余空间，把箭头推到最右侧 */}
         <span className="text-sm text-blue-700 flex-1">
-          If you don't have a test Apple account — view the checkout flow
+          More Apple Pay Related Info/If you don't have a test Apple account, view checkout flow record
         </span>
 
         {/* ml-auto 效果由父 flex-1 的文字撑开，ChevronRight 自然靠右 */}
@@ -99,9 +99,24 @@ export function InfoPanel() {
           />
           */}
           <DialogLink
-            href="#"
-            label="Placeholder external link"
-            description="用于普通外链，内容待填"
+            href="https://developer.apple.com/apple-pay/sandbox-testing/"
+            label="Add an Apple Pay Test Card"
+            description="You need to add a test card to your Apple Wallet to test the checkout flow. "
+          />
+          <DialogLink
+            href="https://developer.apple.com/documentation/applepayontheweb/applepayrecurringpaymentrequest"
+            label="Apple Pay Doc [1]"
+            description="ApplePayRecurringPaymentRequest "
+          />
+          <DialogLink
+            href="https://developer.apple.com/documentation/applepayontheweb/applepayrecurringpaymentrequest/regularbilling"
+            label="Apple Pay Doc [2]"
+            description="RegularBilling "
+          />
+          <DialogLink
+            href="https://developer.apple.com/documentation/applepayontheweb/applepaylineitem"
+            label="Apple Pay Doc [3]"
+            description="ApplePayLineItem "
           />
         </div>
       </Dialog>
