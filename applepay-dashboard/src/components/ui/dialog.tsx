@@ -55,7 +55,7 @@
  */
 import { useEffect, useId } from 'react'
 import { createPortal } from 'react-dom'
-import { X, ArrowUpRight } from 'lucide-react'
+import { X, ArrowUpRight, Play } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 // ── Dialog ──────────────────────────────────────────────────────────────────
@@ -151,6 +151,58 @@ interface DialogLinkProps {
   label: string
   description?: string
   className?: string
+}
+
+// ── DialogVideoLink ──────────────────────────────────────────────────────────
+//
+// 与 DialogLink 的区别：
+//   - 图标用 Play（而非 ArrowUpRight），让用户一眼知道"这是视频"
+//   - 右侧有可选的 fileSize badge（如 "MP4 · 1.4 MB"）
+//   - 其余布局完全兼容 DialogLink，放在同一个 divide-y 列表里不会突兀
+
+interface DialogVideoLinkProps {
+  href: string
+  label: string
+  description?: string
+  fileSize?: string  // 可选，显示文件大小提示，如 "1.4 MB"
+  className?: string
+}
+
+export function DialogVideoLink({ href, label, description, fileSize, className }: DialogVideoLinkProps) {
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className={cn(
+        'group flex items-start gap-3 py-3 px-2 -mx-2 rounded-lg',
+        'hover:bg-accent/60 transition-colors duration-150',
+        className,
+      )}
+    >
+      {/* Play 图标：蓝色圆形背景，视觉上比 ArrowUpRight 更明确"这是视频" */}
+      <div className="flex-shrink-0 mt-0.5 h-5 w-5 rounded-full bg-blue-100 flex items-center justify-center group-hover:bg-blue-200 transition-colors">
+        <Play className="h-2.5 w-2.5 text-blue-500 fill-blue-500" />
+      </div>
+
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-2 flex-wrap">
+          <p className="text-sm font-medium text-foreground group-hover:text-primary transition-colors leading-snug">
+            {label}
+          </p>
+          {/* fileSize badge：灰色小标签，告知用户文件大小，设置预期 */}
+          {fileSize && (
+            <span className="text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded font-mono">
+              MP4 · {fileSize}
+            </span>
+          )}
+        </div>
+        {description && (
+          <p className="text-xs text-muted-foreground mt-0.5 leading-snug">{description}</p>
+        )}
+      </div>
+    </a>
+  )
 }
 
 export function DialogLink({ href, label, description, className }: DialogLinkProps) {

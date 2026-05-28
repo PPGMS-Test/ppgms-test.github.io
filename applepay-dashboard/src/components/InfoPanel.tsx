@@ -41,7 +41,7 @@
  */
 import { useState } from 'react'
 import { Info, ChevronRight } from 'lucide-react'
-import { Dialog, DialogLink } from '@/components/ui/dialog'
+import { Dialog, DialogLink, DialogVideoLink } from '@/components/ui/dialog'
 
 export function InfoPanel() {
   // open：控制 Dialog 是否显示，初始为 false（关闭）
@@ -81,7 +81,17 @@ export function InfoPanel() {
       >
         {/* divide-y divide-border：每两个子元素之间自动插入一条 1px 分隔线 */}
         <div className="divide-y divide-border">
-          {/* ↓ 在这里添加 DialogLink，格式如下：
+
+          {/* 视频演示 — 静态资源托管于 applepay-dashboard/public/videos/
+              视频放好后把 href 里的文件名改成实际文件名 */}
+          <DialogVideoLink
+            href="/__1__-jsv5-test/ApplePay/videos/checkout-demo.mp4"
+            label="Checkout Flow Demo"
+            description="Watch the full Apple Pay checkout flow — 无需测试账号"
+            fileSize="1.4 MB"
+          />
+
+          {/* ↓ 在这里添加普通外链，格式如下：
           <DialogLink
             href="https://..."
             label="链接标题"
@@ -90,8 +100,8 @@ export function InfoPanel() {
           */}
           <DialogLink
             href="#"
-            label="Placeholder — content coming soon"
-            description="The user will fill in the actual links."
+            label="Placeholder external link"
+            description="用于普通外链，内容待填"
           />
         </div>
       </Dialog>
