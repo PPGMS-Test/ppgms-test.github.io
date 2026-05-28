@@ -14,7 +14,9 @@
       "WebSearch",
       "WebFetch(domain:github.com)",
       "WebFetch(domain:raw.githubusercontent.com)",
-      "Bash(npx skills:*)"
+      "Bash(npx skills:*)",
+      "mcp__plugin_ecc_exa__web_search_exa",
+      "mcp__plugin_ecc_exa__web_fetch_exa"
     ]
   }
 }

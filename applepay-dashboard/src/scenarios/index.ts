@@ -49,6 +49,20 @@ export function buildApplePayRequest(params: BuildRequestParams): ApplePayPaymen
     return baseRequest
   } else {
     // scenario === one-time-vault：显示订阅弹窗让用户授权保存卡
+
+
+    /**
+     * Apple Pay 文档/Doc [2026-05]
+      [1] ApplePayRecurringPaymentRequest
+        https://developer.apple.com/documentation/applepayontheweb/applepayrecurringpaymentrequest
+
+      [2] regularBilling
+        https://developer.apple.com/documentation/applepayontheweb/applepayrecurringpaymentrequest/regularbilling
+
+      [3] ApplePayLineItem（含完整示例）
+        https://developer.apple.com/documentation/applepayontheweb/applepaylineitem
+     */
+  
     return {
       ...baseRequest,
       total: { ...baseRequest.total, paymentTiming: 'recurring' },
