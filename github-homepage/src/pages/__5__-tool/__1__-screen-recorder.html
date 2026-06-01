@@ -1,0 +1,1461 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Screen Recorder</title>
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.468.0/dist/umd/lucide.min.js" crossorigin="anonymous"></script>
+  <style>
+    :root {
+      --bg: #f7f8fb;
+      --panel: #ffffff;
+      --panel-2: #f0f4f8;
+      --text: #1d2433;
+      --muted: #5c667a;
+      --border: #dbe2ea;
+      --primary: #155eef;
+      --primary-dark: #0f45b5;
+      --danger: #d92d20;
+      --success: #11845b;
+      --warning: #b54708;
+      --shadow: 0 18px 48px rgba(21, 36, 61, 0.12);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background:
+        linear-gradient(120deg, rgba(21, 94, 239, 0.08), transparent 34%),
+        linear-gradient(240deg, rgba(17, 132, 91, 0.09), transparent 32%),
+        var(--bg);
+      color: var(--text);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    button,
+    select,
+    input {
+      font: inherit;
+    }
+
+    button {
+      border: 0;
+      cursor: pointer;
+    }
+
+    button:disabled {
+      cursor: not-allowed;
+      opacity: 0.55;
+    }
+
+    .app {
+      width: min(1240px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 24px 0 36px;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+
+    .top-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .lang-switch {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 36px;
+      padding: 6px 10px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.82);
+      color: var(--muted);
+    }
+
+    .lang-switch select {
+      width: auto;
+      min-width: 94px;
+      color: var(--text);
+      font-weight: 700;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(24px, 4vw, 38px);
+      line-height: 1.08;
+      letter-spacing: 0;
+    }
+
+    .subtitle {
+      margin: 8px 0 0;
+      color: var(--muted);
+      max-width: 720px;
+      line-height: 1.55;
+    }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 36px;
+      padding: 8px 12px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.82);
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    .status-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: var(--muted);
+    }
+
+    .status-pill.recording .status-dot {
+      background: var(--danger);
+      box-shadow: 0 0 0 6px rgba(217, 45, 32, 0.12);
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1.45fr) minmax(310px, 0.55fr);
+      gap: 18px;
+      align-items: start;
+    }
+
+    .stage,
+    .side-panel,
+    .log-panel {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.9);
+      box-shadow: var(--shadow);
+    }
+
+    .stage {
+      overflow: hidden;
+    }
+
+    .preview-wrap {
+      position: relative;
+      aspect-ratio: 16 / 9;
+      background: #111827;
+    }
+
+    video {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      background: #111827;
+    }
+
+    .empty-state {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      color: #cbd5e1;
+      text-align: center;
+      padding: 24px;
+    }
+
+    .empty-state svg {
+      width: 42px;
+      height: 42px;
+      margin-bottom: 12px;
+      color: #94a3b8;
+    }
+
+    .stage-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 14px;
+      border-top: 1px solid var(--border);
+      background: var(--panel);
+    }
+
+    .timer {
+      font-variant-numeric: tabular-nums;
+      font-size: 26px;
+      font-weight: 700;
+    }
+
+    .hint {
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .side-panel {
+      padding: 16px;
+    }
+
+    .section {
+      padding-bottom: 18px;
+      margin-bottom: 18px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .section:last-child {
+      padding-bottom: 0;
+      margin-bottom: 0;
+      border-bottom: 0;
+    }
+
+    .section-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 0 0 12px;
+      font-size: 15px;
+      font-weight: 750;
+    }
+
+    .control-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .field,
+    .toggle {
+      min-width: 0;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--panel-2);
+      padding: 10px;
+    }
+
+    .field label,
+    .toggle span {
+      display: block;
+      margin-bottom: 7px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    select {
+      width: 100%;
+      border: 0;
+      outline: 0;
+      background: transparent;
+      color: var(--text);
+      font-weight: 650;
+    }
+
+    .toggle {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .toggle span {
+      margin: 0;
+      color: var(--text);
+      font-weight: 650;
+    }
+
+    .toggle input {
+      width: 18px;
+      height: 18px;
+      accent-color: var(--primary);
+      flex: 0 0 auto;
+    }
+
+    .button-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      min-height: 42px;
+      padding: 10px 12px;
+      border-radius: 8px;
+      background: var(--panel-2);
+      color: var(--text);
+      font-weight: 700;
+      text-decoration: none;
+      transition: transform 0.16s ease, background 0.16s ease, box-shadow 0.16s ease;
+    }
+
+    .btn:hover:not(:disabled) {
+      transform: translateY(-1px);
+      box-shadow: 0 8px 18px rgba(21, 36, 61, 0.12);
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: #fff;
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      background: var(--primary-dark);
+    }
+
+    .btn-danger {
+      background: var(--danger);
+      color: #fff;
+    }
+
+    .btn-success {
+      background: var(--success);
+      color: #fff;
+    }
+
+    .btn-wide {
+      grid-column: 1 / -1;
+    }
+
+    .file-card {
+      display: grid;
+      gap: 8px;
+      min-height: 86px;
+      padding: 12px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--panel-2);
+    }
+
+    .file-card strong {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+    }
+
+    .file-meta {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.45;
+      word-break: break-word;
+    }
+
+    .progress {
+      height: 9px;
+      overflow: hidden;
+      border-radius: 999px;
+      background: #e5e7eb;
+    }
+
+    .progress span {
+      display: block;
+      width: 0%;
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, var(--primary), var(--success));
+      transition: width 0.2s ease;
+    }
+
+    .progress-header {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 8px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.4;
+    }
+
+    .progress-value {
+      flex: 0 0 auto;
+      color: var(--text);
+      font-weight: 750;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .cache-line {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .cache-line strong {
+      color: var(--text);
+    }
+
+    .log-panel {
+      margin-top: 18px;
+      padding: 14px;
+    }
+
+    .log {
+      height: 128px;
+      margin: 0;
+      overflow: auto;
+      border-radius: 8px;
+      background: #0f172a;
+      color: #d1fae5;
+      padding: 12px;
+      font: 12px/1.55 "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+      white-space: pre-wrap;
+    }
+
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: 22px;
+      z-index: 20;
+      width: min(520px, calc(100% - 28px));
+      padding: 12px 14px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: #fff;
+      box-shadow: var(--shadow);
+      color: var(--text);
+      transform: translate(-50%, 120px);
+      opacity: 0;
+      transition: transform 0.2s ease, opacity 0.2s ease;
+    }
+
+    .toast.show {
+      transform: translate(-50%, 0);
+      opacity: 1;
+    }
+
+    .operation-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 30;
+      display: none;
+      place-items: center;
+      padding: 18px;
+      background: rgba(15, 23, 42, 0.48);
+      backdrop-filter: blur(8px);
+    }
+
+    .operation-overlay.show {
+      display: grid;
+    }
+
+    .operation-card {
+      width: min(720px, 100%);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 8px;
+      background: #fff;
+      box-shadow: 0 24px 70px rgba(15, 23, 42, 0.28);
+      padding: 20px;
+    }
+
+    .operation-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 0 0 8px;
+      font-size: 18px;
+      font-weight: 800;
+    }
+
+    .operation-detail {
+      margin: 0 0 16px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .operation-log {
+      height: min(240px, 32vh);
+      margin: 16px 0 0;
+      overflow: auto;
+      border-radius: 8px;
+      background: #0f172a;
+      color: #d1fae5;
+      padding: 12px;
+      font: 12px/1.55 "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+      white-space: pre-wrap;
+    }
+
+    .spinner {
+      width: 22px;
+      height: 22px;
+      border: 3px solid #dbeafe;
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      flex: 0 0 auto;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    @media (max-width: 880px) {
+      .topbar,
+      .stage-footer {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .top-actions {
+        justify-content: flex-start;
+      }
+
+      .layout {
+        grid-template-columns: 1fr;
+      }
+
+      .button-row,
+      .control-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .btn-wide {
+        grid-column: auto;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header class="topbar">
+      <div>
+        <h1 id="pageTitle">Screen Recorder</h1>
+        <p id="subtitle" class="subtitle">本地录制屏幕、窗口或浏览器标签页，录完可直接下载 WebM，也可在浏览器内转换为 MP4。</p>
+      </div>
+      <div class="top-actions">
+        <label class="lang-switch">
+          <i data-lucide="languages"></i>
+          <select id="languageSelect" aria-label="Language">
+            <option value="zh-CN">中文</option>
+            <option value="en">English</option>
+          </select>
+        </label>
+        <div id="statusPill" class="status-pill">
+          <span class="status-dot"></span>
+          <span id="statusText">Ready</span>
+        </div>
+      </div>
+    </header>
+
+    <section class="layout">
+      <div>
+        <div class="stage">
+          <div class="preview-wrap">
+            <video id="preview" playsinline controls></video>
+            <div id="emptyState" class="empty-state">
+              <div>
+                <i data-lucide="monitor-up"></i>
+                <div id="emptyStateText">等待录制内容</div>
+              </div>
+            </div>
+          </div>
+          <div class="stage-footer">
+            <div>
+              <div id="timer" class="timer">00:00</div>
+              <div id="recordingMeta" class="hint">WebM 原始文件会在停止后生成</div>
+            </div>
+            <div class="button-row">
+              <button id="startBtn" class="btn btn-primary" type="button">
+                <i data-lucide="circle-dot"></i>
+                <span id="startBtnText">Start</span>
+              </button>
+              <button id="stopBtn" class="btn btn-danger" type="button" disabled>
+                <i data-lucide="square"></i>
+                <span id="stopBtnText">Stop</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="log-panel">
+          <p class="section-title"><i data-lucide="terminal"></i><span id="logTitle">FFmpeg Log</span></p>
+          <pre id="log" class="log">FFmpeg 尚未加载。</pre>
+        </div>
+      </div>
+
+      <aside class="side-panel">
+        <div class="section">
+          <p class="section-title"><i data-lucide="sliders-horizontal"></i><span id="captureTitle">Capture</span></p>
+          <div class="control-grid">
+            <div class="field">
+              <label id="qualityLabel" for="qualitySelect">质量</label>
+              <select id="qualitySelect">
+                <option value="12000000">High</option>
+                <option value="7000000" selected>Balanced</option>
+                <option value="3500000">Compact</option>
+              </select>
+            </div>
+            <div class="field">
+              <label id="fpsLabel" for="fpsSelect">帧率</label>
+              <select id="fpsSelect">
+                <option value="60">60 fps</option>
+                <option value="30" selected>30 fps</option>
+                <option value="24">24 fps</option>
+              </select>
+            </div>
+            <label class="toggle">
+              <span id="systemAudioLabel">系统音频</span>
+              <input id="systemAudioInput" type="checkbox" checked />
+            </label>
+            <label class="toggle">
+              <span id="micLabel">麦克风</span>
+              <input id="micInput" type="checkbox" />
+            </label>
+          </div>
+        </div>
+
+        <div class="section">
+          <p class="section-title"><i data-lucide="file-video"></i><span id="filesTitle">Files</span></p>
+          <div class="file-card">
+            <strong><i data-lucide="film"></i>WebM</strong>
+            <div id="webmMeta" class="file-meta">尚未生成</div>
+            <a id="webmDownload" class="btn" aria-disabled="true">
+              <i data-lucide="download"></i>
+              <span id="webmDownloadText">Download WebM</span>
+            </a>
+          </div>
+          <div style="height: 10px"></div>
+          <div class="file-card">
+            <strong><i data-lucide="badge-play"></i>MP4</strong>
+            <div id="mp4Meta" class="file-meta">尚未转换</div>
+            <button id="convertBtn" class="btn btn-success" type="button" disabled>
+              <i data-lucide="refresh-cw"></i>
+              <span id="convertBtnText">Convert MP4</span>
+            </button>
+            <a id="mp4Download" class="btn" aria-disabled="true">
+              <i data-lucide="download"></i>
+              <span id="mp4DownloadText">Download MP4</span>
+            </a>
+          </div>
+        </div>
+
+        <div class="section">
+          <p class="section-title"><i data-lucide="database"></i><span id="cacheTitle">Cache</span></p>
+          <div id="cacheInfo" class="cache-line">FFmpeg 资源会在首次转换时缓存。</div>
+          <div style="height: 10px"></div>
+          <div class="progress-header">
+            <span id="progressLabel">等待转换</span>
+            <span id="progressValue" class="progress-value">0%</span>
+          </div>
+          <div class="progress" aria-label="convert progress">
+            <span id="progressBar"></span>
+          </div>
+        </div>
+      </aside>
+    </section>
+  </main>
+
+  <div id="toast" class="toast" role="status"></div>
+  <div id="operationOverlay" class="operation-overlay" aria-live="polite" aria-busy="true">
+    <div class="operation-card">
+      <p class="operation-title">
+        <span class="spinner" aria-hidden="true"></span>
+        <span id="operationTitle">Working</span>
+      </p>
+      <p id="operationDetail" class="operation-detail">Please wait...</p>
+      <div class="progress-header">
+        <span id="operationProgressLabel">Preparing</span>
+        <span id="operationProgressValue" class="progress-value">0%</span>
+      </div>
+      <div class="progress">
+        <span id="operationProgressBar"></span>
+      </div>
+      <pre id="operationLog" class="operation-log">FFmpeg 尚未加载。</pre>
+    </div>
+  </div>
+
+  <script>
+    const FFMPEG_VERSION = "0.12.15";
+    const CORE_VERSION = "0.12.10";
+    const CORE_MT_VERSION = "0.12.10";
+    const CDN = "https://cdn.jsdelivr.net/npm";
+    const FFMPEG_SCRIPT_URL = "./vendor/ffmpeg/ffmpeg.js";
+    const CORE_BASE_URL = `${CDN}/@ffmpeg/core@${CORE_VERSION}/dist/umd`;
+    const CORE_MT_BASE_URL = `${CDN}/@ffmpeg/core-mt@${CORE_MT_VERSION}/dist/umd`;
+    const CACHE_NAME = `screen-recorder-ffmpeg-${CORE_VERSION}`;
+    const CACHE_MT_NAME = `screen-recorder-ffmpeg-mt-${CORE_MT_VERSION}`;
+
+    const I18N = {
+      "zh-CN": {
+        pageTitle: "Screen Recorder",
+        subtitle: "本地录制屏幕、窗口或浏览器标签页，录完可直接下载 WebM，也可在浏览器内转换为 MP4。",
+        ready: "Ready",
+        recording: "Recording",
+        recorded: "Recorded",
+        loadingFFmpeg: "Loading FFmpeg",
+        converting: "Converting",
+        converted: "Converted",
+        convertFailed: "Convert failed",
+        emptyState: "等待录制内容",
+        recordingMetaIdle: "WebM 原始文件会在停止后生成",
+        recordingMetaDone: "录制完成，可下载 WebM 或转换为 MP4",
+        start: "开始",
+        stop: "停止",
+        logTitle: "FFmpeg Log",
+        logIdle: "FFmpeg 尚未加载。",
+        captureTitle: "Capture",
+        qualityLabel: "质量",
+        fpsLabel: "帧率",
+        systemAudioLabel: "系统音频",
+        micLabel: "麦克风",
+        filesTitle: "Files",
+        webmPending: "尚未生成",
+        webmRecording: "录制中...",
+        mp4Pending: "尚未转换",
+        mp4Converting: "转换中...",
+        mp4Failed: "转换失败",
+        downloadWebM: "Download WebM",
+        convertMP4: "Convert MP4",
+        downloadMP4: "Download MP4",
+        cacheTitle: "Cache",
+        cacheInitial: "FFmpeg 资源会在首次转换时缓存。",
+        cacheUnavailable: "Cache Storage 不可用，将依赖浏览器 HTTP 缓存。",
+        cacheStatus: "{cached}/{total} 个 FFmpeg 资源已持久缓存。",
+        progressIdle: "等待转换",
+        progressLoading: "加载 FFmpeg 资源",
+        progressWriting: "写入录制文件",
+        progressTranscoding: "转码中",
+        progressPackaging: "生成 MP4 下载",
+        progressDone: "转换完成",
+        overlayWorking: "处理中",
+        overlayCaptureTitle: "等待屏幕授权",
+        overlayCaptureDetail: "请选择要录制的屏幕、窗口或标签页。",
+        overlayPrepareTitle: "准备录制",
+        overlayPrepareDetail: "正在初始化媒体轨道和录制器。",
+        overlayFinishTitle: "整理录制文件",
+        overlayFinishDetail: "正在停止媒体流并生成 WebM 预览。",
+        overlayLoadTitle: "加载 FFmpeg",
+        overlayLoadDetail: "首次转换需要下载并缓存 FFmpeg core 和 wasm。",
+        overlayConvertTitle: "转换 MP4",
+        overlayConvertDetail: "正在浏览器内转码，请保持页面打开。",
+        overlayConvertDetailMt: "正在使用多线程 FFmpeg 转码，请保持页面打开。",
+        overlayConvertDetailSt: "当前页面未启用跨源隔离，使用单线程 FFmpeg 转码。",
+        logThreadMt: "已启用多线程 FFmpeg core-mt。",
+        logThreadSt: "当前环境不支持多线程：需要 COOP/COEP 响应头和 crossOriginIsolated=true，已回退单线程。",
+        unsupported: "当前浏览器不支持屏幕录制 API。",
+        startFailed: "启动录制失败。",
+        needRecording: "请先完成一段录制。",
+        convertDone: "MP4 转换完成。",
+        convertError: "MP4 转换失败。",
+        logLoadStart: "开始加载 FFmpeg 资源...",
+        logLoadDone: "FFmpeg 加载完成。",
+        logPrimary: "使用 H.264/AAC 参数转换 MP4...",
+        logFallback: "H.264 转换失败，切换到 MPEG-4 fallback。",
+      },
+      en: {
+        pageTitle: "Screen Recorder",
+        subtitle: "Record a screen, window, or browser tab locally. Download WebM directly or convert it to MP4 in the browser.",
+        ready: "Ready",
+        recording: "Recording",
+        recorded: "Recorded",
+        loadingFFmpeg: "Loading FFmpeg",
+        converting: "Converting",
+        converted: "Converted",
+        convertFailed: "Convert failed",
+        emptyState: "Waiting for a recording",
+        recordingMetaIdle: "The original WebM file is created after recording stops",
+        recordingMetaDone: "Recording complete. Download WebM or convert to MP4",
+        start: "Start",
+        stop: "Stop",
+        logTitle: "FFmpeg Log",
+        logIdle: "FFmpeg has not loaded yet.",
+        captureTitle: "Capture",
+        qualityLabel: "Quality",
+        fpsLabel: "Frame rate",
+        systemAudioLabel: "System audio",
+        micLabel: "Microphone",
+        filesTitle: "Files",
+        webmPending: "Not generated yet",
+        webmRecording: "Recording...",
+        mp4Pending: "Not converted yet",
+        mp4Converting: "Converting...",
+        mp4Failed: "Conversion failed",
+        downloadWebM: "Download WebM",
+        convertMP4: "Convert MP4",
+        downloadMP4: "Download MP4",
+        cacheTitle: "Cache",
+        cacheInitial: "FFmpeg resources will be cached on the first conversion.",
+        cacheUnavailable: "Cache Storage is unavailable. Browser HTTP cache will be used instead.",
+        cacheStatus: "{cached}/{total} FFmpeg resources are persistently cached.",
+        progressIdle: "Waiting to convert",
+        progressLoading: "Loading FFmpeg resources",
+        progressWriting: "Writing recording file",
+        progressTranscoding: "Transcoding",
+        progressPackaging: "Preparing MP4 download",
+        progressDone: "Conversion complete",
+        overlayWorking: "Working",
+        overlayCaptureTitle: "Waiting for screen permission",
+        overlayCaptureDetail: "Choose the screen, window, or tab you want to record.",
+        overlayPrepareTitle: "Preparing recording",
+        overlayPrepareDetail: "Initializing media tracks and the recorder.",
+        overlayFinishTitle: "Finalizing recording",
+        overlayFinishDetail: "Stopping media streams and creating the WebM preview.",
+        overlayLoadTitle: "Loading FFmpeg",
+        overlayLoadDetail: "The first conversion downloads and caches FFmpeg core and wasm.",
+        overlayConvertTitle: "Converting MP4",
+        overlayConvertDetail: "Transcoding in the browser. Keep this page open.",
+        overlayConvertDetailMt: "Transcoding with multi-threaded FFmpeg. Keep this page open.",
+        overlayConvertDetailSt: "Cross-origin isolation is not enabled. Using single-threaded FFmpeg.",
+        logThreadMt: "Multi-threaded FFmpeg core-mt enabled.",
+        logThreadSt: "Multi-threading is unavailable: COOP/COEP headers and crossOriginIsolated=true are required. Falling back to single-threaded mode.",
+        unsupported: "This browser does not support the screen recording API.",
+        startFailed: "Failed to start recording.",
+        needRecording: "Please finish a recording first.",
+        convertDone: "MP4 conversion complete.",
+        convertError: "MP4 conversion failed.",
+        logLoadStart: "Loading FFmpeg resources...",
+        logLoadDone: "FFmpeg loaded.",
+        logPrimary: "Converting MP4 with H.264/AAC...",
+        logFallback: "H.264 conversion failed. Falling back to MPEG-4.",
+      },
+    };
+
+    const $ = (id) => document.getElementById(id);
+    const els = {
+      pageTitle: $("pageTitle"),
+      subtitle: $("subtitle"),
+      languageSelect: $("languageSelect"),
+      preview: $("preview"),
+      emptyState: $("emptyState"),
+      emptyStateText: $("emptyStateText"),
+      statusPill: $("statusPill"),
+      statusText: $("statusText"),
+      timer: $("timer"),
+      recordingMeta: $("recordingMeta"),
+      startBtn: $("startBtn"),
+      startBtnText: $("startBtnText"),
+      stopBtn: $("stopBtn"),
+      stopBtnText: $("stopBtnText"),
+      qualitySelect: $("qualitySelect"),
+      qualityLabel: $("qualityLabel"),
+      fpsSelect: $("fpsSelect"),
+      fpsLabel: $("fpsLabel"),
+      systemAudioInput: $("systemAudioInput"),
+      systemAudioLabel: $("systemAudioLabel"),
+      micInput: $("micInput"),
+      micLabel: $("micLabel"),
+      logTitle: $("logTitle"),
+      captureTitle: $("captureTitle"),
+      filesTitle: $("filesTitle"),
+      webmMeta: $("webmMeta"),
+      webmDownload: $("webmDownload"),
+      webmDownloadText: $("webmDownloadText"),
+      mp4Meta: $("mp4Meta"),
+      mp4Download: $("mp4Download"),
+      mp4DownloadText: $("mp4DownloadText"),
+      convertBtn: $("convertBtn"),
+      convertBtnText: $("convertBtnText"),
+      cacheTitle: $("cacheTitle"),
+      cacheInfo: $("cacheInfo"),
+      progressLabel: $("progressLabel"),
+      progressValue: $("progressValue"),
+      progressBar: $("progressBar"),
+      log: $("log"),
+      toast: $("toast"),
+      operationOverlay: $("operationOverlay"),
+      operationTitle: $("operationTitle"),
+      operationDetail: $("operationDetail"),
+      operationProgressLabel: $("operationProgressLabel"),
+      operationProgressValue: $("operationProgressValue"),
+      operationProgressBar: $("operationProgressBar"),
+      operationLog: $("operationLog"),
+    };
+
+    const state = {
+      lang: localStorage.getItem("screen-recorder-lang") || (navigator.language?.startsWith("zh") ? "zh-CN" : "en"),
+      statusKey: "ready",
+      progressKey: "progressIdle",
+      progress: 0,
+      recordingMetaKey: "recordingMetaIdle",
+      webmState: "pending",
+      mp4State: "pending",
+      displayStream: null,
+      micStream: null,
+      mixedStream: null,
+      audioContext: null,
+      recorder: null,
+      chunks: [],
+      startedAt: 0,
+      recordedDurationMs: 0,
+      timerId: 0,
+      webmBlob: null,
+      mp4Blob: null,
+      webmUrl: "",
+      mp4Url: "",
+      ffmpeg: null,
+      ffmpegLoaded: false,
+      ffmpegMode: "st",
+      scriptUrls: [],
+    };
+
+    function t(key, vars = {}) {
+      const template = I18N[state.lang]?.[key] || I18N.en[key] || key;
+      return Object.entries(vars).reduce((text, [name, value]) => text.replaceAll(`{${name}}`, value), template);
+    }
+
+    function setText(el, key, vars) {
+      el.textContent = t(key, vars);
+    }
+
+    function applyLanguage() {
+      if (!I18N[state.lang]) state.lang = "zh-CN";
+      document.documentElement.lang = state.lang;
+      document.title = t("pageTitle");
+      els.languageSelect.value = state.lang;
+      setText(els.pageTitle, "pageTitle");
+      setText(els.subtitle, "subtitle");
+      setText(els.emptyStateText, "emptyState");
+      setText(els.startBtnText, "start");
+      setText(els.stopBtnText, "stop");
+      setText(els.logTitle, "logTitle");
+      setText(els.captureTitle, "captureTitle");
+      setText(els.qualityLabel, "qualityLabel");
+      setText(els.fpsLabel, "fpsLabel");
+      setText(els.systemAudioLabel, "systemAudioLabel");
+      setText(els.micLabel, "micLabel");
+      setText(els.filesTitle, "filesTitle");
+      setText(els.webmDownloadText, "downloadWebM");
+      setText(els.convertBtnText, "convertMP4");
+      setText(els.mp4DownloadText, "downloadMP4");
+      setText(els.cacheTitle, "cacheTitle");
+      els.recordingMeta.textContent = t(state.recordingMetaKey);
+      setStatus(state.statusKey, els.statusPill.classList.contains("recording"));
+      updateFileMetaText();
+      setConvertProgress(state.progress, state.progressKey);
+      updateCacheInfo().catch(() => {});
+      if (els.log.dataset.idle === "true") {
+        els.log.textContent = t("logIdle");
+        els.operationLog.textContent = t("logIdle");
+      }
+    }
+
+    function setStatus(key, recording = false) {
+      state.statusKey = key;
+      els.statusText.textContent = t(key);
+      els.statusPill.classList.toggle("recording", recording);
+    }
+
+    function toastKey(key) {
+      els.toast.textContent = t(key);
+      els.toast.classList.add("show");
+      window.clearTimeout(toast._timer);
+      toast._timer = window.setTimeout(() => els.toast.classList.remove("show"), 3200);
+    }
+
+    function toast(message) {
+      els.toast.textContent = message;
+      els.toast.classList.add("show");
+      window.clearTimeout(toast._timer);
+      toast._timer = window.setTimeout(() => els.toast.classList.remove("show"), 3200);
+    }
+
+    function logMessage(message) {
+      const prefix = new Date().toLocaleTimeString();
+      const current = els.log.dataset.idle === "true" ? "" : els.log.textContent + "\n";
+      const next = `${current}[${prefix}] ${message}`;
+      els.log.textContent = next;
+      els.operationLog.textContent = next;
+      els.log.dataset.idle = "false";
+      els.log.scrollTop = els.log.scrollHeight;
+      els.operationLog.scrollTop = els.operationLog.scrollHeight;
+    }
+
+    function logKey(key) {
+      logMessage(t(key));
+    }
+
+    function parseFFmpegTime(message) {
+      const match = String(message).match(/time=(\d{2}):(\d{2}):(\d{2}(?:\.\d+)?)/);
+      if (!match) return null;
+      const [, hours, minutes, seconds] = match;
+      return (Number(hours) * 3600 + Number(minutes) * 60 + Number(seconds)) * 1000;
+    }
+
+    function updateTranscodeProgressFromLog(message) {
+      const outputMs = parseFFmpegTime(message);
+      if (!outputMs || !state.recordedDurationMs) return;
+      const percent = Math.min(99, Math.max(state.progress, (outputMs / state.recordedDurationMs) * 100));
+      setConvertProgress(percent, "progressTranscoding");
+    }
+
+    function setConvertProgress(percent, key = state.progressKey) {
+      state.progress = Math.max(0, Math.min(100, Math.round(percent)));
+      state.progressKey = key;
+      els.progressBar.style.width = `${state.progress}%`;
+      els.progressValue.textContent = `${state.progress}%`;
+      els.progressLabel.textContent = t(key);
+      els.operationProgressBar.style.width = `${state.progress}%`;
+      els.operationProgressValue.textContent = `${state.progress}%`;
+      els.operationProgressLabel.textContent = t(key);
+    }
+
+    function showOverlay(titleKey, detailKey, progress = state.progress, progressKey = state.progressKey) {
+      els.operationTitle.textContent = t(titleKey);
+      els.operationDetail.textContent = t(detailKey);
+      setConvertProgress(progress, progressKey);
+      els.operationOverlay.classList.add("show");
+    }
+
+    function hideOverlay() {
+      els.operationOverlay.classList.remove("show");
+    }
+
+    function updateFileMetaText() {
+      if (state.webmState === "pending") els.webmMeta.textContent = t("webmPending");
+      if (state.webmState === "recording") els.webmMeta.textContent = t("webmRecording");
+      if (state.mp4State === "pending") els.mp4Meta.textContent = t("mp4Pending");
+      if (state.mp4State === "converting") els.mp4Meta.textContent = t("mp4Converting");
+      if (state.mp4State === "failed") els.mp4Meta.textContent = t("mp4Failed");
+    }
+
+    function formatBytes(bytes) {
+      if (!bytes) return "0 B";
+      const units = ["B", "KB", "MB", "GB"];
+      const index = Math.min(Math.floor(Math.log(bytes) / Math.log(1024)), units.length - 1);
+      return `${(bytes / Math.pow(1024, index)).toFixed(index ? 1 : 0)} ${units[index]}`;
+    }
+
+    function formatTime(ms) {
+      const total = Math.floor(ms / 1000);
+      const min = String(Math.floor(total / 60)).padStart(2, "0");
+      const sec = String(total % 60).padStart(2, "0");
+      return `${min}:${sec}`;
+    }
+
+    function updateTimer() {
+      els.timer.textContent = formatTime(Date.now() - state.startedAt);
+    }
+
+    function revokeUrl(key) {
+      if (state[key]) {
+        URL.revokeObjectURL(state[key]);
+        state[key] = "";
+      }
+    }
+
+    function setDownload(anchor, url, filename) {
+      anchor.href = url;
+      anchor.download = filename;
+      anchor.setAttribute("aria-disabled", "false");
+    }
+
+    function disableDownload(anchor) {
+      anchor.removeAttribute("href");
+      anchor.removeAttribute("download");
+      anchor.setAttribute("aria-disabled", "true");
+    }
+
+    function getSupportedMimeType() {
+      const types = [
+        "video/webm;codecs=vp9,opus",
+        "video/webm;codecs=vp8,opus",
+        "video/webm;codecs=h264,opus",
+        "video/webm",
+      ];
+      return types.find((type) => MediaRecorder.isTypeSupported(type)) || "";
+    }
+
+    async function createMixedStream(displayStream, micStream) {
+      const videoTracks = displayStream.getVideoTracks();
+      const audioTracks = [
+        ...displayStream.getAudioTracks(),
+        ...(micStream ? micStream.getAudioTracks() : []),
+      ];
+
+      if (!audioTracks.length) {
+        return new MediaStream(videoTracks);
+      }
+
+      const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+      state.audioContext = new AudioContextClass();
+      const destination = state.audioContext.createMediaStreamDestination();
+
+      if (displayStream.getAudioTracks().length) {
+        state.audioContext.createMediaStreamSource(new MediaStream(displayStream.getAudioTracks())).connect(destination);
+      }
+
+      if (micStream && micStream.getAudioTracks().length) {
+        state.audioContext.createMediaStreamSource(micStream).connect(destination);
+      }
+
+      return new MediaStream([...videoTracks, ...destination.stream.getAudioTracks()]);
+    }
+
+    async function startRecording() {
+      if (!navigator.mediaDevices?.getDisplayMedia || !window.MediaRecorder) {
+        toastKey("unsupported");
+        return;
+      }
+
+      try {
+        showOverlay("overlayCaptureTitle", "overlayCaptureDetail", 0, "progressIdle");
+        revokeUrl("webmUrl");
+        revokeUrl("mp4Url");
+        state.webmBlob = null;
+        state.mp4Blob = null;
+        state.recordedDurationMs = 0;
+        state.chunks = [];
+        disableDownload(els.webmDownload);
+        disableDownload(els.mp4Download);
+        state.webmState = "recording";
+        state.mp4State = "pending";
+        updateFileMetaText();
+        els.convertBtn.disabled = true;
+        setConvertProgress(0, "progressIdle");
+
+        state.displayStream = await navigator.mediaDevices.getDisplayMedia({
+          video: {
+            frameRate: Number(els.fpsSelect.value),
+            width: { ideal: 3840 },
+            height: { ideal: 2160 },
+          },
+          audio: els.systemAudioInput.checked,
+        });
+
+        if (els.micInput.checked) {
+          showOverlay("overlayPrepareTitle", "overlayPrepareDetail", 4, "progressIdle");
+          state.micStream = await navigator.mediaDevices.getUserMedia({
+            audio: {
+              echoCancellation: true,
+              noiseSuppression: true,
+              autoGainControl: true,
+            },
+          });
+        }
+
+        showOverlay("overlayPrepareTitle", "overlayPrepareDetail", 8, "progressIdle");
+        state.mixedStream = await createMixedStream(state.displayStream, state.micStream);
+        els.preview.srcObject = state.mixedStream;
+        els.preview.muted = true;
+        els.preview.controls = false;
+        await els.preview.play().catch(() => {});
+        els.emptyState.hidden = true;
+
+        const mimeType = getSupportedMimeType();
+        const options = {
+          videoBitsPerSecond: Number(els.qualitySelect.value),
+        };
+        if (mimeType) options.mimeType = mimeType;
+
+        state.recorder = new MediaRecorder(state.mixedStream, options);
+        state.recorder.ondataavailable = (event) => {
+          if (event.data && event.data.size > 0) {
+            state.chunks.push(event.data);
+          }
+        };
+        state.recorder.onstop = finishRecording;
+        state.displayStream.getVideoTracks()[0].addEventListener("ended", () => {
+          if (state.recorder?.state === "recording") stopRecording();
+        });
+
+        state.recorder.start(1000);
+        state.startedAt = Date.now();
+        state.timerId = window.setInterval(updateTimer, 250);
+        updateTimer();
+
+        setStatus("recording", true);
+        els.startBtn.disabled = true;
+        els.stopBtn.disabled = false;
+        els.qualitySelect.disabled = true;
+        els.fpsSelect.disabled = true;
+        els.systemAudioInput.disabled = true;
+        els.micInput.disabled = true;
+        hideOverlay();
+      } catch (error) {
+        cleanupStreams();
+        resetControls();
+        state.webmState = "pending";
+        updateFileMetaText();
+        hideOverlay();
+        toast(error?.message || t("startFailed"));
+      }
+    }
+
+    function stopRecording() {
+      if (state.recorder?.state === "recording") {
+        showOverlay("overlayFinishTitle", "overlayFinishDetail", 10, "progressIdle");
+        state.recorder.stop();
+      }
+      cleanupStreams();
+    }
+
+    function finishRecording() {
+      window.clearInterval(state.timerId);
+      state.recordedDurationMs = Math.max(1000, Date.now() - state.startedAt);
+      state.webmBlob = new Blob(state.chunks, { type: state.recorder.mimeType || "video/webm" });
+      state.webmUrl = URL.createObjectURL(state.webmBlob);
+      els.preview.srcObject = null;
+      els.preview.src = state.webmUrl;
+      els.preview.muted = false;
+      els.preview.controls = true;
+      els.emptyState.hidden = true;
+
+      const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+      setDownload(els.webmDownload, state.webmUrl, `screen-recording-${timestamp}.webm`);
+      state.webmState = "done";
+      els.webmMeta.textContent = `${formatBytes(state.webmBlob.size)} · ${els.timer.textContent}`;
+      state.recordingMetaKey = "recordingMetaDone";
+      els.recordingMeta.textContent = t(state.recordingMetaKey);
+      els.convertBtn.disabled = false;
+      setStatus("recorded");
+      resetControls();
+      hideOverlay();
+    }
+
+    function cleanupStreams() {
+      [state.displayStream, state.micStream, state.mixedStream].forEach((stream) => {
+        stream?.getTracks().forEach((track) => track.stop());
+      });
+      state.displayStream = null;
+      state.micStream = null;
+      state.mixedStream = null;
+
+      if (state.audioContext) {
+        state.audioContext.close().catch(() => {});
+        state.audioContext = null;
+      }
+    }
+
+    function resetControls() {
+      els.startBtn.disabled = false;
+      els.stopBtn.disabled = true;
+      els.qualitySelect.disabled = false;
+      els.fpsSelect.disabled = false;
+      els.systemAudioInput.disabled = false;
+      els.micInput.disabled = false;
+    }
+
+    function getFFmpegRuntimeAssets(useMultiThread = false) {
+      const baseURL = useMultiThread ? CORE_MT_BASE_URL : CORE_BASE_URL;
+      const assets = [
+        { key: "coreURL", url: `${baseURL}/ffmpeg-core.js`, type: "text/javascript" },
+        { key: "wasmURL", url: `${baseURL}/ffmpeg-core.wasm`, type: "application/wasm" },
+      ];
+      if (useMultiThread) {
+        assets.push({ key: "workerURL", url: `${baseURL}/ffmpeg-core.worker.js`, type: "text/javascript" });
+      }
+      return assets;
+    }
+
+    function canUseMultiThreadFFmpeg() {
+      return window.crossOriginIsolated === true && typeof SharedArrayBuffer !== "undefined";
+    }
+
+    async function cacheFetchBlobUrl(url, type, cacheName = CACHE_NAME) {
+      if (!("caches" in window)) {
+        const response = await fetch(url, { mode: "cors" });
+        if (!response.ok) throw new Error(`Fetch failed: ${url}`);
+        const blob = await response.blob();
+        return URL.createObjectURL(new Blob([blob], { type }));
+      }
+
+      const cache = await caches.open(cacheName);
+      let response = await cache.match(url);
+      if (!response) {
+        response = await fetch(url, { mode: "cors", cache: "force-cache" });
+        if (!response.ok) throw new Error(`Fetch failed: ${url}`);
+        await cache.put(url, response.clone());
+      }
+      const blob = await response.blob();
+      return URL.createObjectURL(new Blob([blob], { type }));
+    }
+
+    async function loadScript(src) {
+      await new Promise((resolve, reject) => {
+        const script = document.createElement("script");
+        script.src = src;
+        script.onload = resolve;
+        script.onerror = () => reject(new Error(`Script load failed: ${src}`));
+        document.head.appendChild(script);
+      });
+    }
+
+    async function updateCacheInfo() {
+      if (!("caches" in window)) {
+        els.cacheInfo.textContent = t("cacheUnavailable");
+        return;
+      }
+
+      const useMultiThread = canUseMultiThreadFFmpeg();
+      const cacheName = useMultiThread ? CACHE_MT_NAME : CACHE_NAME;
+      const assets = getFFmpegRuntimeAssets(useMultiThread);
+      const cache = await caches.open(cacheName);
+      const hits = await Promise.all(assets.map((asset) => cache.match(asset.url)));
+      const cached = hits.filter(Boolean).length;
+      els.cacheInfo.innerHTML = `<strong>${cached}/${assets.length}</strong> ${t("cacheStatus", { cached, total: assets.length }).replace(`${cached}/${assets.length} `, "")}`;
+    }
+
+    async function ensureFFmpegLoaded() {
+      if (state.ffmpegLoaded) return state.ffmpeg;
+
+      setStatus("loadingFFmpeg");
+      els.convertBtn.disabled = true;
+      setConvertProgress(1, "progressLoading");
+      logKey("logLoadStart");
+      await updateCacheInfo();
+
+      if (!window.FFmpegWASM) {
+        setConvertProgress(2, "progressLoading");
+        await loadScript(FFMPEG_SCRIPT_URL);
+      }
+
+      const useMultiThread = canUseMultiThreadFFmpeg();
+      state.ffmpegMode = useMultiThread ? "mt" : "st";
+      logKey(useMultiThread ? "logThreadMt" : "logThreadSt");
+
+      const { FFmpeg } = window.FFmpegWASM;
+      const ffmpeg = new FFmpeg();
+      ffmpeg.on("log", ({ message }) => {
+        logMessage(message);
+        updateTranscodeProgressFromLog(message);
+      });
+      ffmpeg.on("progress", ({ progress }) => {
+        if (Number.isFinite(progress) && !state.recordedDurationMs) {
+          setConvertProgress(Math.min(99, progress * 100), "progressTranscoding");
+        }
+      });
+
+      const cacheName = useMultiThread ? CACHE_MT_NAME : CACHE_NAME;
+      const runtimeAssets = getFFmpegRuntimeAssets(useMultiThread);
+      const loadConfig = {};
+      for (let index = 0; index < runtimeAssets.length; index += 1) {
+        const asset = runtimeAssets[index];
+        setConvertProgress(2 + index, "progressLoading");
+        loadConfig[asset.key] = await cacheFetchBlobUrl(asset.url, asset.type, cacheName);
+        state.scriptUrls.push(loadConfig[asset.key]);
+      }
+      setConvertProgress(4, "progressLoading");
+      await ffmpeg.load(loadConfig);
+
+      state.ffmpeg = ffmpeg;
+      state.ffmpegLoaded = true;
+      logKey("logLoadDone");
+      await updateCacheInfo();
+      return ffmpeg;
+    }
+
+    async function deleteIfExists(ffmpeg, path) {
+      try {
+        await ffmpeg.deleteFile(path);
+      } catch (_) {}
+    }
+
+    async function convertToMp4() {
+      if (!state.webmBlob) {
+        toastKey("needRecording");
+        return;
+      }
+
+      try {
+        showOverlay("overlayConvertTitle", canUseMultiThreadFFmpeg() ? "overlayConvertDetailMt" : "overlayConvertDetailSt", 1, "progressLoading");
+        els.convertBtn.disabled = true;
+        setConvertProgress(1, "progressLoading");
+        state.mp4State = "converting";
+        updateFileMetaText();
+        setStatus("converting");
+        const ffmpeg = await ensureFFmpegLoaded();
+
+        setConvertProgress(5, "progressWriting");
+        await deleteIfExists(ffmpeg, "input.webm");
+        await deleteIfExists(ffmpeg, "output.mp4");
+        await ffmpeg.writeFile("input.webm", new Uint8Array(await state.webmBlob.arrayBuffer()));
+
+        const primaryArgs = [
+          "-i", "input.webm",
+          "-c:v", "libx264",
+          "-preset", "veryfast",
+          "-crf", "23",
+          "-pix_fmt", "yuv420p",
+          "-c:a", "aac",
+          "-b:a", "128k",
+          "-movflags", "+faststart",
+          "output.mp4",
+        ];
+
+        try {
+          setConvertProgress(0, "progressTranscoding");
+          logKey("logPrimary");
+          await ffmpeg.exec(primaryArgs);
+        } catch (error) {
+          logKey("logFallback");
+          await deleteIfExists(ffmpeg, "output.mp4");
+          setConvertProgress(0, "progressTranscoding");
+          await ffmpeg.exec([
+            "-i", "input.webm",
+            "-c:v", "mpeg4",
+            "-q:v", "5",
+            "-c:a", "aac",
+            "-b:a", "128k",
+            "output.mp4",
+          ]);
+        }
+
+        setConvertProgress(99, "progressPackaging");
+        const data = await ffmpeg.readFile("output.mp4");
+        state.mp4Blob = new Blob([data.buffer], { type: "video/mp4" });
+        revokeUrl("mp4Url");
+        state.mp4Url = URL.createObjectURL(state.mp4Blob);
+        const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+        setDownload(els.mp4Download, state.mp4Url, `screen-recording-${timestamp}.mp4`);
+        state.mp4State = "done";
+        els.mp4Meta.textContent = `${formatBytes(state.mp4Blob.size)} · MP4`;
+        setConvertProgress(100, "progressDone");
+        setStatus("converted");
+        toastKey("convertDone");
+      } catch (error) {
+        console.error(error);
+        state.mp4State = "failed";
+        updateFileMetaText();
+        toast(error?.message || t("convertError"));
+        setStatus("convertFailed");
+      } finally {
+        hideOverlay();
+        els.convertBtn.disabled = !state.webmBlob;
+      }
+    }
+
+    els.startBtn.addEventListener("click", startRecording);
+    els.stopBtn.addEventListener("click", stopRecording);
+    els.convertBtn.addEventListener("click", convertToMp4);
+    els.languageSelect.addEventListener("change", () => {
+      state.lang = els.languageSelect.value;
+      localStorage.setItem("screen-recorder-lang", state.lang);
+      applyLanguage();
+    });
+    els.webmDownload.addEventListener("click", (event) => {
+      if (!state.webmUrl) event.preventDefault();
+    });
+    els.mp4Download.addEventListener("click", (event) => {
+      if (!state.mp4Url) event.preventDefault();
+    });
+
+    window.addEventListener("beforeunload", () => {
+      cleanupStreams();
+      revokeUrl("webmUrl");
+      revokeUrl("mp4Url");
+      state.scriptUrls.forEach((url) => URL.revokeObjectURL(url));
+    });
+
+    els.log.dataset.idle = "true";
+    els.recordingMeta.textContent = t(state.recordingMetaKey);
+    updateFileMetaText();
+    setConvertProgress(0, "progressIdle");
+    applyLanguage();
+    lucide.createIcons();
+  </script>
+</body>
+</html>

@@ -31,6 +31,14 @@
             "isFolder": false,
             "hasChildren": false,
             "isExternal": false
+          },
+          {
+            "description": "",
+            "url": "https://20260318-paypal-3ds-full-test.pages.dev/",
+            "text": "PayPal 3DS 测试demo",
+            "isFolder": false,
+            "hasChildren": false,
+            "isExternal": true
           }
         ]
       },
@@ -41,8 +49,16 @@
         "items": [
           {
             "description": "",
-            "url": "__1__-jsv5-test/ApplePay/applepay-test.html",
-            "text": "applepay-test",
+            "url": "/__1__-jsv5-test/ApplePay/index.html",
+            "text": "ApplePay Dashboard",
+            "isFolder": false,
+            "hasChildren": false,
+            "isExternal": true
+          },
+          {
+            "description": "",
+            "url": "__1__-jsv5-test/ApplePay/applepay-test-archive.html",
+            "text": "applepay-test-archive",
             "isFolder": false,
             "hasChildren": false,
             "isExternal": false
@@ -108,6 +124,21 @@
             "subGroups": []
           }
         ]
+      },
+      {
+        "title": "Vault Test Site",
+        "icon": "number-five",
+        "expanded": true,
+        "items": [
+          {
+            "description": "",
+            "url": "https://jsv5-vault-playground.pages.dev/",
+            "text": "JSv5 + Vault 主测试站",
+            "isFolder": false,
+            "hasChildren": false,
+            "isExternal": true
+          }
+        ]
       }
     ]
   },
@@ -131,7 +162,15 @@
           },
           {
             "description": "",
-            "url": "__2__-jsv6-test/__2__-appswitch-test-vercel-backend.html",
+            "url": "https://ecs-api-demo.pages.dev/",
+            "text": "ECS Test Demo",
+            "isFolder": false,
+            "hasChildren": false,
+            "isExternal": true
+          },
+          {
+            "description": "",
+            "url": "__2__-jsv6-test/__3__-appswitch-test-vercel-backend.html",
             "text": "appswitch-test-vercel-backend",
             "isFolder": false,
             "hasChildren": false,
@@ -139,7 +178,7 @@
           },
           {
             "description": "",
-            "url": "__2__-jsv6-test/__3__-redirect-test-vercel-backend.html",
+            "url": "__2__-jsv6-test/__4__-redirect-test-vercel-backend.html",
             "text": "redirect-test-vercel-backend",
             "isFolder": false,
             "hasChildren": false,
@@ -147,7 +186,7 @@
           },
           {
             "description": "",
-            "url": "__2__-jsv6-test/__4__-iframe-hostpage.html",
+            "url": "__2__-jsv6-test/__5__-iframe-hostpage.html",
             "text": "iframe-hostpage",
             "isFolder": false,
             "hasChildren": false,
@@ -244,6 +283,14 @@
         "items": [
           {
             "description": "",
+            "url": "https://youtube.com/shorts/Adn3UPPj1fc?si=WGSlRRkxbP8klExi",
+            "text": "App Switch Record Video at youtube",
+            "isFolder": false,
+            "hasChildren": false,
+            "isExternal": true
+          },
+          {
+            "description": "",
             "url": "__4__-appSwitch/app-switch-jsv5.html",
             "text": "app-switch-jsv5",
             "isFolder": false,
@@ -254,6 +301,28 @@
             "description": "",
             "url": "__4__-appSwitch/app-switch-jsv6.html",
             "text": "app-switch-jsv6",
+            "isFolder": false,
+            "hasChildren": false,
+            "isExternal": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "title": "Tool",
+    "icon": "monitor-cog",
+    "expanded": true,
+    "groups": [
+      {
+        "title": "Tool",
+        "icon": "monitor-cog",
+        "expanded": true,
+        "items": [
+          {
+            "description": "",
+            "url": "__5__-tool/__1__-screen-recorder.html",
+            "text": "screen-recorder",
             "isFolder": false,
             "hasChildren": false,
             "isExternal": false

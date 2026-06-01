@@ -83,6 +83,10 @@ export default defineConfig({
             if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
               // 文件存在：设置正确的 Content-Type，然后直接返回文件内容，请求到此结束
               res.setHeader('Content-Type', MIME_BY_EXT[ext] ?? 'application/octet-stream')
+              if (url.startsWith('/__5__-tool/')) {
+                res.setHeader('Cross-Origin-Opener-Policy', 'same-origin')
+                res.setHeader('Cross-Origin-Embedder-Policy', 'credentialless')
+              }
               res.end(fs.readFileSync(filePath))
               return
             }
