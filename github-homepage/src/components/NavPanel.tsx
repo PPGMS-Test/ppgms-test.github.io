@@ -4,6 +4,7 @@ import {
   Layers, Code2, Globe, CreditCard, FlaskConical, Settings, BookOpen, Zap,
   Wallet, DollarSign, ShoppingCart, Clock, Star, Database, Layout, Smartphone,
   Apple, ChevronsRight, Package, AlertCircle, CheckCircle, Droplet,
+  Wrench,
   type LucideIcon,
 } from 'lucide-react'
 import type { NavPanelData, NavItem, NavSubGroup } from '../types'
