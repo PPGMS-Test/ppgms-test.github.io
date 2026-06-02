@@ -1,6 +1,8 @@
 # Todo
 
 - [ ] ecs playground的开发 ⏫
+- [x] Apple Pay Vault Recurring lineItem 优化 ⏫ ✅ 2026-05-28
+- [x] 录屏软件的优化开发 🔽 ✅ 2026-06-01
 - [x] Pay Later Message被script注入的问题. 单个的HTML页面已经重构, 现在不会发生问题了, 不知道为什么之前会有错误. 我怀疑是个bug 🔼 ✅ 2026-05-24
 - [x] JSv6 Subscription scenario 🔼 ✅ 2026-05-22
 - [x] JSv6 check Eligible 在后端的情况 ⏫ ✅ 2026-05-11

@@ -34,6 +34,7 @@ const LUCIDE_MAP: Record<string, LucideIcon> = {
   'chevrons-right': ChevronsRight, 'package': Package,
   'alert-circle': AlertCircle, 'check-circle': CheckCircle,
   'droplet': Droplet, 'folder': Folder,
+  'wrench': Wrench,
 }
 
 function toCssName(name: string) {

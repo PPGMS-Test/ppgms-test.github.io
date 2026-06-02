@@ -311,12 +311,12 @@
   },
   {
     "title": "Tool",
-    "icon": "monitor-cog",
+    "icon": "wrench",
     "expanded": true,
     "groups": [
       {
         "title": "Tool",
-        "icon": "monitor-cog",
+        "icon": "wrench",
         "expanded": true,
         "items": [
           {
