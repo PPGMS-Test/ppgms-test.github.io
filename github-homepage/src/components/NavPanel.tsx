@@ -47,13 +47,38 @@ function PanelIcon({ name, size = 20 }: { name: string; size?: number }) {
   const key = toCssName(name).toLowerCase()
   const LucideComponent = LUCIDE_MAP[key]
   if (LucideComponent) return <LucideComponent size={size} />
-  // 自定义 SVG：在 public 目录下找同名 .svg 文件
-  return <img src={`/${name}.svg`} width={size} height={size} alt={name} style={{ filter: 'brightness(0) invert(1)' }} />
+  // 自定义 SVG：用 mask 让任意 SVG 继承 currentColor，与 Lucide 行为一致
+  return (
+    <span
+      role="img"
+      aria-label={name}
+      style={{
+        display: 'inline-block',
+        width: size,
+        height: size,
+        backgroundColor: 'currentColor',
+        WebkitMaskImage: `url(/${name}.svg)`,
+        maskImage: `url(/${name}.svg)`,
+        WebkitMaskRepeat: 'no-repeat',
+        maskRepeat: 'no-repeat',
+        WebkitMaskSize: 'contain',
+        maskSize: 'contain',
+        WebkitMaskPosition: 'center',
+        maskPosition: 'center',
+      }}
+    />
+  )
 }
 
 interface NavPanelProps {
   panel: NavPanelData
   colorIndex: number
+  /** Optional dnd-kit integration: attach to root for transform/transition */
+  dragNodeRef?: (node: HTMLElement | null) => void
+  dragStyle?: React.CSSProperties
+  /** Optional dnd-kit listeners — spread onto the header to make it the drag handle */
+  dragHandleProps?: React.HTMLAttributes<HTMLDivElement>
+  isDragging?: boolean
 }
 
 function initExpanded(panel: NavPanelData): Set<string> {
@@ -67,10 +92,22 @@ function initExpanded(panel: NavPanelData): Set<string> {
   return keys
 }
 
-export function NavPanel({ panel, colorIndex }: NavPanelProps) {
+function countPanelItems(panel: NavPanelData): number {
+  return panel.groups.reduce((sum, g) => sum + g.items.length, 0)
+}
+
+export function NavPanel({
+  panel,
+  colorIndex,
+  dragNodeRef,
+  dragStyle,
+  dragHandleProps,
+  isDragging,
+}: NavPanelProps) {
   const color = PANEL_COLORS[colorIndex % PANEL_COLORS.length]
   const FallbackIcon = FALLBACK_ICONS[colorIndex % FALLBACK_ICONS.length]
   const [expanded, setExpanded] = useState<Set<string>>(() => initExpanded(panel))
+  const itemCount = countPanelItems(panel)
 
   function toggle(key: string) {
     setExpanded(prev => {
@@ -83,30 +120,27 @@ export function NavPanel({ panel, colorIndex }: NavPanelProps) {
 
   return (
     <div
+      ref={dragNodeRef}
+      className={`panel-card${isDragging ? ' is-dragging' : ''}`}
       style={{
-        borderRadius: 'var(--radius)',
-        overflow: 'hidden',
-        boxShadow: 'var(--shadow-md)',
+        ['--nav-accent' as string]: color.bg,
         background: `color-mix(in srgb, ${color.accent} 75%, var(--card-bg))`,
+        ...dragStyle,
       }}
     >
-      {/* Panel Header */}
+      {/* Wide colored header — also the drag handle */}
       <div
-        style={{
-          background: color.bg,
-          color: '#fff',
-          padding: '14px 18px',
-          display: 'flex',
-          alignItems: 'center',
-          gap: 10,
-          fontSize: 15,
-          fontWeight: 600,
-        }}
+        className="panel-drag-header"
+        style={{ background: color.bg }}
+        {...dragHandleProps}
       >
-        {panel.icon && panel.icon !== 'folder'
-          ? <PanelIcon name={panel.icon} size={20} />
-          : <FallbackIcon size={20} />}
-        <span>{panel.title}</span>
+        <span style={{ display: 'inline-flex', color: '#fff', flexShrink: 0 }}>
+          {panel.icon && panel.icon !== 'folder'
+            ? <PanelIcon name={panel.icon} size={20} />
+            : <FallbackIcon size={20} />}
+        </span>
+        <span className="panel-header-title">{panel.title}</span>
+        {itemCount > 0 && <span className="panel-count-badge">{itemCount}</span>}
       </div>
 
       {/* Groups */}
@@ -146,8 +180,8 @@ export function NavPanel({ panel, colorIndex }: NavPanelProps) {
               </button>
             )}
 
-            {/* Group Items */}
-            {(isOpen || panel.groups.length === 1 || group.title === panel.title) && (
+            {/* Group Items — collapsible whenever a header button is shown */}
+            {(isOpen || panel.groups.length === 1) && (
               <div style={{ paddingBottom: 4 }}>
                 {group.items.map((item, ii) => (
                   <NavItemRow

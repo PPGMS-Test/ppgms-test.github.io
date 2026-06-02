@@ -201,7 +201,21 @@ function HistoryDialog({ items, onClose }: { items: TodoItem[]; onClose: () => v
   )
 }
 
-export function TodoPanel() {
+interface TodoPanelProps {
+  /** Optional dnd-kit integration — attached to root for transform/transition */
+  dragNodeRef?: (node: HTMLElement | null) => void
+  dragStyle?: React.CSSProperties
+  /** Spread onto the header button to make it the drag handle */
+  dragHandleProps?: Record<string, unknown>
+  isDragging?: boolean
+}
+
+export function TodoPanel({
+  dragNodeRef,
+  dragStyle,
+  dragHandleProps,
+  isDragging,
+}: TodoPanelProps = {}) {
   const items = parseTodo(todoRaw)
   const pending = items.filter(i => !i.done)
   const done = items.filter(i => i.done)
@@ -211,15 +225,16 @@ export function TodoPanel() {
   return (
     <>
       <div
+        ref={dragNodeRef}
+        className={`panel-card${isDragging ? ' is-dragging' : ''}`}
         style={{
-          borderRadius: 'var(--radius)',
-          overflow: 'hidden',
-          boxShadow: 'var(--shadow-md)',
           background: `color-mix(in srgb, ${HEADER_COLOR.accent} 80%, var(--card-bg))`,
+          ...dragStyle,
         }}
       >
         <button
           onClick={() => setOpen(o => !o)}
+          {...dragHandleProps}
           style={{
             width: '100%',
             background: HEADER_COLOR.bg,
@@ -231,21 +246,14 @@ export function TodoPanel() {
             fontSize: 15,
             fontWeight: 600,
             border: 'none',
-            cursor: 'pointer',
+            cursor: 'grab',
+            textAlign: 'left',
           }}
         >
           <ClipboardList size={20} />
           <span>Todo</span>
           {pending.length > 0 && (
-            <span
-              style={{
-                background: 'rgba(255,255,255,0.25)',
-                borderRadius: 999,
-                padding: '1px 8px',
-                fontSize: 12,
-                fontWeight: 500,
-              }}
-            >
+            <span className="panel-count-badge">
               {pending.length} 待完成
             </span>
           )}

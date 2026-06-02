@@ -5,32 +5,38 @@
 }
 
 :root {
-  --bg-color: #f0f2f5;
+  /* Trello-style board background */
+  --bg-color: oklch(94% 0.015 240);
   --card-bg: #ffffff;
-  --text-color: #1a1a2e;
-  --text-muted: #6b7280;
+  --text-color: #172b4d;
+  --text-muted: #5e6c84;
   --border-color: #e5e7eb;
-  --hover-bg: #f9fafb;
-  --link-color: #2563eb;
-  --shadow-sm: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.06);
+  --hover-bg: rgba(9, 30, 66, 0.04);
+  --link-color: #0052cc;
+  --shadow-sm: 0 1px 0 rgba(9,30,66,0.25);
   --shadow-md: 0 4px 12px rgba(0,0,0,0.08), 0 2px 4px rgba(0,0,0,0.06);
-  --radius: 12px;
-  --radius-sm: 8px;
+  /* Trello card shadows */
+  --card-shadow: 0 1px 0 rgba(9,30,66,0.25);
+  --card-shadow-hover: 0 8px 16px -4px rgba(9,30,66,0.25), 0 0 0 1px rgba(9,30,66,0.08);
+  --radius: 8px;
+  --radius-sm: 6px;
   --scrollbar-thumb: rgba(0,0,0,0.18);
   --scrollbar-thumb-hover: rgba(0,0,0,0.32);
   --scrollbar-track: transparent;
 }
 
 .dark-mode {
-  --bg-color: #0f1117;
-  --card-bg: #1a1d27;
+  --bg-color: oklch(22% 0.025 240);
+  --card-bg: oklch(28% 0 0);
   --text-color: #e2e8f0;
   --text-muted: #94a3b8;
   --border-color: #2d3748;
-  --hover-bg: #252836;
+  --hover-bg: rgba(255,255,255,0.06);
   --link-color: #60a5fa;
-  --shadow-sm: 0 1px 3px rgba(0,0,0,0.3);
+  --shadow-sm: 0 1px 0 rgba(0,0,0,0.4);
   --shadow-md: 0 4px 12px rgba(0,0,0,0.3);
+  --card-shadow: 0 1px 0 rgba(0,0,0,0.4);
+  --card-shadow-hover: 0 8px 16px -4px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.06);
   --scrollbar-thumb: rgba(255,255,255,0.18);
   --scrollbar-thumb-hover: rgba(255,255,255,0.32);
 }
@@ -132,6 +138,107 @@ footer a:hover {
 .nav-link,
 .nav-button {
   min-height: 44px;
+}
+
+/* ── Trello-style panel card shell (shared shell, NOT background) ── */
+.panel-card {
+  position: relative;
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: var(--card-shadow);
+  transition: transform 150ms cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 150ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.panel-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--card-shadow-hover);
+}
+
+.panel-card.is-dragging {
+  opacity: 0.5;
+  cursor: grabbing;
+}
+
+/* Wide colored header bar for NavPanel — drag handle */
+.panel-drag-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 18px;
+  color: #fff;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: grab;
+  user-select: none;
+}
+
+.panel-drag-header:active {
+  cursor: grabbing;
+}
+
+.panel-header-title {
+  flex: 1;
+  min-width: 0;
+}
+
+.panel-count-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1px 8px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.25);
+  border-radius: 999px;
+}
+
+/* Nav link Trello-style hover */
+.nav-link {
+  position: relative;
+}
+
+.nav-link::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 4px;
+  bottom: 4px;
+  width: 2px;
+  background: transparent;
+  border-radius: 0 2px 2px 0;
+  transition: background 150ms;
+}
+
+.nav-link:hover::before {
+  background: var(--nav-accent, var(--link-color));
+}
+
+/* Reset order button */
+.reset-order-btn {
+  position: fixed;
+  top: 16px;
+  right: 60px;
+  z-index: 50;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-muted);
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 999px;
+  cursor: pointer;
+  box-shadow: var(--card-shadow);
+  transition: all 150ms;
+}
+
+.reset-order-btn:hover {
+  color: var(--text-color);
+  box-shadow: var(--card-shadow-hover);
 }
 
 /* ── History dialog ─────────────────────────────────────────────── */
