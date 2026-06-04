@@ -231,34 +231,51 @@
                 }
             }
 
+            // SDK v6 的 resume() 在 App Switch 回跳时偶尔会触发两次 onApprove，
+            // 导致第二次 capture 命中 PayPal 的 ORDER_ALREADY_CAPTURED（疑似 BYOK
+            // 后端多一次 OAuth 往返让 SDK 内部超时触发重试）。
+            // 同一 orderId 的 capture 请求合并成一个 Promise，两次 onApprove 拿同一份结果。
+            const captureRequests = new Map();
+
+            async function requestCapture(orderId) {
+                const response = await fetch(CAPTURE_ENDPOINT(orderId), {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: AUTH_HEADER,
+                    },
+                });
+                if (!response.ok) {
+                    const text = await response.text();
+                    throw new Error(`Capture failed (${response.status}): ${text}`);
+                }
+                return response.json();
+            }
+
             const paymentSessionOptions = {
                 async onApprove(data) {
                     appendLog("买家已批准，开始 capture", data);
                     updateStatus("捕获中...", "pending", "sync");
-                    // debugger;
 
-                    const response = await fetch(
-                        CAPTURE_ENDPOINT(data.orderId),
-                        {
-                            method: "POST",
-                            headers: {
-                                "Content-Type": "application/json",
-                                Authorization: AUTH_HEADER,
-                            },
-                        },
-                    );
-
-                    if (!response.ok) {
-                        const text = await response.text();
-                        appendLog("捕获失败", text);
-                        updateStatus("捕获失败", "error", "error_outline");
-                        throw new Error(`Capture failed: ${response.status}`);
+                    let captureP = captureRequests.get(data.orderId);
+                    if (captureP) {
+                        appendLog("检测到重复 onApprove，复用已有 capture 请求", data);
+                    } else {
+                        captureP = requestCapture(data.orderId);
+                        captureRequests.set(data.orderId, captureP);
                     }
 
-                    const captureData = await response.json();
-                    appendLog("捕获成功", captureData);
-                    updateStatus("订单已成功捕获", "success", "check_circle");
-                    return captureData;
+                    try {
+                        const captureData = await captureP;
+                        appendLog("捕获成功", captureData);
+                        updateStatus("订单已成功捕获", "success", "check_circle");
+                        return captureData;
+                    } catch (err) {
+                        captureRequests.delete(data.orderId);
+                        appendLog("捕获失败", err.message);
+                        updateStatus("捕获失败", "error", "error_outline");
+                        throw err;
+                    }
                 },
 
                 onCancel: (data) => {
