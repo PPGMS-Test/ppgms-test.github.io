@@ -234,7 +234,9 @@
         "responses": {
           "200": { "description": "Order detail", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Order" } } } }
         }
-      },
+      }
+    },
+    "/api/checkout/orders/{orderId}/capture": {
       "post": {
         "tags": ["Orders"],
         "summary": "Capture order",

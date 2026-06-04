@@ -77,7 +77,7 @@
                         >
                         <div class="info-row-content">
                             <strong>Create API:</strong>
-                            paypal-backend-api-vercel.vercel.app/api/checkout/orders/create-with-sample-data
+                            ppgms-test-github-io.pages.dev/api/checkout/orders/create-with-sample-data
                         </div>
                     </div>
                     <div class="info-row">
@@ -86,7 +86,7 @@
                         >
                         <div class="info-row-content">
                             <strong>Capture API:</strong>
-                            paypal-backend-api-vercel.vercel.app/api/checkout/orders/{id}/capture
+                            ppgms-test-github-io.pages.dev/api/checkout/orders/{id}/capture
                         </div>
                     </div>
                     <div class="info-row">
@@ -141,20 +141,17 @@
             onload="onPayPalWebSdkLoaded()"
         ></script>
         <script>
-            // const CREATE_ENDPOINT =
-            //     "https://paypal-backend-api-vercel.vercel.app/api/checkout/orders/create-order-with-sample-data-app-switch-jsv6-sdk";
-
             const vConsole = new VConsole();
             console.log("VConsole initialized for development");
 
             const CREATE_ENDPOINT =
-                "https://paypal-backend-api-vercel.vercel.app/api/checkout/orders/create";
+                "https://ppgms-test-github-io.pages.dev/api/checkout/orders/create";
 
             const CAPTURE_ENDPOINT = (orderId) =>
-                `https://paypal-backend-api-vercel.vercel.app/api/checkout/orders/${orderId}/capture`;
+                `https://ppgms-test-github-io.pages.dev/api/checkout/orders/${orderId}/capture`;
 
             const AUTH_ENDPOINT =
-                "https://paypal-backend-api-vercel.vercel.app/api/auth/sandbox-browser-safe-client-token";
+                "https://ppgms-test-github-io.pages.dev/api/auth/sandbox-client-token";
 
             const logPane = document.getElementById("event-log");
             const statusChip = document.getElementById("status-chip");

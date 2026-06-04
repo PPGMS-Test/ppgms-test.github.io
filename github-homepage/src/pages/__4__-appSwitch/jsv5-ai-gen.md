@@ -4,8 +4,8 @@
 
 要求, 使用JSSDK来渲染按钮, OrderV2来创建订单
 
-创建订单的地址可以使用这个: https://paypal-backend-api-vercel.vercel.app/api/checkout/orders/create-with-sample-data
-capture的地址是这个: https://paypal-backend-api-vercel.vercel.app/api/checkout/{{order_id}}/capture
+创建订单的地址可以使用这个: https://ppgms-test-github-io.pages.dev/api/checkout/orders/create-with-sample-data
+capture的地址是这个: https://ppgms-test-github-io.pages.dev/api/checkout/orders/{{order_id}}/capture
 
 PayPal测试环境的JS SDK信息如下:
 <!-- APP Name: v6-sdk-test -->
