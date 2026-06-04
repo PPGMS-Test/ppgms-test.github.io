@@ -1,0 +1,319 @@
+<!doctype html>
+<html lang="zh-CN">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>PayPal App Switch JS SDK Demo</title>
+        <link
+            href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600&display=swap"
+            rel="stylesheet"
+        />
+        <link
+            href="https://fonts.googleapis.com/icon?family=Material+Icons"
+            rel="stylesheet"
+        />
+        <!-- VConsole -->
+        <script src="https://cdn.jsdelivr.net/npm/vconsole@3.15.1/dist/vconsole.min.js"></script>
+        <link rel="stylesheet" href="./app-switch-common.css" />
+    </head>
+    <body>
+        <div class="page-shell">
+            <section class="card">
+                <h2>
+                    <span class="material-icons" aria-hidden="true"
+                        >tips_and_updates</span
+                    >使用提示
+                </h2>
+                <ol class="guide">
+                    <li>
+                        请在非 iframe 的页面上直接访问，确保 App Switch
+                        正常跳转。
+                    </li>
+                    <li>
+                        使用 PayPal 测试 App 并登录
+                        <strong>p-test-cn-v6-2025@test.com</strong>
+                        (merchant acct)(pwd:Qq111222333)账号验证体验。
+                    </li>
+                    <li>
+                        创建订单走Order V2 API（Sample
+                        backend），捕获阶段直接命中 PayPal Orders Capture。
+                    </li>
+                    <li>
+                        如从 PayPal App 返回本页，脚本会自动检测并调用
+                        <code>buttons.resume()</code> 完成流程。
+                    </li>
+                </ol>
+            </section>
+
+            <section class="card">
+                <h2>
+                    <span class="material-icons" aria-hidden="true"
+                        >storage</span
+                    >沙箱信息
+                </h2>
+                <div class="grid-two">
+                    <div class="info-row">
+                        <span class="material-icons" aria-hidden="true"
+                            >vpn_key</span
+                        >
+                        <div class="info-row-content">
+                            <strong>Client ID:</strong>
+                            ATW2maVlMXBh67xRprsLYttNFXVCDO7MhEUE_VId1zbwqSSfYfIAC8mtdLaLRwA4nZpTzGBZPws7Kf-Z
+                        </div>
+                    </div>
+                    <div class="info-row">
+                        <span class="material-icons" aria-hidden="true"
+                            >link</span
+                        >
+                        <div class="info-row-content">
+                            <strong>Create API (BYOK):</strong>
+                            ppgms-test-github-io.pages.dev/api/byok/checkout/orders/create-app-switch
+                        </div>
+                    </div>
+                    <div class="info-row">
+                        <span class="material-icons" aria-hidden="true"
+                            >link</span
+                        >
+                        <div class="info-row-content">
+                            <strong>Capture API (BYOK):</strong>
+                            ppgms-test-github-io.pages.dev/api/byok/checkout/orders/{id}/capture
+                        </div>
+                    </div>
+                    <div class="info-row">
+                        <span class="material-icons" aria-hidden="true"
+                            >smartphone</span
+                        >
+                        <div class="info-row-content">
+                            <strong>App Switch:</strong>
+                            appSwitchWhenAvailable = true（JS SDK v5）
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="card button-panel">
+                <div class="chip">
+                    <span class="material-icons" aria-hidden="true"
+                        >play_circle</span
+                    >实时测试
+                </div>
+                <div id="paypal-button-container"></div>
+                <div class="status" id="status-chip" data-tone="pending">
+                    <span class="material-icons" aria-hidden="true"
+                        >hourglass_top</span
+                    >
+                    <span>等待操作...</span>
+                </div>
+                <div>
+                    <h3>
+                        <span class="material-icons" aria-hidden="true"
+                            >terminal</span
+                        >事件日志
+                    </h3>
+                    <div class="log-pane" id="event-log">
+                        App Switch Demo 准备就绪。
+                    </div>
+                </div>
+            </section>
+
+            <footer>
+                PayPal App Switch JS SDK Demo · Sandbox Only · 无需额外框架
+            </footer>
+        </div>
+
+        <script
+            id="paypal-sdk"
+            src="https://www.paypal.com/sdk/js?client-id=ATW2maVlMXBh67xRprsLYttNFXVCDO7MhEUE_VId1zbwqSSfYfIAC8mtdLaLRwA4nZpTzGBZPws7Kf-Z"
+            onload="console.log('[PayPal SDK] script onload fired, window.paypal=', !!window.paypal)"
+            onerror="console.error('[PayPal SDK] script failed to load')"
+        ></script>
+        <script>
+            const vConsole = new VConsole();
+            console.log("VConsole initialized for development");
+            (function () {
+                console.log("[PayPal App Switch] boot", {
+                    userAgent: navigator.userAgent,
+                    url: window.location.href,
+                    hasPaypal: !!window.paypal,
+                    hasPaypalButtons:
+                        !!window.paypal && typeof window.paypal.Buttons === "function",
+                });
+
+                const CLIENT_ID =
+                    "ATW2maVlMXBh67xRprsLYttNFXVCDO7MhEUE_VId1zbwqSSfYfIAC8mtdLaLRwA4nZpTzGBZPws7Kf-Z";
+                // TODO: 替换为真实的中国商户 sandbox secret。
+                const CLIENT_SECRET = "EAx19qrwczQSJeSzQ5FjlzAUAjgd7LJcneDH9k93ZocGWaF4k_oYcX1k8-AvSrJkMvdlncdIUYZSxtf0";
+                const AUTH_HEADER = "Basic " + btoa(`${CLIENT_ID}:${CLIENT_SECRET}`);
+
+                const CREATE_ENDPOINT =
+                    "https://ppgms-test-github-io.pages.dev/api/byok/checkout/orders/create-app-switch";
+
+                const CAPTURE_ENDPOINT = (orderId) =>
+                    `https://ppgms-test-github-io.pages.dev/api/byok/checkout/orders/${orderId}/capture`;
+
+                const logPane = document.getElementById("event-log");
+                const statusChip = document.getElementById("status-chip");
+
+                const updateStatus = (
+                    text,
+                    tone = "pending",
+                    icon = "hourglass_top",
+                ) => {
+                    statusChip.dataset.tone = tone;
+                    statusChip.querySelector(
+                        "span.material-icons",
+                    ).textContent = icon;
+                    statusChip.querySelector("span:last-child").textContent =
+                        text;
+                };
+
+                const appendLog = (message, meta) => {
+                    const timestamp = new Date().toLocaleTimeString();
+                    let entry = `[${timestamp}] ${message}`;
+                    if (meta) {
+                        entry += `\n${typeof meta === "string" ? meta : JSON.stringify(meta, null, 2)}`;
+                    }
+                    logPane.textContent =
+                        `${entry}\n\n${logPane.textContent}`.trim();
+                };
+
+                const getCanonicalUrl = () => {
+                    const url = new URL(window.location.href);
+                    url.hash = "";
+                    return url.toString();
+                };
+
+                const buildOrderRequest = () => ({
+                    returnUrl: getCanonicalUrl(),
+                    cancelUrl: getCanonicalUrl(),
+                });
+
+                const buttons = paypal.Buttons({
+                    appSwitchWhenAvailable: true,
+                    style: {
+                        layout: "vertical",
+                        color: "gold",
+                        shape: "pill",
+                        label: "paypal",
+                    },
+
+                    createOrder: async () => {
+                        updateStatus(
+                            "创建订单中...",
+                            "pending",
+                            "hourglass_top",
+                        );
+                        const orderRequest = buildOrderRequest();
+                        appendLog(
+                            "调用 create-with-sample-data 接口",
+                            orderRequest,
+                        );
+
+                        const response = await fetch(CREATE_ENDPOINT, {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json",
+                                Authorization: AUTH_HEADER,
+                            },
+                            body: JSON.stringify(orderRequest),
+                        });
+
+                        if (!response.ok) {
+                            const text = await response.text();
+                            appendLog("创建订单失败", text);
+                            updateStatus(
+                                "创建订单失败",
+                                "error",
+                                "error_outline",
+                            );
+                            throw new Error(
+                                `Create order failed: ${response.status}`,
+                            );
+                        }
+
+                        const orderData = await response.json();
+
+                        appendLog("订单创建完成", orderData);
+                        updateStatus(
+                            "等待买家在 PayPal 中确认",
+                            "pending",
+                            "hourglass_empty",
+                        );
+                        return orderData.id;
+                    },
+
+                    onApprove: async (data) => {
+                        appendLog("买家已批准，开始 capture", data);
+                        updateStatus("捕获中...", "pending", "sync");
+
+                        // debugger;
+
+                        const response = await fetch(
+                            CAPTURE_ENDPOINT(data.orderID),
+                            {
+                                method: "POST",
+                                headers: {
+                                    "Content-Type": "application/json",
+                                    Authorization: AUTH_HEADER,
+                                },
+                            },
+                        );
+
+                        if (!response.ok) {
+                            const text = await response.text();
+                            appendLog("捕获失败", text);
+                            updateStatus("捕获失败", "error", "error_outline");
+                            throw new Error(
+                                `Capture failed: ${response.status}`,
+                            );
+                        }
+
+                        const captureData = await response.json();
+                        appendLog("捕获成功", captureData);
+                        updateStatus(
+                            "订单已成功捕获",
+                            "success",
+                            "check_circle",
+                        );
+                        return captureData;
+                    },
+
+                    onCancel: (data) => {
+                        appendLog("买家取消了流程", data);
+                        updateStatus(
+                            "买家已取消",
+                            "pending",
+                            "do_not_disturb_on",
+                        );
+                    },
+
+                    onError: (error) => {
+                        appendLog("SDK 报错", { message: error.message });
+                        updateStatus(
+                            "出现错误，详见日志",
+                            "error",
+                            "report_problem",
+                        );
+                    },
+                });
+
+                if (
+                    typeof buttons.hasReturned === "function" &&
+                    buttons.hasReturned()
+                ) {
+                    appendLog("检测到来自 PayPal App 的回跳，调用 resume()...");
+                    buttons.resume().catch((err) => {
+                        appendLog("resume 失败", err);
+                        updateStatus(
+                            "resume 失败，请重新点击按钮",
+                            "error",
+                            "error_outline",
+                        );
+                    });
+                } else {
+                    buttons.render("#paypal-button-container");
+                }
+            })();
+        </script>
+    </body>
+</html>

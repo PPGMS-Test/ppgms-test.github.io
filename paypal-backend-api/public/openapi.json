@@ -8,6 +8,7 @@
   "tags": [
     { "name": "Auth", "description": "Client token endpoints" },
     { "name": "Orders", "description": "Order creation and management" },
+    { "name": "Orders (BYOK)", "description": "Bring-your-own-key variants. Caller supplies sandbox clientId/clientSecret via HTTP Basic auth; the server forwards them to PayPal REST. No server-side credential storage." },
     { "name": "Apple Pay", "description": "Apple Pay + PayPal integration endpoints" }
   ],
   "paths": {
@@ -254,9 +255,81 @@
           "200": { "description": "Order captured", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Order" } } } }
         }
       }
+    },
+    "/api/byok/auth/client-token": {
+      "post": {
+        "tags": ["Orders (BYOK)"],
+        "summary": "Get browser-safe client token (BYOK)",
+        "description": "Issues a PayPal browser-safe client token for the supplied sandbox credentials. Pass clientId/clientSecret via HTTP Basic auth. Used by the JS SDK v6 createInstance() call.",
+        "security": [{ "basicAuth": [] }],
+        "responses": {
+          "200": { "description": "Client token", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ClientToken" } } } },
+          "401": { "description": "Missing or invalid Authorization: Basic header" }
+        }
+      }
+    },
+    "/api/byok/checkout/orders/create-app-switch": {
+      "post": {
+        "tags": ["Orders (BYOK)"],
+        "summary": "Create order (App Switch, BYOK)",
+        "description": "Create a $149.95 App-Switch order using caller-supplied sandbox credentials. Pass clientId/clientSecret via HTTP Basic auth.",
+        "security": [{ "basicAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["returnUrl", "cancelUrl"],
+                "properties": {
+                  "returnUrl": { "type": "string" },
+                  "cancelUrl": { "type": "string" }
+                }
+              },
+              "example": {
+                "returnUrl": "https://example.com/return",
+                "cancelUrl": "https://example.com/cancel"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Order created", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Order" } } } },
+          "400": { "description": "Missing returnUrl or cancelUrl" },
+          "401": { "description": "Missing or invalid Authorization: Basic header" }
+        }
+      }
+    },
+    "/api/byok/checkout/orders/{orderId}/capture": {
+      "post": {
+        "tags": ["Orders (BYOK)"],
+        "summary": "Capture order (BYOK)",
+        "description": "Capture payment for an approved order using caller-supplied sandbox credentials. Pass clientId/clientSecret via HTTP Basic auth.",
+        "security": [{ "basicAuth": [] }],
+        "parameters": [
+          {
+            "name": "orderId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" },
+            "example": "3JR90341RV502671K"
+          }
+        ],
+        "responses": {
+          "200": { "description": "Order captured", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Order" } } } },
+          "401": { "description": "Missing or invalid Authorization: Basic header" }
+        }
+      }
     }
   },
   "components": {
+    "securitySchemes": {
+      "basicAuth": {
+        "type": "http",
+        "scheme": "basic",
+        "description": "PayPal sandbox clientId:clientSecret encoded as base64."
+      }
+    },
     "schemas": {
       "ClientToken": {
         "type": "object",
