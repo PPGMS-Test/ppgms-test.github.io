@@ -8,4 +8,11 @@ paypal-backend-api/.next
 paypal-backend-api/.env
 node_modules
 
+# paypal-mobile Android test app
+paypal-mobile/andriod-test/.gradle
+paypal-mobile/andriod-test/.idea
+paypal-mobile/andriod-test/local.properties
+paypal-mobile/andriod-test/build
+paypal-mobile/andriod-test/app/build
+
 pnpm-lock.yaml
