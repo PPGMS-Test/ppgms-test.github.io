@@ -16,6 +16,7 @@
 - [ ] JSv6 Fastlane scenario 🔼
 - [x] JSv6 Vault First Time scenario ⏫ ✅ 2026-05-12
 - [x] JSv6 ACDC 3DS scenario/ Add get Order API before Capture ⏫ ✅ 2026-06-02
+- [ ] JSv6 ACDC 3DS scenario 似乎在React中不生效 ⏫ 
 - [x] JSv6 Vault Recurring  scenario ⏫ ✅ 2026-05-12
 - [x] JSv6 Styling Customize 🔼 ✅ 2026-05-14
 - [x] JSv6 Live Env Switch ⏫ ✅ 2026-05-14

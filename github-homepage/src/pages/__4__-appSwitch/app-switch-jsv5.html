@@ -202,11 +202,20 @@
                             "调用 create-with-sample-data 接口",
                             orderRequest,
                         );
+                        appendLog("Create endpoint", {
+                            url: CREATE_ENDPOINT,
+                            method: "POST",
+                        });
 
                         const response = await fetch(CREATE_ENDPOINT, {
                             method: "POST",
                             headers: { "Content-Type": "application/json" },
                             body: JSON.stringify(orderRequest),
+                        });
+                        appendLog("Create response", {
+                            ok: response.ok,
+                            status: response.status,
+                            statusText: response.statusText,
                         });
 
                         if (!response.ok) {
@@ -237,6 +246,11 @@
                         appendLog("买家已批准，开始 capture", data);
                         updateStatus("捕获中...", "pending", "sync");
 
+                        appendLog("Capture endpoint", {
+                            url: CAPTURE_ENDPOINT(data.orderID),
+                            method: "POST",
+                        });
+
                         // debugger;
 
                         const response = await fetch(
@@ -246,6 +260,11 @@
                                 headers: { "Content-Type": "application/json" },
                             },
                         );
+                        appendLog("Capture response", {
+                            ok: response.ok,
+                            status: response.status,
+                            statusText: response.statusText,
+                        });
 
                         if (!response.ok) {
                             const text = await response.text();
