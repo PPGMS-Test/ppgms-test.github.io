@@ -170,16 +170,8 @@
           },
           {
             "description": "",
-            "url": "__2__-jsv6-test/__3__-appswitch-test-vercel-backend.html",
-            "text": "appswitch-test-vercel-backend",
-            "isFolder": false,
-            "hasChildren": false,
-            "isExternal": false
-          },
-          {
-            "description": "",
-            "url": "__2__-jsv6-test/__4__-redirect-test-vercel-backend.html",
-            "text": "redirect-test-vercel-backend",
+            "url": "__2__-jsv6-test/__4__-redirect-test-backend.html",
+            "text": "redirect-test-backend",
             "isFolder": false,
             "hasChildren": false,
             "isExternal": false
@@ -299,8 +291,24 @@
           },
           {
             "description": "",
+            "url": "__4__-appSwitch/app-switch-jsv5-China-Merchant.html",
+            "text": "app-switch-jsv5-China-Merchant",
+            "isFolder": false,
+            "hasChildren": false,
+            "isExternal": false
+          },
+          {
+            "description": "",
             "url": "__4__-appSwitch/app-switch-jsv6.html",
             "text": "app-switch-jsv6",
+            "isFolder": false,
+            "hasChildren": false,
+            "isExternal": false
+          },
+          {
+            "description": "",
+            "url": "__4__-appSwitch/app-switch-jsv6-China-Merchant.html",
+            "text": "app-switch-jsv6-China-Merchant",
             "isFolder": false,
             "hasChildren": false,
             "isExternal": false

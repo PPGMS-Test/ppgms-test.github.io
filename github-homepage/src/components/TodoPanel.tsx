@@ -10,6 +10,7 @@ interface TodoItem {
   done: boolean
   priority: Priority
   doneDate?: string  // ✅ YYYY-MM-DD
+  notes?: string[]   // 缩进子项，作为说明/备注
 }
 
 const PRIORITY_COLORS: Record<Priority, string> = {
@@ -29,27 +30,35 @@ const HEADER_COLOR = { bg: '#0f766e', accent: '#f0fdf4' }
 // Obsidian Tasks 格式：
 //   优先级 emoji：⏫ = high, 🔼 = medium, 🔽 = low（无 emoji 默认 medium）
 //   完成日期：✅ YYYY-MM-DD（放在行尾）
+//   缩进子项（备注/说明）：行首 2+ 空格 + "- 文本" 或 "* 文本"，挂到上一个 task 的 notes 上
 function parseTodo(md: string): TodoItem[] {
   const items: TodoItem[] = []
 
   for (const line of md.split('\n')) {
     const task = line.match(/^-\s+\[(x| )\]\s+(.+)/i)
-    if (!task) continue
+    if (task) {
+      const done = task[1].toLowerCase() === 'x'
+      let text = task[2].trim()
 
-    const done = task[1].toLowerCase() === 'x'
-    let text = task[2].trim()
+      let doneDate: string | undefined
+      text = text.replace(/✅\s*(\d{4}-\d{2}-\d{2})/, (_, d) => { doneDate = d; return '' }).trim()
 
-    let doneDate: string | undefined
-    text = text.replace(/✅\s*(\d{4}-\d{2}-\d{2})/, (_, d) => { doneDate = d; return '' }).trim()
+      let priority: Priority = 'medium'
+      text = text.replace(/[⏫🔼🔽]/u, m => {
+        if (m === '⏫') priority = 'high'
+        else if (m === '🔽') priority = 'low'
+        return ''
+      }).trim()
 
-    let priority: Priority = 'medium'
-    text = text.replace(/[⏫🔼🔽]/u, m => {
-      if (m === '⏫') priority = 'high'
-      else if (m === '🔽') priority = 'low'
-      return ''
-    }).trim()
+      items.push({ text, done, priority, doneDate: done ? doneDate : undefined })
+      continue
+    }
 
-    items.push({ text, done, priority, doneDate: done ? doneDate : undefined })
+    const note = line.match(/^\s{2,}[-*]\s+(.+)/)
+    if (note && items.length > 0) {
+      const last = items[items.length - 1]
+      ;(last.notes ??= []).push(note[1].trim())
+    }
   }
 
   return items
@@ -169,6 +178,15 @@ function HistoryDialog({ items, onClose }: { items: TodoItem[]; onClose: () => v
                       <span style={{ fontSize: 13, lineHeight: 1.5, color: 'var(--text-color)' }}>
                         {item.text}
                       </span>
+                      {item.notes && item.notes.length > 0 && (
+                        <div style={{ marginTop: 4, paddingLeft: 10, borderLeft: '2px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: 2 }}>
+                          {item.notes.map((n, ni) => (
+                            <span key={ni} style={{ fontSize: 11.5, lineHeight: 1.45, color: 'var(--text-muted)' }}>
+                              {n}
+                            </span>
+                          ))}
+                        </div>
+                      )}
                     </span>
                     <span
                       style={{
@@ -325,6 +343,15 @@ function TodoRow({ item }: { item: TodoItem }) {
           <span style={{ marginLeft: 8, fontSize: 11, color: 'var(--text-muted)' }}>
             ✅ {item.doneDate}
           </span>
+        )}
+        {item.notes && item.notes.length > 0 && (
+          <div style={{ marginTop: 4, paddingLeft: 10, borderLeft: '2px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: 2 }}>
+            {item.notes.map((n, i) => (
+              <span key={i} style={{ fontSize: 11.5, lineHeight: 1.45, color: 'var(--text-muted)' }}>
+                {n}
+              </span>
+            ))}
+          </div>
         )}
       </span>
     </div>

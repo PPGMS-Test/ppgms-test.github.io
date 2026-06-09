@@ -25,14 +25,9 @@
     "filePath": "__1__-jsv5-test/google-pay/__3__-google-pay-with-shipping/index.html"
   },
   {
-    "name": "__3__-appswitch-test-vercel-backend",
-    "path": "__2__-jsv6-test/__3__-appswitch-test-vercel-backend.html",
-    "filePath": "__2__-jsv6-test/__3__-appswitch-test-vercel-backend.html"
-  },
-  {
-    "name": "__4__-redirect-test-vercel-backend",
-    "path": "__2__-jsv6-test/__4__-redirect-test-vercel-backend.html",
-    "filePath": "__2__-jsv6-test/__4__-redirect-test-vercel-backend.html"
+    "name": "__4__-redirect-test-backend",
+    "path": "__2__-jsv6-test/__4__-redirect-test-backend.html",
+    "filePath": "__2__-jsv6-test/__4__-redirect-test-backend.html"
   },
   {
     "name": "__5__-iframe-hostpage",
@@ -95,9 +90,19 @@
     "filePath": "__4__-appSwitch/app-switch-jsv5.html"
   },
   {
+    "name": "app-switch-jsv5-China-Merchant",
+    "path": "__4__-appSwitch/app-switch-jsv5-China-Merchant.html",
+    "filePath": "__4__-appSwitch/app-switch-jsv5-China-Merchant.html"
+  },
+  {
     "name": "app-switch-jsv6",
     "path": "__4__-appSwitch/app-switch-jsv6.html",
     "filePath": "__4__-appSwitch/app-switch-jsv6.html"
+  },
+  {
+    "name": "app-switch-jsv6-China-Merchant",
+    "path": "__4__-appSwitch/app-switch-jsv6-China-Merchant.html",
+    "filePath": "__4__-appSwitch/app-switch-jsv6-China-Merchant.html"
   },
   {
     "name": "__1__-screen-recorder",

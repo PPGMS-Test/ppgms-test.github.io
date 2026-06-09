@@ -3,8 +3,10 @@
 - [ ] ecs playground的开发 ⏫
 - [x] Apple Pay Vault Recurring lineItem 优化 ⏫ ✅ 2026-05-28
 - [x] 录屏软件的优化开发 🔽 ✅ 2026-06-01
-- [x] Pay Later Message被script注入的问题. 单个的HTML页面已经重构, 现在不会发生问题了, 不知道为什么之前会有错误. 我怀疑是个bug 🔼 ✅ 2026-05-24
+- [x] Pay Later Message被script注入的问题.  🔼 ✅ 2026-05-24
+  - 单个的HTML页面已经重构, 现在不会发生问题了, 不知道为什么之前会有错误. 我怀疑是个偶发bug
 - [x] JSv6 Subscription scenario 🔼 ✅ 2026-05-22
+  - (2026-06-05)Update: 这个问题还没有最终fix.
 - [x] JSv6 check Eligible 在后端的情况 ⏫ ✅ 2026-05-11
 - [x] JSv6 有check eligible 和没有的对比情况 ⏫ ✅ 2026-05-10
 - [x] Cross Border Message在Partner解决方案下的测试demo讨论 (ISU方案也可以拿到client-id, 只是拿不到secret) 🔽 ✅ 2026-05-10
@@ -13,15 +15,24 @@
 - [x] Vault PlayGround 重构 🔼 ✅ 2026-05-12
 - [ ] JSv6 Fastlane scenario 🔼
 - [x] JSv6 Vault First Time scenario ⏫ ✅ 2026-05-12
+- [x] JSv6 ACDC 3DS scenario/ Add get Order API before Capture ⏫ ✅ 2026-06-02
 - [x] JSv6 Vault Recurring  scenario ⏫ ✅ 2026-05-12
 - [x] JSv6 Styling Customize 🔼 ✅ 2026-05-14
 - [x] JSv6 Live Env Switch ⏫ ✅ 2026-05-14
+- [ ] JSv6 3rd Party Mode Confirm ⏫ 
+  - 需要验证, 如果partner Acct有jsv6 scope而merchant Acct没有的情况下.
 - [x] paypal-backend-api 部署到 Cloudflare 用以解决公司网络无法访问serverless的api endpoint 🔽 ✅ 2026-05-16
 - [ ] Internal Claude Desktop Partner Analysis Tool study 🔽
 - [ ] Payment Link QR-code dashboard Demo 🔽
 - [ ] 3DS Demo, 场景文字描述的改进 🔽
-- [x] Applet Study for Wukong 🔽 ✅ 2026-05-19
+- [x] Home Page主页, 增加了Screen Record Tool, 并做了Trello化的改造 🔽 ✅ 2026-06-02 
+- [x] Applet Study for Wukong 🔽 ✅ 2026-05-19 
 - [x] App Switch到底能不能跳转的问题研究(录了视频) 🔼 ✅ 2026-05-07
+- [x] App Switch 增加沙箱环境中, China Merchant Test Scenario 🔼 ✅ 2026-06-05
 - [x] jsv6 test page. BCDC inline scenario 去掉email address以防触发fastlane流程 🔼 ✅ 2026-04-30
 - [x] 完善 PayPal SDK v6 vs v5 开发tech对比文档 🔼 ✅ 2026-04-27
+- [x] Vault Test Scenario, 验证了permit_multiple_payment_tokens的可行性 🔼 ✅ 2026-06-01
+- [x] Vault Test Scenario, 修复了纯API Scenario中的一些bug, 增加了Stored vault info和client的关联性  🔼 ✅ 2026-06-01
+- [x] Vault Test Scenario, 验证了merchant_customer_id这个参数 🔼 ✅ 2026-06-03
+  - 似乎没有什么作用
 

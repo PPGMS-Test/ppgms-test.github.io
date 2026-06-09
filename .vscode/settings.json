@@ -6,6 +6,7 @@
         "onpaymentauthorized",
         "onpaymentmethodselected",
         "onvalidatemerchant",
-        "ppgms"
+        "ppgms",
+        "Wukong"
     ]
 }
