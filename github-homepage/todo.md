@@ -14,6 +14,7 @@
 - [x] Apple Pay Test Page 重构,用以测试recurring情况 ⏫ ✅ 2026-05-12
 - [x] Vault PlayGround 重构 🔼 ✅ 2026-05-12
 - [ ] JSv6 Fastlane scenario 🔼
+- [ ] JSv6 为什么不做eligible check就不能做paylater? 🔼
 - [x] JSv6 Vault First Time scenario ⏫ ✅ 2026-05-12
 - [x] JSv6 ACDC 3DS scenario/ Add get Order API before Capture ⏫ ✅ 2026-06-02
 - [ ] JSv6 ACDC 3DS scenario 似乎在React中不生效 ⏫ 
