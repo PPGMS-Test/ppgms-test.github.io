@@ -30,6 +30,7 @@
 - [x] Applet Study for Wukong 🔽 ✅ 2026-05-19 
 - [x] App Switch到底能不能跳转的问题研究(录了视频) 🔼 ✅ 2026-05-07
 - [x] App Switch 增加沙箱环境中, China Merchant Test Scenario 🔼 ✅ 2026-06-05
+- [ ] App Switch 在mobile SDK中是否能生效 🔼 
 - [x] jsv6 test page. BCDC inline scenario 去掉email address以防触发fastlane流程 🔼 ✅ 2026-04-30
 - [x] 完善 PayPal SDK v6 vs v5 开发tech对比文档 🔼 ✅ 2026-04-27
 - [x] Vault Test Scenario, 验证了permit_multiple_payment_tokens的可行性 🔼 ✅ 2026-06-01
