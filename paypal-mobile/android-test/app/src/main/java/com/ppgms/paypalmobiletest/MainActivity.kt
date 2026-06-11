@@ -454,7 +454,7 @@ class MainActivity : ComponentActivity() {
         when (val finishResult = client.finishStart(intent)) {
             is PayPalWebCheckoutFinishStartResult.Success -> {
                 logger.sdk("finishStart → Success  orderId=${finishResult.orderId}, payerId=${finishResult.payerId}")
-                captureViaBackend(finishResult.orderId)
+                finishResult.orderId?.let { captureViaBackend(it) }
             }
 
             is PayPalWebCheckoutFinishStartResult.Failure -> {
