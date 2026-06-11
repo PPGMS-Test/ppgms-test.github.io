@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  手画 PayPal 按钮的背景 drawable。
+  故意做得跟官方 com.paypal.android:payment-buttons 的 PayPalButton 风格不一样,
+  方便对照看 "组件 vs 手画" 的差异:
+    - 深蓝填充 (#003087)
+    - 6dp 小圆角
+    - 黄色虚线描边
+  三个 state: 按下 / 禁用 / 默认。
+-->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_pressed="true">
+        <shape android:shape="rectangle">
+            <solid android:color="#001E5C" />
+            <corners android:radius="6dp" />
+            <stroke android:width="1dp" android:color="#FFC439" android:dashWidth="6dp" android:dashGap="4dp" />
+        </shape>
+    </item>
+    <item android:state_enabled="false">
+        <shape android:shape="rectangle">
+            <solid android:color="#566A8E" />
+            <corners android:radius="6dp" />
+        </shape>
+    </item>
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="#003087" />
+            <corners android:radius="6dp" />
+            <stroke android:width="1dp" android:color="#FFC439" android:dashWidth="6dp" android:dashGap="4dp" />
+        </shape>
+    </item>
+</selector>

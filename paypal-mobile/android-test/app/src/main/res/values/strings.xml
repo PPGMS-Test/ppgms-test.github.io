@@ -1,4 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+  字符串资源.
+  paypal_return_scheme 必须和 AndroidManifest.xml 里 intent-filter 的 <data android:scheme>
+  以及 MainActivity 里 PayPalWebCheckoutClient 构造时传入的 returnUrl scheme 三处保持一致。
+-->
 <resources>
     <string name="app_name">PayPal Mobile Test</string>
     <string name="paypal_return_scheme">paypalmobiletest</string>

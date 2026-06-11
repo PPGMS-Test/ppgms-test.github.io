@@ -1,4 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+  Material3 主题用到的颜色。
+  说明:
+  - 实际 UI 配色基本都在 MainActivity 里以 Color.parseColor("#...") 形式硬编码,
+    这里保留是因为 themes.xml 里的 Theme.PayPalMobileTest 引用了这些资源。
+  - 整体走深色背景, 所以 background / surface 都是接近黑色的深蓝灰。
+-->
 <resources>
     <color name="md_theme_light_primary">#3563E9</color>
     <color name="md_theme_light_onPrimary">#FFFFFF</color>

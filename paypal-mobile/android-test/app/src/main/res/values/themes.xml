@@ -1,4 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+  app 主题. 用 Material3 NoActionBar 父主题 (本 app 不需要顶部 ActionBar)。
+  MaterialCardView / Spinner / ProgressBar 等组件都依赖这个父主题才能正确渲染。
+-->
 <resources xmlns:tools="http://schemas.android.com/tools">
     <style name="Theme.PayPalMobileTest" parent="Theme.Material3.DayNight.NoActionBar">
         <item name="colorPrimary">@color/md_theme_light_primary</item>

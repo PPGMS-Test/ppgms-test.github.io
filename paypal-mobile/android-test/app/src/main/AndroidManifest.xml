@@ -1,4 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+  Android Manifest — 整个 app 的入口声明。
+
+  关键点:
+  - INTERNET 权限: BackendClient 用 HttpURLConnection 访问后端
+  - launchMode="singleTop": 防止 PayPal 浏览器 redirect 回来时重建 Activity, 而是走 onNewIntent
+  - 第二个 intent-filter: 注册自定义 scheme paypalmobiletest, 这是 PayPalWebCheckoutClient
+    的 returnUrl, 必须跟 strings.xml 里 paypal_return_scheme 保持一致
+-->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <uses-permission android:name="android.permission.INTERNET" />
@@ -13,18 +22,18 @@
             android:name=".MainActivity"
             android:exported="true"
             android:launchMode="singleTop">
+
+            <!-- 普通启动 intent -->
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
 
+            <!-- PayPal 浏览器结算完后通过这个 scheme 回到 app -->
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
-
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-
                 <data android:scheme="@string/paypal_return_scheme" />
             </intent-filter>
         </activity>
