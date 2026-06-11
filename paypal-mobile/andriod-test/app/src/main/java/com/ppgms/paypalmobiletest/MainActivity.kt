@@ -9,6 +9,7 @@ import android.view.View
 import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.EditText
+import android.widget.FrameLayout
 import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.Spinner
@@ -60,9 +61,9 @@ class MainActivity : ComponentActivity() {
 
         scrollView.addView(
             container,
-            ScrollView.LayoutParams(
-                ScrollView.LayoutParams.MATCH_PARENT,
-                ScrollView.LayoutParams.WRAP_CONTENT
+            FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.WRAP_CONTENT
             )
         )
 
@@ -213,6 +214,10 @@ class MainActivity : ComponentActivity() {
 
             PayPalWebCheckoutFinishStartResult.NoResult -> {
                 appendLog("No checkout result was available for this return intent.")
+            }
+
+            else -> {
+                appendLog("No result available.")
             }
         }
     }
