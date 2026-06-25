@@ -429,11 +429,24 @@
             /**
              * 当用户在 Google Pay 界面点击“支付”并授权后触发
              */
+            // shipping option id → label 映射，用于 onPaymentAuthorized 回调里 label 缺失时的 fallback
+            const SHIPPING_LABELS = {
+                "shipping-001": "Free: Standard shipping",
+                "shipping-002": "$1.99: Standard shipping",
+                "shipping-003": "$10.00: Express shipping",
+            };
+
             function showBuyerInfo(paymentData) {
+                console.log("[BuyerInfo] paymentData:", JSON.stringify(paymentData, null, 2));
                 const el = document.getElementById('buyer-info');
                 const sa = paymentData.shippingAddress || {};
                 const shipping = paymentData.shippingOptionData;
                 const pm = paymentData.paymentMethodData;
+
+                // label 不一定回传，用 id 反查兜底
+                const shippingLabel = shipping
+                    ? (shipping.label || SHIPPING_LABELS[shipping.id] || shipping.id)
+                    : null;
 
                 const addrLines = [sa.address1, sa.address2, sa.address3].filter(Boolean);
                 const cityLine = [sa.locality, sa.administrativeArea, sa.postalCode].filter(Boolean).join(' ');
@@ -455,7 +468,7 @@
                     ${addrLines.map(l => row('', l)).join('')}
                     ${row('', cityLine)}
                     ${row('Country', sa.countryCode)}
-                    ${shipping ? section('Shipping Option') + row('', shipping.label) : ''}
+                    ${shippingLabel ? section('Shipping Option') + row('', shippingLabel) : ''}
                     ${pm ? section('Payment Method') + row('', pm.description || pm.type) : ''}
                 `;
                 el.style.display = 'block';
