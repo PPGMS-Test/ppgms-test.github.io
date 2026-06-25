@@ -25,6 +25,11 @@
     "filePath": "__1__-jsv5-test/google-pay/__3__-google-pay-with-shipping/index.html"
   },
   {
+    "name": "index",
+    "path": "__1__-jsv5-test/google-pay/__4__-google-pay-3ds",
+    "filePath": "__1__-jsv5-test/google-pay/__4__-google-pay-3ds/index.html"
+  },
+  {
     "name": "__4__-redirect-test-backend",
     "path": "__2__-jsv6-test/__4__-redirect-test-backend.html",
     "filePath": "__2__-jsv6-test/__4__-redirect-test-backend.html"
@@ -108,5 +113,15 @@
     "name": "__1__-screen-recorder",
     "path": "__5__-tool/__1__-screen-recorder.html",
     "filePath": "__5__-tool/__1__-screen-recorder.html"
+  },
+  {
+    "name": "__1__-orders-v2-merchant-error-codes",
+    "path": "__6__-API/__1__-orders-v2-merchant-error-codes.html",
+    "filePath": "__6__-API/__1__-orders-v2-merchant-error-codes.html"
+  },
+  {
+    "name": "__3__-create-order-get-from-file",
+    "path": "__6__-API/__3__-create-order-get-from-file.html",
+    "filePath": "__6__-API/__3__-create-order-get-from-file.html"
   }
 ]

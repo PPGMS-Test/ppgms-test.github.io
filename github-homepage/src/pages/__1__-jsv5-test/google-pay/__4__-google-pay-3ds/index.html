@@ -1,0 +1,570 @@
+<!doctype html>
+<html lang="zh-CN">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>PayPal Google Pay + 3DS 完整测试</title>
+        <link rel="stylesheet" href="style.css" />
+        <link rel="stylesheet" href="../shared-panel.css" />
+    </head>
+    <body>
+        <div class="container">
+            <!-- ── Checkout card ─────────────────────────────── -->
+            <div class="checkout-card">
+                <div class="header">
+                    <h1>SandBox 支付测试 + 3DS</h1>
+                </div>
+
+                <div class="info-section">
+                    <div class="config-panel">
+                        <div class="config-item">
+                            <span class="config-label">Merchant ID</span>
+                            <span class="config-value">CMHAMMNAXCMGA</span>
+                        </div>
+                        <div class="config-item">
+                            <span class="config-label">Environment</span>
+                            <span class="badge-sandbox">SANDBOX</span>
+                        </div>
+                        <div class="config-item config-full">
+                            <span class="config-label">Features</span>
+                            <div class="config-chips">
+                                <span class="config-chip">googlepay</span>
+                                <span class="config-chip">shipping</span>
+                                <span class="config-chip">dynamic-price</span>
+                                <span class="config-chip">3ds</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="product-summary">
+                    <div class="product-item">
+                        <span class="product-name">测试商品 (Subtotal)</span>
+                        <span class="product-price">$100.00</span>
+                    </div>
+                    <div class="product-item">
+                        <span class="product-name">税费 (Tax)</span>
+                        <span class="product-price">$10.00</span>
+                    </div>
+                    <div class="total-row product-item">
+                        <span>总计 (Total)</span>
+                        <span class="product-price">$110.00</span>
+                    </div>
+                </div>
+
+                <div class="payment-area">
+                    <div id="google-pay-button-container"></div>
+                    <div id="message" class="status-message"></div>
+                </div>
+            </div>
+
+            <!-- ── Info panels (shown after authorization) ───── -->
+            <div id="info-panels" class="info-panels" style="display:none;">
+                <div class="info-panel" id="panel-buyer">
+                    <div class="panel-title">Buyer · Card</div>
+                    <div id="panel-buyer-body"></div>
+                </div>
+                <div class="info-panel" id="panel-shipping">
+                    <div class="panel-title">Shipping</div>
+                    <div id="panel-shipping-body"></div>
+                </div>
+                <div class="info-panel" id="panel-billing">
+                    <div class="panel-title">Billing</div>
+                    <div id="panel-billing-body"></div>
+                </div>
+                <div class="info-panel" id="panel-3ds">
+                    <div class="panel-title">3DS · Auth</div>
+                    <div id="panel-3ds-body" class="tds-body">
+                        <span class="tds-badge waiting">Waiting</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            // ==========================================
+            // 1. 全局配置 (Configuration)
+            // ==========================================
+            const CONFIG = {
+                clientId:
+                    "AecNl_qaDuLKXRGAviRbvQ5773SJLW15PrxuOShudJbS3QCaBH8tTX6Wi1mJ8aByWaQx2FeRIVZ7KCg0",
+                clientSecret:
+                    "EFuRYH2pDANYlrpybQulVCq6sc706zEw37ffiMKvpw4vzPJEpNk9NeORWS4l4rMtAbzLWqssRb_ny_Mj",
+                merchantId: "CMHAMMNAXCMGA",
+                currency: "USD",
+            };
+
+            const baseRequest = { apiVersion: 2, apiVersionMinor: 0 };
+
+            let paymentsClient = null;
+            let allowedPaymentMethods = null;
+            let merchantInfo = null;
+
+            function showMessage(text, isError = false) {
+                const el = document.getElementById("message");
+                el.innerHTML = text;
+                el.style.color = isError ? "#d32f2f" : "#2e7d32";
+                console.log(`[UI] ${text}`);
+            }
+
+            // ==========================================
+            // 2. SDK 加载
+            // ==========================================
+            function loadScripts() {
+                console.log("[Init] 开始加载 SDK... / Loading SDKs...");
+                const paypalScript = document.createElement("script");
+                paypalScript.src = `https://www.paypal.com/sdk/js?client-id=${CONFIG.clientId}&currency=${CONFIG.currency}&components=googlepay&merchant-id=${CONFIG.merchantId}&buyer-country=US`;
+                paypalScript.onload = () => {
+                    console.log("[Init] PayPal SDK 已加载 / PayPal SDK loaded");
+                    const googleScript = document.createElement("script");
+                    googleScript.src = "https://pay.google.com/gp/p/js/pay.js";
+                    googleScript.onload = () => {
+                        console.log("[Init] Google Pay SDK 已加载 / Google Pay SDK loaded");
+                        if (window.google && window.paypal?.Googlepay) {
+                            onGooglePayLoaded();
+                        } else {
+                            showMessage("SDK 加载不完整，请刷新重试 / SDK not fully loaded, please refresh", true);
+                        }
+                    };
+                    document.head.appendChild(googleScript);
+                };
+                paypalScript.onerror = () =>
+                    showMessage("无法加载 PayPal SDK / Failed to load PayPal SDK", true);
+                document.head.appendChild(paypalScript);
+            }
+
+            // ==========================================
+            // 3. Google Pay 初始化
+            // ==========================================
+            async function onGooglePayLoaded() {
+                try {
+                    console.log("[1] 获取 PayPal Google Pay 配置... / Fetching config...");
+                    const googlePayConfig = await paypal.Googlepay().config();
+                    allowedPaymentMethods = googlePayConfig.allowedPaymentMethods;
+                    merchantInfo = googlePayConfig.merchantInfo;
+                    merchantInfo["merchantName"] = "My Merchant Name";
+
+                    if (allowedPaymentMethods?.[0]?.parameters) {
+                        allowedPaymentMethods[0].parameters.billingAddressRequired = true;
+                        allowedPaymentMethods[0].parameters.billingAddressParameters = {
+                            format: "FULL",
+                            phoneNumberRequired: true,
+                        };
+                    }
+                    console.log("[1.1] 配置已获取 / Config received:", googlePayConfig);
+
+                    const client = getGooglePaymentsClient();
+                    console.log("[2] 检查 isReadyToPay... / Checking isReadyToPay...");
+                    client
+                        .isReadyToPay(Object.assign({}, baseRequest, { allowedPaymentMethods }))
+                        .then((response) => {
+                            if (response.result) {
+                                console.log("[3] Google Pay 可用，添加按钮 / Adding button");
+                                addGooglePayButton();
+                            } else {
+                                console.warn("[3] isReadyToPay 返回 false / returned false");
+                                showMessage("当前环境不支持 Google Pay / Not supported", true);
+                            }
+                        })
+                        .catch((err) => console.error("[3] isReadyToPay 错误 / error:", err));
+                } catch (err) {
+                    console.error("[Init] 初始化错误 / Init error:", err);
+                    showMessage("初始化失败 / Init failed: " + err.message, true);
+                }
+            }
+
+            function getGooglePaymentsClient() {
+                if (!paymentsClient) {
+                    paymentsClient = new google.payments.api.PaymentsClient({
+                        environment: "TEST",
+                        paymentDataCallbacks: {
+                            onPaymentAuthorized,
+                            onPaymentDataChanged,
+                        },
+                    });
+                }
+                return paymentsClient;
+            }
+
+            function addGooglePayButton() {
+                const btn = getGooglePaymentsClient().createButton({
+                    onClick: onGooglePaymentButtonClicked,
+                    buttonColor: "black",
+                    buttonType: "buy",
+                });
+                document.getElementById("google-pay-button-container").appendChild(btn);
+            }
+
+            async function onGooglePaymentButtonClicked() {
+                console.log("[Click] Google Pay 按钮被点击 / Button clicked");
+                try {
+                    const req = Object.assign({}, baseRequest);
+                    req.allowedPaymentMethods = allowedPaymentMethods;
+                    req.merchantInfo = merchantInfo;
+                    req.transactionInfo = getGoogleTransactionInfo();
+                    req.callbackIntents = ["SHIPPING_OPTION", "PAYMENT_AUTHORIZATION"];
+                    req.shippingAddressRequired = true;
+                    req.shippingAddressParameters = { phoneNumberRequired: true };
+                    req.shippingOptionRequired = true;
+                    req.shippingOptionParameters = {
+                        shippingOptions: [
+                            { id: "shipping-001", label: "$0.00: Free shipping",     description: "Free Shipping delivered in 5 business days." },
+                            { id: "shipping-002", label: "$1.99: Standard shipping", description: "Standard shipping delivered in 3 business days." },
+                            { id: "shipping-003", label: "$15.00: Express shipping", description: "Express shipping delivered in 1 business day." },
+                        ],
+                    };
+                    console.log("[Load] 调用 loadPaymentData... / Calling loadPaymentData...");
+                    getGooglePaymentsClient().loadPaymentData(req);
+                } catch (err) {
+                    console.error("[Click] 按钮点击处理错误 / Button click error:", err);
+                }
+            }
+
+            function getGoogleTransactionInfo() {
+                return {
+                    displayItems: [
+                        { label: "Subtotal", type: "SUBTOTAL", price: "100.00" },
+                        { label: "Tax",      type: "TAX",      price: "10.00" },
+                    ],
+                    countryCode: "US",
+                    currencyCode: CONFIG.currency,
+                    totalPriceStatus: "FINAL",
+                    totalPrice: "110.00",
+                    totalPriceLabel: "Total",
+                };
+            }
+
+            // ==========================================
+            // 4. Shipping callbacks (dynamic pricing)
+            // ==========================================
+            function onPaymentDataChanged(intermediatePaymentData) {
+                return new Promise((resolve) => {
+                    console.log("[PaymentDataChanged] 收到变更 / Change received:", intermediatePaymentData);
+                    const { callbackTrigger, shippingOptionData } = intermediatePaymentData;
+                    const update = {};
+
+                    if (callbackTrigger === "INITIALIZE" || callbackTrigger === "SHIPPING_ADDRESS") {
+                        update.newShippingOptionParameters = {
+                            defaultSelectedOptionId: "shipping-001",
+                            shippingOptions: [
+                                { id: "shipping-001", label: "Free: Standard shipping",  description: "Delivered in 5 business days." },
+                                { id: "shipping-002", label: "$1.99: Standard shipping", description: "Delivered in 3 business days." },
+                                { id: "shipping-003", label: "$10.00: Express shipping", description: "Delivered in 1 business day." },
+                            ],
+                        };
+                        update.newTransactionInfo = calcTransactionInfo("shipping-001");
+                    } else if (callbackTrigger === "SHIPPING_OPTION") {
+                        update.newTransactionInfo = calcTransactionInfo(shippingOptionData.id);
+                    }
+                    resolve(update);
+                });
+            }
+
+            function calcTransactionInfo(optionId) {
+                const costs = { "shipping-001": 0.0, "shipping-002": 1.99, "shipping-003": 15.0 };
+                const labels = { "shipping-001": "Free Shipping", "shipping-002": "Standard Shipping", "shipping-003": "Express Shipping" };
+                const ship = costs[optionId] ?? 0;
+                const total = (100 + 10 + ship).toFixed(2);
+                console.log(`[Calc] Option: ${optionId}, ship: $${ship}, total: $${total}`);
+                return {
+                    countryCode: "US", currencyCode: CONFIG.currency,
+                    totalPriceStatus: "FINAL", totalPrice: total, totalPriceLabel: "Total",
+                    displayItems: [
+                        { label: "Subtotal",        type: "SUBTOTAL",  price: "100.00" },
+                        { label: "Tax",             type: "TAX",       price: "10.00" },
+                        { label: labels[optionId],  type: "LINE_ITEM", price: ship.toFixed(2), status: "FINAL" },
+                    ],
+                };
+            }
+
+            // ==========================================
+            // 5. Payment authorized callback
+            // ==========================================
+            const SHIPPING_LABELS = {
+                "shipping-001": "Free: Standard shipping",
+                "shipping-002": "$1.99: Standard shipping",
+                "shipping-003": "$10.00: Express shipping",
+            };
+
+            function onPaymentAuthorized(paymentData) {
+                return new Promise((resolve) => {
+                    console.log("[Authorized] 用户已授权，开始处理支付... / User authorized, processing...");
+                    showMessage("用户已授权，正在处理订单... / User authorized, processing order...");
+                    showInfoPanels(paymentData);
+                    update3DSPanel("waiting", ["等待确认结果... / Awaiting confirm result..."]);
+
+                    processPayment(paymentData)
+                        .then(resolve)
+                        .catch((err) => {
+                            console.error("Process Payment Error:", err);
+                            resolve({ transactionState: "ERROR" });
+                        });
+                });
+            }
+
+            // ==========================================
+            // 6. Panel rendering
+            // ==========================================
+
+            // Build a section header
+            function sec(title) {
+                return `<div class="bi-section">${title}</div>`;
+            }
+            // Build a data row; skip if value is falsy
+            function row(label, value) {
+                if (!value && value !== 0) return "";
+                return `<div class="bi-row"><span class="bi-label">${label}</span><span class="bi-value">${value}</span></div>`;
+            }
+
+            function showInfoPanels(paymentData) {
+                console.log("[BuyerInfo] 买家信息 / Buyer payment data:", JSON.stringify(paymentData, null, 2));
+
+                const sa = paymentData.shippingAddress || {};
+                const pm = paymentData.paymentMethodData;
+                const shipping = paymentData.shippingOptionData;
+                const shippingLabel = shipping
+                    ? (shipping.label || SHIPPING_LABELS[shipping.id] || shipping.id)
+                    : null;
+                const addrLines = [sa.address1, sa.address2, sa.address3].filter(Boolean);
+                const cityLine  = [sa.locality, sa.administrativeArea, sa.postalCode].filter(Boolean).join(" ");
+
+                // Panel 1 – Buyer & Card
+                document.getElementById("panel-buyer-body").innerHTML = `
+                    ${sec("Buyer")}
+                    ${row("Name",  sa.name)}
+                    ${row("Phone", sa.phoneNumber)}
+                    ${row("Email", paymentData.email)}
+                    ${pm ? sec("Card") + row("Desc", pm.description || pm.type) + row("Network", pm.info?.cardNetwork) + row("Last 4", pm.info?.cardDetails) : ""}
+                `;
+
+                // Panel 2 – Shipping
+                document.getElementById("panel-shipping-body").innerHTML = `
+                    ${sec("Address")}
+                    ${addrLines.map((l) => row("", l)).join("")}
+                    ${row("", cityLine)}
+                    ${row("Country", sa.countryCode)}
+                    ${shippingLabel ? sec("Option") + row("", shippingLabel) : ""}
+                `;
+
+                // Panel 3 – Billing
+                const ba = pm?.info?.billingAddress;
+                if (ba) {
+                    const baLines  = [ba.address1, ba.address2, ba.address3].filter(Boolean);
+                    const baCityLn = [ba.locality, ba.administrativeArea, ba.postalCode].filter(Boolean).join(" ");
+                    document.getElementById("panel-billing-body").innerHTML = `
+                        ${sec("Billing Address")}
+                        ${row("Name",  ba.name)}
+                        ${baLines.map((l) => row("", l)).join("")}
+                        ${row("", baCityLn)}
+                        ${row("Country", ba.countryCode)}
+                        ${row("Phone",   ba.phoneNumber)}
+                    `;
+                } else {
+                    document.getElementById("panel-billing-body").innerHTML = `
+                        <div class="tds-body"><span class="tds-badge waiting">No Data</span></div>
+                    `;
+                }
+
+                // Show panels
+                document.getElementById("info-panels").style.display = "flex";
+            }
+
+            // 3DS panel – accumulate log entries
+            const tdsLog = [];
+            const TDS_BADGE_LABEL = {
+                waiting: "Waiting",
+                pending: "In Progress",
+                skipped: "Not Required",
+                success: "Passed ✓",
+                error:   "Failed ✗",
+            };
+
+            function update3DSPanel(badge, newLines) {
+                if (newLines?.length) tdsLog.push(...newLines);
+                const body = document.getElementById("panel-3ds-body");
+                if (!body) return;
+                body.innerHTML = `
+                    <span class="tds-badge ${badge}">${TDS_BADGE_LABEL[badge] ?? badge}</span>
+                    <ul class="tds-log">
+                        ${tdsLog.map((line) => `<li>${line}</li>`).join("")}
+                    </ul>
+                `;
+            }
+
+            // ==========================================
+            // 7. Payment processing (refactored)
+            // ==========================================
+            async function processPayment(paymentData) {
+                try {
+                    const accessToken = await generateAccessToken();
+                    if (!accessToken) throw new Error("无法获取 Access Token / Cannot get access token");
+
+                    // Create order
+                    console.log("[Process] 创建 PayPal 订单... / Creating PayPal order...");
+                    const orderId = await createOrder(accessToken);
+                    console.log("[Process] 订单创建成功 / Order created, ID:", orderId);
+                    showMessage(`订单创建成功 / Order created (${orderId}), 正在确认 / confirming...`);
+
+                    // Confirm with Google Pay token
+                    console.log("[Process] 正在关联 PayPal 与 Google Pay 数据... / Linking data...");
+                    const confirmRes = await paypal.Googlepay().confirmOrder({
+                        orderId,
+                        paymentMethodData: paymentData.paymentMethodData,
+                    });
+                    console.log("[Process] Confirm 结果 / Confirm result:", confirmRes);
+
+                    if (confirmRes.status === "APPROVED") {
+                        update3DSPanel("skipped", [
+                            "直接批准，无需 3DS / Direct approval, no 3DS required",
+                            `订单状态 / Order status: APPROVED`,
+                        ]);
+                        return await captureOrder(orderId, accessToken);
+                    } else if (confirmRes.status === "PAYER_ACTION_REQUIRED") {
+                        return await handle3DS(orderId, accessToken);
+                    } else {
+                        showMessage(
+                            "支付未能完成 / Payment incomplete, 状态 / Status: " + confirmRes.status,
+                            true,
+                        );
+                        update3DSPanel("error", [`未预期的确认状态 / Unexpected confirm status: ${confirmRes.status}`]);
+                        return { transactionState: "ERROR" };
+                    }
+                } catch (err) {
+                    console.error("[Process Error / 处理异常]", err);
+                    showMessage("处理失败 / Process failed: " + err.message, true);
+                    update3DSPanel("error", [`处理异常 / Process error: ${err.message}`]);
+                    return { transactionState: "ERROR" };
+                }
+            }
+
+            async function createOrder(accessToken) {
+                const res = await fetch("https://api.sandbox.paypal.com/v2/checkout/orders", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${accessToken}`,
+                    },
+                    body: JSON.stringify({
+                        intent: "CAPTURE",
+                        purchase_units: [{
+                            amount: { currency_code: CONFIG.currency, value: "110.00" },
+                            payee: { merchant_id: CONFIG.merchantId },
+                        }],
+                    }),
+                });
+                const data = await res.json();
+                if (!res.ok) {
+                    throw new Error("创建订单失败 / Create order failed: " + JSON.stringify(data));
+                }
+                return data.id;
+            }
+
+            async function captureOrder(orderId, accessToken) {
+                console.log("[Process] 订单已批准，正在捕获资金... / Capturing funds...");
+                showMessage("订单已批准，正在扣款... / Order approved, capturing payment...");
+
+                const res = await fetch(
+                    `https://api.sandbox.paypal.com/v2/checkout/orders/${orderId}/capture`,
+                    {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            Authorization: `Bearer ${accessToken}`,
+                        },
+                    },
+                );
+                const data = await res.json();
+                if (!res.ok) {
+                    throw new Error("捕获失败 / Capture failed: " + JSON.stringify(data));
+                }
+
+                const status =
+                    data.status ||
+                    data.purchase_units?.[0]?.payments?.captures?.[0]?.status;
+
+                console.log("[Process] 捕获成功 / Capture success:", data);
+                showMessage(
+                    `支付成功！/ Payment successful!<br>状态 / Status: ${status}<br>订单ID / Order ID: ${orderId}`,
+                );
+                return { transactionState: "SUCCESS" };
+            }
+
+            async function handle3DS(orderId, accessToken) {
+                console.log("[3DS] 触发 PAYER_ACTION_REQUIRED / 3DS challenge required");
+                showMessage("需要额外的 3DS 验证... / 3DS verification required...");
+                update3DSPanel("pending", [
+                    "触发 PAYER_ACTION_REQUIRED / Challenge required",
+                    `订单 ID: ${orderId}`,
+                    "正在打开验证窗口... / Opening verification window...",
+                ]);
+
+                try {
+                    // Trigger the 3DS popup / redirect
+                    await paypal.Googlepay().initiatePayerAction({ orderId });
+                    console.log("[3DS] initiatePayerAction 完成 / Action completed");
+                    update3DSPanel("pending", [
+                        "用户已完成验证窗口 / User completed action window",
+                        "正在检查订单状态... / Checking order status...",
+                    ]);
+
+                    // Poll order status after challenge
+                    const statusRes = await fetch(
+                        `https://api.sandbox.paypal.com/v2/checkout/orders/${orderId}`,
+                        { headers: { Authorization: `Bearer ${accessToken}` } },
+                    );
+                    const statusData = await statusRes.json();
+                    const orderStatus = statusData.status;
+                    console.log("[3DS] 订单状态 / Order status:", orderStatus, statusData);
+                    update3DSPanel("pending", [`订单状态 / Order status: ${orderStatus}`]);
+
+                    if (orderStatus === "APPROVED") {
+                        update3DSPanel("success", [
+                            "验证通过 / Verification passed",
+                            "正在捕获资金... / Capturing funds...",
+                        ]);
+                        return await captureOrder(orderId, accessToken);
+                    } else {
+                        const msg = `验证后订单状态不符 / Unexpected post-3DS status: ${orderStatus}`;
+                        update3DSPanel("error", [msg]);
+                        showMessage("3DS 验证后无法完成支付 / Cannot complete payment after 3DS", true);
+                        return { transactionState: "ERROR", error: { message: msg } };
+                    }
+                } catch (err) {
+                    console.error("[3DS] Error:", err);
+                    update3DSPanel("error", [`错误 / Error: ${err.message}`]);
+                    showMessage("3DS 处理失败 / 3DS process failed: " + err.message, true);
+                    return { transactionState: "ERROR", error: { message: err.message } };
+                }
+            }
+
+            // ==========================================
+            // 8. Access Token (Client Credentials – Demo only)
+            // ==========================================
+            async function generateAccessToken() {
+                const auth = btoa(`${CONFIG.clientId}:${CONFIG.clientSecret}`);
+                try {
+                    const res = await fetch("https://api.sandbox.paypal.com/v1/oauth2/token", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/x-www-form-urlencoded",
+                            Authorization: `Basic ${auth}`,
+                        },
+                        body: "grant_type=client_credentials",
+                    });
+                    const data = await res.json();
+                    if (data.access_token) {
+                        console.log("[Token] 获取 Access Token 成功 / Access token acquired");
+                        return data.access_token;
+                    }
+                    throw new Error("未获取到 Token / Token not received: " + JSON.stringify(data));
+                } catch (err) {
+                    console.error("Token 获取失败 / Token fetch failed", err);
+                    return null;
+                }
+            }
+
+            // 启动 / Start
+            loadScripts();
+        </script>
+    </body>
+</html>

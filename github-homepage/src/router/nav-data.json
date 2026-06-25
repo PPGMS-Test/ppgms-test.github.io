@@ -122,6 +122,25 @@
               }
             ],
             "subGroups": []
+          },
+          {
+            "description": "google-pay-3ds",
+            "url": "__1__-jsv5-test/google-pay/__4__-google-pay-3ds/index.html",
+            "text": "google-pay-3ds",
+            "isFolder": true,
+            "expanded": true,
+            "hasChildren": true,
+            "children": [
+              {
+                "description": "",
+                "url": "__1__-jsv5-test/google-pay/__4__-google-pay-3ds/index.html",
+                "text": "google-pay-3ds",
+                "isFolder": false,
+                "hasChildren": false,
+                "isExternal": false
+              }
+            ],
+            "subGroups": []
           }
         ]
       },
@@ -331,6 +350,36 @@
             "description": "",
             "url": "__5__-tool/__1__-screen-recorder.html",
             "text": "screen-recorder",
+            "isFolder": false,
+            "hasChildren": false,
+            "isExternal": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "title": "API",
+    "icon": "server",
+    "expanded": true,
+    "groups": [
+      {
+        "title": "API",
+        "icon": "server",
+        "expanded": true,
+        "items": [
+          {
+            "description": "",
+            "url": "__6__-API/__1__-orders-v2-merchant-error-codes.html",
+            "text": "orders-v2-merchant-error-codes",
+            "isFolder": false,
+            "hasChildren": false,
+            "isExternal": false
+          },
+          {
+            "description": "",
+            "url": "__6__-API/__3__-create-order-get-from-file.html",
+            "text": "create-order-get-from-file",
             "isFolder": false,
             "hasChildren": false,
             "isExternal": false
