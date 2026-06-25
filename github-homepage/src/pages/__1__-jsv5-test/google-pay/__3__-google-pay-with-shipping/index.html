@@ -53,6 +53,8 @@
                 <!-- Google Pay 按钮容器 -->
                 <div id="google-pay-button-container"></div>
 
+                <div id="buyer-info" class="buyer-info" style="display:none;"></div>
+
                 <div id="message" class="status-message"></div>
             </div>
         </div>
@@ -227,7 +229,7 @@
 
                     paymentDataRequest.shippingAddressRequired = true;
                     paymentDataRequest.shippingAddressParameters = {
-                        allowedCountryCodes: ["US"],
+                        // allowedCountryCodes: ["US"],
                         phoneNumberRequired: true,
                     };
                     paymentDataRequest.shippingOptionRequired = true;
@@ -427,10 +429,43 @@
             /**
              * 当用户在 Google Pay 界面点击“支付”并授权后触发
              */
+            function showBuyerInfo(paymentData) {
+                const el = document.getElementById('buyer-info');
+                const sa = paymentData.shippingAddress || {};
+                const shipping = paymentData.shippingOptionData;
+                const pm = paymentData.paymentMethodData;
+
+                const addrLines = [sa.address1, sa.address2, sa.address3].filter(Boolean);
+                const cityLine = [sa.locality, sa.administrativeArea, sa.postalCode].filter(Boolean).join(' ');
+
+                function row(label, value) {
+                    if (!value) return '';
+                    return `<div class="bi-row"><span class="bi-label">${label}</span><span class="bi-value">${value}</span></div>`;
+                }
+                function section(title) {
+                    return `<div class="bi-section">${title}</div>`;
+                }
+
+                el.innerHTML = `
+                    ${section('Buyer')}
+                    ${row('Name', sa.name)}
+                    ${row('Phone', sa.phoneNumber)}
+                    ${row('Email', paymentData.email)}
+                    ${section('Shipping Address')}
+                    ${addrLines.map(l => row('', l)).join('')}
+                    ${row('', cityLine)}
+                    ${row('Country', sa.countryCode)}
+                    ${shipping ? section('Shipping Option') + row('', shipping.label) : ''}
+                    ${pm ? section('Payment Method') + row('', pm.description || pm.type) : ''}
+                `;
+                el.style.display = 'block';
+            }
+
             function onPaymentAuthorized(paymentData) {
                 return new Promise(function (resolve, reject) {
                     console.log("[Authorized] 用户已授权，开始处理后端逻辑...");
                     showMessage("用户已授权，正在处理订单...");
+                    showBuyerInfo(paymentData);
 
                     processPayment(paymentData)
                         .then(function (result) {
