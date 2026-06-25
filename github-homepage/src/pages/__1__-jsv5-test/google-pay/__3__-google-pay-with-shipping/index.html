@@ -98,7 +98,7 @@
             // 2. 脚本加载逻辑
             // ==========================================
             function loadScripts() {
-                console.log("[Init] 开始加载 SDK...");
+                console.log("[Init] 开始加载 SDK... / Loading SDKs...");
 
                 // 1. 加载 PayPal SDK
                 const paypalScript = document.createElement("script");
@@ -107,13 +107,13 @@
                 paypalScript.src = `https://www.paypal.com/sdk/js?client-id=${CONFIG.clientId}&currency=${CONFIG.currency}&components=googlepay&merchant-id=${CONFIG.merchantId}&buyer-country=US`;
 
                 paypalScript.onload = () => {
-                    console.log("[Init] PayPal SDK Loaded");
+                    console.log("[Init] PayPal SDK 已加载 / PayPal SDK loaded");
 
                     // 2. 加载 Google Pay SDK
                     const googleScript = document.createElement("script");
                     googleScript.src = "https://pay.google.com/gp/p/js/pay.js";
                     googleScript.onload = () => {
-                        console.log("[Init] Google Pay SDK Loaded");
+                        console.log("[Init] Google Pay SDK 已加载 / Google Pay SDK loaded");
                         // 确保两个库都加载完毕后初始化
                         if (
                             window.google &&
@@ -122,7 +122,7 @@
                         ) {
                             onGooglePayLoaded();
                         } else {
-                            showMessage("SDK 加载不完整，请刷新重试", true);
+                            showMessage("SDK 加载不完整，请刷新重试 / SDK not fully loaded, please refresh", true);
                         }
                     };
                     document.head.appendChild(googleScript);
@@ -130,7 +130,7 @@
 
                 paypalScript.onerror = () =>
                     showMessage(
-                        "无法加载 PayPal SDK，可能是网络问题或 Client ID 错误",
+                        "无法加载 PayPal SDK，可能是网络问题或 Client ID 错误 / Failed to load PayPal SDK, check network or Client ID",
                         true,
                     );
                 document.head.appendChild(paypalScript);
@@ -142,24 +142,31 @@
             async function onGooglePayLoaded() {
                 try {
                     // [Step 1] 获取 PayPal 的 Google Pay 配置
-                    console.log("[1] 获取 PayPal Google Pay 配置...");
+                    console.log("[1] 获取 PayPal Google Pay 配置... / Fetching PayPal Google Pay config...");
                     const googlePayConfig = await paypal.Googlepay().config();
 
                     allowedPaymentMethods =
                         googlePayConfig.allowedPaymentMethods;
                     merchantInfo = googlePayConfig.merchantInfo;
 
-                    merchantInfo["merchantName"] = "My Merchant Name"
+                    merchantInfo["merchantName"] = "My Merchant Name";
 
-                    
+                    // 开启 billing address 采集 / Enable billing address collection
+                    if (allowedPaymentMethods?.[0]?.parameters) {
+                        allowedPaymentMethods[0].parameters.billingAddressRequired = true;
+                        allowedPaymentMethods[0].parameters.billingAddressParameters = {
+                            format: "FULL",
+                            phoneNumberRequired: true,
+                        };
+                    }
 
-                    console.log("[1.1] Config Received:", googlePayConfig);
+                    console.log("[1.1] 配置已获取 / Config received:", googlePayConfig);
 
                     // [Step 2] 初始化 Google Payments Client
                     const client = getGooglePaymentsClient();
 
                     // [Step 3] 检查是否支持 (isReadyToPay)
-                    console.log("[2] 检查 isReadyToPay...");
+                    console.log("[2] 检查 isReadyToPay... / Checking isReadyToPay...");
                     const isReadyRequest = Object.assign({}, baseRequest, {
                         allowedPaymentMethods: allowedPaymentMethods,
                     });
@@ -168,22 +175,22 @@
                         .isReadyToPay(isReadyRequest)
                         .then(function (response) {
                             if (response.result) {
-                                console.log("[3] Google Pay 可用，添加按钮");
+                                console.log("[3] Google Pay 可用，添加按钮 / Google Pay available, adding button");
                                 addGooglePayButton();
                             } else {
-                                console.warn("isReadyToPay 返回 false");
+                                console.warn("[3] isReadyToPay 返回 false / isReadyToPay returned false");
                                 showMessage(
-                                    "当前环境不支持 Google Pay (可能是浏览器或账号问题)",
+                                    "当前环境不支持 Google Pay / Google Pay not supported (browser or account issue)",
                                     true,
                                 );
                             }
                         })
                         .catch(function (err) {
-                            console.error("isReadyToPay Error:", err);
+                            console.error("[3] isReadyToPay 错误 / isReadyToPay error:", err);
                         });
                 } catch (err) {
-                    console.error("初始化错误:", err);
-                    showMessage("初始化失败: " + err.message, true);
+                    console.error("[Init] 初始化错误 / Init error:", err);
+                    showMessage("初始化失败 / Init failed: " + err.message, true);
                 }
             }
 
@@ -212,7 +219,7 @@
             }
 
             async function onGooglePaymentButtonClicked() {
-                console.log("[Click] Google Pay 按钮点击");
+                console.log("[Click] Google Pay 按钮被点击 / Google Pay button clicked");
                 try {
                     // 构建支付请求数据
                     const paymentDataRequest = Object.assign({}, baseRequest);
@@ -257,12 +264,12 @@
                     };
 
                     // 加载支付数据 (弹出 Google Pay 窗口)
-                    console.log("[Load] 调用 loadPaymentData...");
+                    console.log("[Load] 调用 loadPaymentData... / Calling loadPaymentData...");
                     getGooglePaymentsClient().loadPaymentData(
                         paymentDataRequest,
                     );
                 } catch (err) {
-                    console.error("按钮点击处理错误:", err);
+                    console.error("[Click] 按钮点击处理错误 / Button click error:", err);
                 }
             }
 
@@ -295,7 +302,7 @@
             function onPaymentDataChanged(intermediatePaymentData) {
                 return new Promise(function (resolve, reject) {
                     console.log(
-                        "[PaymentDataChanged] 收到变更:",
+                        "[PaymentDataChanged] 收到变更 / Change received:",
                         intermediatePaymentData,
                     );
 
@@ -437,7 +444,7 @@
             };
 
             function showBuyerInfo(paymentData) {
-                console.log("[BuyerInfo] paymentData:", JSON.stringify(paymentData, null, 2));
+                console.log("[BuyerInfo] 买家信息 / Buyer payment data:", JSON.stringify(paymentData, null, 2));
                 const el = document.getElementById('buyer-info');
                 const sa = paymentData.shippingAddress || {};
                 const shipping = paymentData.shippingOptionData;
@@ -488,8 +495,8 @@
 
             function onPaymentAuthorized(paymentData) {
                 return new Promise(function (resolve, reject) {
-                    console.log("[Authorized] 用户已授权，开始处理后端逻辑...");
-                    showMessage("用户已授权，正在处理订单...");
+                    console.log("[Authorized] 用户已授权，开始处理支付... / User authorized, processing payment...");
+                    showMessage("用户已授权，正在处理订单... / User authorized, processing order...");
                     showBuyerInfo(paymentData);
 
                     processPayment(paymentData)
@@ -518,7 +525,7 @@
                     if (!accessToken) throw new Error("无法获取 Access Token");
 
                     // 2. 创建订单 (Create Order)
-                    console.log("[Process] 创建 PayPal 订单...");
+                    console.log("[Process] 创建 PayPal 订单... / Creating PayPal order...");
                     // 使用 Sandbox API 创建订单
                     const createOrderUrl =
                         "https://api.sandbox.paypal.com/v2/checkout/orders";
@@ -551,17 +558,17 @@
 
                     if (!orderRes.ok) {
                         throw new Error(
-                            "创建订单失败: " + JSON.stringify(orderData),
+                            "创建订单失败 / Create order failed: " + JSON.stringify(orderData),
                         );
                     }
 
                     const orderId = orderData.id;
-                    console.log("[Process] 订单创建成功, ID:", orderId);
-                    showMessage(`订单创建成功 (${orderId}), 正在确认...`);
+                    console.log("[Process] 订单创建成功 / Order created, ID:", orderId);
+                    showMessage(`订单创建成功 / Order created (${orderId}), 正在确认 / confirming...`);
 
                     // 3. 确认订单 (Confirm Order - SDK)
                     console.log(
-                        "[Process] 正在关联 PayPal 与 Google Pay 数据...",
+                        "[Process] 正在关联 PayPal 与 Google Pay 数据... / Linking PayPal with Google Pay data...",
                     );
 
                     // 这里将 paymentData 里的 paymentMethodData 传递给 PayPal
@@ -570,12 +577,12 @@
                         paymentMethodData: paymentData.paymentMethodData,
                     });
 
-                    console.log("[Process] Confirm 结果:", confirmRes);
+                    console.log("[Process] Confirm 结果 / Confirm result:", confirmRes);
 
                     if (confirmRes.status === "APPROVED") {
                         // 4. 捕获资金 (Capture Order)
-                        console.log("[Process] 订单已批准，正在捕获资金...");
-                        showMessage("订单已批准，正在扣款...");
+                        console.log("[Process] 订单已批准，正在捕获资金... / Order approved, capturing funds...");
+                        showMessage("订单已批准，正在扣款... / Order approved, capturing payment...");
 
                         const captureUrl = `https://api.sandbox.paypal.com/v2/checkout/orders/${orderId}/capture`;
                         const captureRes = await fetch(captureUrl, {
@@ -591,7 +598,7 @@
                         // 注意：capture 可能会返回 201 Created，也可能是 200 OK
                         if (!captureRes.ok) {
                             throw new Error(
-                                "捕获失败: " + JSON.stringify(captureData),
+                                "捕获失败 / Capture failed: " + JSON.stringify(captureData),
                             );
                         }
 
@@ -602,15 +609,15 @@
                                 captureData.purchase_units[0].payments
                                     .captures[0].status);
 
-                        console.log("[Process] 捕获成功:", captureData);
+                        console.log("[Process] 捕获成功 / Capture success:", captureData);
                         showMessage(
-                            `支付成功！<br>状态: ${captureStatus}<br>订单ID: ${orderId}`,
+                            `支付成功！/ Payment successful!<br>状态 / Status: ${captureStatus}<br>订单ID / Order ID: ${orderId}`,
                         );
                         return { transactionState: "SUCCESS" };
                     } else if (confirmRes.status === "PAYER_ACTION_REQUIRED") {
                         // 处理 3DS 情况 (简化版，未完全实现)
-                        console.log("[Process] 需要额外的用户验证 (3DS)");
-                        showMessage("需要额外的 3DS 验证...");
+                        console.log("[Process] 需要额外的用户验证 (3DS) / Additional payer action required (3DS)");
+                        showMessage("需要额外的 3DS 验证... / 3DS verification required...");
 
                         // 调用 initiatePayerAction (如果实现了)
                         /*
@@ -622,19 +629,19 @@
                             transactionState: "ERROR",
                             error: {
                                 message:
-                                    "需要 3DS 验证，此 Demo 未完全实现该流程",
+                                    "需要 3DS 验证，此 Demo 未完全实现该流程 / 3DS required, not fully implemented in this demo",
                             },
                         };
                     } else {
                         showMessage(
-                            "支付未能完成，状态: " + confirmRes.status,
+                            "支付未能完成 / Payment incomplete, 状态 / Status: " + confirmRes.status,
                             true,
                         );
                         return { transactionState: "ERROR" };
                     }
                 } catch (err) {
-                    console.error("[Process Error]", err);
-                    showMessage("处理失败: " + err.message, true);
+                    console.error("[Process Error / 处理异常]", err);
+                    showMessage("处理失败 / Process failed: " + err.message, true);
                     return { transactionState: "ERROR" };
                 }
             }
@@ -664,15 +671,15 @@
 
                     const data = await response.json();
                     if (data.access_token) {
-                        console.log("[Token] 获取 Access Token 成功");
+                        console.log("[Token] 获取 Access Token 成功 / Access token acquired");
                         return data.access_token;
                     } else {
                         throw new Error(
-                            "未获取到 Token: " + JSON.stringify(data),
+                            "未获取到 Token / Token not received: " + JSON.stringify(data),
                         );
                     }
                 } catch (err) {
-                    console.error("Token 获取失败", err);
+                    console.error("Token 获取失败 / Token fetch failed", err);
                     return null;
                 }
             }
