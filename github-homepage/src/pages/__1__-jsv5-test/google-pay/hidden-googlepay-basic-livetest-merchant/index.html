@@ -31,24 +31,28 @@
                     </div>
                 </div>
             </section>
-            <section class="container">
+            <section class="card-section">
                 <a
                     href="https://developers.google.com/pay/api/web/guides/resources/test-card-suite"
-                    >Enable/Disable Google Test Card Suite</a
+                    class="link-card"
+                    target="_blank"
+                    rel="noopener"
                 >
+                    <svg class="link-card-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>
+                    Enable / Disable Google Test Card Suite
+                    <svg class="link-card-arrow" xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>
+                </a>
             </section>
-            <section class="container">
-                <div id="button-container"></div>
+            <section class="card-section" style="padding-bottom: 40px;">
+                <div class="payment-card">
+                    <span class="payment-card-label">Payment</span>
+                    <div id="button-container"></div>
+                </div>
             </section>
         </main>
 
         <style>
-            .container {
-                height: 200px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-            }
+            body { margin: 0; background: #f9fafb; }
         </style>
 
         <script
