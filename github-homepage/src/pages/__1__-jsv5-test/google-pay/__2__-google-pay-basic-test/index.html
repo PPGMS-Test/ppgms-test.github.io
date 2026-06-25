@@ -7,9 +7,28 @@
         <script src="./script.js"></script>
 
         <link rel="shortcut icon" href="#" />
+        <link rel="stylesheet" href="../shared-panel.css" />
     </head>
     <body>
         <main>
+            <section class="info-section">
+                <div class="config-panel">
+                    <div class="config-item">
+                        <span class="config-label">Account</span>
+                        <span class="config-value">vault-test-merchant-c2@cctest.com</span>
+                    </div>
+                    <div class="config-item">
+                        <span class="config-label">Environment</span>
+                        <span class="badge-sandbox">SANDBOX</span>
+                    </div>
+                    <div class="config-item config-full">
+                        <span class="config-label">Components</span>
+                        <div class="config-chips">
+                            <span class="config-chip">googlepay</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
             <section class="container">
                 <a
                     href="https://developers.google.com/pay/api/web/guides/resources/test-card-suite"

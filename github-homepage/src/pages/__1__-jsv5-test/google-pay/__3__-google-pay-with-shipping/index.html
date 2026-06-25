@@ -5,12 +5,33 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>PayPal Google Pay 集成测试原型 (Mock Backend)</title>
         <link rel="stylesheet" href="style.css" />
+        <link rel="stylesheet" href="../shared-panel.css" />
         <!-- 将所有的 CSS 和 JS 逻辑都包含在这里以便单文件运行 -->
     </head>
     <body>
         <div class="container">
             <div class="header">
                 <h1>SandBox 支付测试</h1>
+            </div>
+            <div class="info-section">
+                <div class="config-panel">
+                    <div class="config-item">
+                        <span class="config-label">Merchant ID</span>
+                        <span class="config-value">CMHAMMNAXCMGA</span>
+                    </div>
+                    <div class="config-item">
+                        <span class="config-label">Environment</span>
+                        <span class="badge-sandbox">SANDBOX</span>
+                    </div>
+                    <div class="config-item config-full">
+                        <span class="config-label">Features</span>
+                        <div class="config-chips">
+                            <span class="config-chip">googlepay</span>
+                            <span class="config-chip">shipping</span>
+                            <span class="config-chip">dynamic-price</span>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <div class="product-summary">
