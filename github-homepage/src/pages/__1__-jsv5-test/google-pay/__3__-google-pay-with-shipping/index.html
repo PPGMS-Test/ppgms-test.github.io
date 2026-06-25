@@ -470,6 +470,18 @@
                     ${row('Country', sa.countryCode)}
                     ${shippingLabel ? section('Shipping Option') + row('', shippingLabel) : ''}
                     ${pm ? section('Payment Method') + row('', pm.description || pm.type) : ''}
+                    ${(() => {
+                        const ba = pm?.info?.billingAddress;
+                        if (!ba) return '';
+                        const baAddrLines = [ba.address1, ba.address2, ba.address3].filter(Boolean);
+                        const baCityLine = [ba.locality, ba.administrativeArea, ba.postalCode].filter(Boolean).join(' ');
+                        return section('Billing Address')
+                            + row('Name', ba.name)
+                            + baAddrLines.map(l => row('', l)).join('')
+                            + row('', baCityLine)
+                            + row('Country', ba.countryCode)
+                            + row('Phone', ba.phoneNumber);
+                    })()}
                 `;
                 el.style.display = 'block';
             }
