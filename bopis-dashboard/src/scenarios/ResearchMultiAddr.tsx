@@ -52,7 +52,7 @@ const PAYPAL_CREATE_A = {
   purchase_units: [
     {
       amount: { currency_code: 'USD', value: '80.00' },
-      shipping: { type: 'PICKUP_IN_STORE', name: { full_name: 'Store A — San Jose' }, address: STORE_A },
+      shipping: { type: 'PICKUP_IN_STORE', name: { full_name: 'Store A — San Jose' }, address: STORE_A, phone_number: { national_number: '4085551234' } },
       custom_id: 'PICKUP-EXP-A',
       description: 'Pickup at Store A — San Jose',
     },
@@ -66,12 +66,12 @@ const PAYPAL_CREATE_B = {
     {
       reference_id: 'store-a',
       amount: { currency_code: 'USD', value: '50.00' },
-      shipping: { type: 'PICKUP_IN_STORE', name: { full_name: 'Store A — San Jose' }, address: STORE_A },
+      shipping: { type: 'PICKUP_IN_STORE', name: { full_name: 'Store A — San Jose' }, address: STORE_A, phone_number: { national_number: '4085551234' } },
     },
     {
       reference_id: 'store-b',
       amount: { currency_code: 'USD', value: '50.00' },
-      shipping: { type: 'PICKUP_IN_STORE', name: { full_name: 'Store B — Sunnyvale' }, address: STORE_B },
+      shipping: { type: 'PICKUP_IN_STORE', name: { full_name: 'Store B — Sunnyvale' }, address: STORE_B, phone_number: { national_number: '4085551234' } },
     },
   ],
   payment_source: { paypal: { experience_context: EXPERIENCE_CONTEXT } },

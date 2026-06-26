@@ -35,6 +35,7 @@ const PAYPAL_CREATE_PAYLOAD = {
         type: 'PICKUP_IN_STORE',
         name: { full_name: 'Palo Alto Store #456' },
         address: STORE_ADDRESS,
+        phone_number: { national_number: '4085551234' },
       },
       custom_id: 'PICKUP-PART123',
       description: 'Pickup at Palo Alto Store #456',

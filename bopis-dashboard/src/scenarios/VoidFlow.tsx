@@ -34,6 +34,7 @@ const PAYPAL_CREATE_PAYLOAD = {
         type: 'PICKUP_IN_STORE',
         name: { full_name: 'Mountain View Store #789' },
         address: STORE_ADDRESS,
+        phone_number: { national_number: '4085551234' },
       },
       custom_id: 'PICKUP-VOID456',
       description: 'Pickup at Mountain View Store #789',

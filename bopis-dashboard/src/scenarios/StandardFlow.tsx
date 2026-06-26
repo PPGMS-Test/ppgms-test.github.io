@@ -35,6 +35,7 @@ const PAYPAL_CREATE_PAYLOAD = {
         type: 'PICKUP_IN_STORE',
         name: { full_name: 'Downtown Store #123' },
         address: STORE_ADDRESS,
+        phone_number: { national_number: '4085551234' },
       },
       custom_id: 'PICKUP-PICK789',
       description: 'Pickup at Downtown Store #123',
