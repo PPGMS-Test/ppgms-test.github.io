@@ -339,9 +339,8 @@ export function ResearchMultiAddr() {
       {tab === 'B' && (
         <div className="space-y-4">
           <div className="rounded border border-slate-200 bg-slate-50 p-2 text-xs text-slate-700">
-            创建 2 个 purchase_unit（PU1=Store A $50，PU2=Store B $50）→ Authorize → 各自 Capture → GET Order。
-            每个 PU 有独立的 authorizationId 和独立的 shipping 地址，GET Order 可验证。
-            <br /><strong>预期：✅ 可以在不同地点提货——但需要在 Order 创建时提前指定，不是在 capture 时指定。</strong>
+            创建 2 个 purchase_unit（PU1=Store A $50，PU2=Store B $50），intent=AUTHORIZE → Authorize → 各自 Capture → GET Order。
+            <br /><strong>预期（待验证）：多 PU 是否支持 AUTHORIZE intent？</strong>
           </div>
 
           <StepCard number={1} title="Create Multi-Unit Order (Store A + Store B)"
@@ -397,6 +396,14 @@ export function ResearchMultiAddr() {
             requestUrl={`GET https://api-m.sandbox.paypal.com/v2/checkout/orders/${bOrderId ?? '{orderId}'}`}
             result={bSteps.details} onExecute={bDetails}
             disabled={bSteps.captureB.status !== 'success'} />
+
+          {bSteps.create.status === 'error' && (
+            <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900 space-y-1">
+              <p className="font-semibold">📌 研究结论：多 PU 不支持 AUTHORIZE intent</p>
+              <p>PayPal 返回 <code className="font-mono">UNSUPPORTED_INTENT</code>：多 purchase_unit 订单只支持 <code className="font-mono">intent=CAPTURE</code>，不支持 <code className="font-mono">intent=AUTHORIZE</code>。</p>
+              <p>这意味着：<strong>无法对多门店 BOPIS 订单使用"先授权、等提货再扣款"的流程</strong>。如果需要多个门店分别提货，只能拆成多个独立订单（每个订单一个 PU），各自走完整的 Create → Authorize → Capture 流程。</p>
+            </div>
+          )}
 
           {bSteps.details.status === 'success' && (
             <div className="rounded-lg border border-green-200 bg-green-50 p-3 text-xs text-green-800">
