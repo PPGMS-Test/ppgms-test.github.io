@@ -90,6 +90,12 @@ export function StepCard({
         <JsonBlock label="Response" data={result.response} defaultOpen={true} />
       )}
 
+      {result.debugId && (
+        <p className="text-xs text-muted-foreground font-mono">
+          <span className="select-none">debug-id: </span>{result.debugId}
+        </p>
+      )}
+
       {result.error && (
         <p className="text-xs text-red-600 font-mono">{result.error}</p>
       )}

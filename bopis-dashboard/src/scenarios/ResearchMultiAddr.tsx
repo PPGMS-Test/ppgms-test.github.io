@@ -107,13 +107,13 @@ export function ResearchMultiAddr() {
   const aCreate = async () => {
     setA('create', { status: 'loading' })
     try {
-      const { data, status } = await createBopisOrder(EXP_A_REQUEST)
+      const { data, status, debugId } = await createBopisOrder(EXP_A_REQUEST)
       if (status >= 200 && status < 300) {
         setAOrderId((data as { id: string }).id)
         setAClientToken(await getSandboxClientToken())
-        setA('create', { status: 'success', response: data })
+        setA('create', { status: 'success', response: data, debugId })
       } else {
-        setA('create', { status: 'error', response: data, error: `HTTP ${status}` })
+        setA('create', { status: 'error', response: data, error: `HTTP ${status}`, debugId })
       }
     } catch (e) { setA('create', { status: 'error', error: String(e) }) }
   }
@@ -122,15 +122,15 @@ export function ResearchMultiAddr() {
     if (!aOrderId) return
     setA('authorize', { status: 'loading' })
     try {
-      const { data, status } = await authorizeOrder(aOrderId)
+      const { data, status, debugId } = await authorizeOrder(aOrderId)
       if (status >= 200 && status < 300) {
         const id = (data as {
           purchase_units: Array<{ payments: { authorizations: Array<{ id: string }> } }>
         }).purchase_units[0].payments.authorizations[0].id
         setAAuthId(id)
-        setA('authorize', { status: 'success', response: data })
+        setA('authorize', { status: 'success', response: data, debugId })
       } else {
-        setA('authorize', { status: 'error', response: data, error: `HTTP ${status}` })
+        setA('authorize', { status: 'error', response: data, error: `HTTP ${status}`, debugId })
       }
     } catch (e) { setA('authorize', { status: 'error', error: String(e) }) }
   }
@@ -139,10 +139,10 @@ export function ResearchMultiAddr() {
     if (!aAuthId) return
     setA('capture1', { status: 'loading' })
     try {
-      const { data, status } = await captureAuthorization(aAuthId, '50.00')
+      const { data, status, debugId } = await captureAuthorization(aAuthId, '50.00')
       setA('capture1', {
         status: status >= 200 && status < 300 ? 'success' : 'error',
-        response: data, error: status >= 400 ? `HTTP ${status}` : undefined,
+        response: data, error: status >= 400 ? `HTTP ${status}` : undefined, debugId,
       })
     } catch (e) { setA('capture1', { status: 'error', error: String(e) }) }
   }
@@ -151,10 +151,10 @@ export function ResearchMultiAddr() {
     if (!aAuthId) return
     setA('capture2', { status: 'loading' })
     try {
-      const { data, status } = await captureAuthorization(aAuthId, '30.00')
+      const { data, status, debugId } = await captureAuthorization(aAuthId, '30.00')
       setA('capture2', {
         status: status >= 200 && status < 300 ? 'success' : 'error',
-        response: data, error: status >= 400 ? `HTTP ${status}` : undefined,
+        response: data, error: status >= 400 ? `HTTP ${status}` : undefined, debugId,
       })
     } catch (e) { setA('capture2', { status: 'error', error: String(e) }) }
   }
@@ -162,13 +162,13 @@ export function ResearchMultiAddr() {
   const bCreate = async () => {
     setB('create', { status: 'loading' })
     try {
-      const { data, status } = await createBopisOrderMultiUnit(EXP_B_REQUEST)
+      const { data, status, debugId } = await createBopisOrderMultiUnit(EXP_B_REQUEST)
       if (status >= 200 && status < 300) {
         setBOrderId((data as { id: string }).id)
         setBClientToken(await getSandboxClientToken())
-        setB('create', { status: 'success', response: data })
+        setB('create', { status: 'success', response: data, debugId })
       } else {
-        setB('create', { status: 'error', response: data, error: `HTTP ${status}` })
+        setB('create', { status: 'error', response: data, error: `HTTP ${status}`, debugId })
       }
     } catch (e) { setB('create', { status: 'error', error: String(e) }) }
   }
@@ -177,7 +177,7 @@ export function ResearchMultiAddr() {
     if (!bOrderId) return
     setB('authorize', { status: 'loading' })
     try {
-      const { data, status } = await authorizeOrder(bOrderId)
+      const { data, status, debugId } = await authorizeOrder(bOrderId)
       if (status >= 200 && status < 300) {
         const pus = (data as {
           purchase_units: Array<{
@@ -189,9 +189,9 @@ export function ResearchMultiAddr() {
         const puB = pus.find((p) => p.reference_id === 'store-b')
         setBAuthIdA(puA?.payments.authorizations[0].id ?? null)
         setBAuthIdB(puB?.payments.authorizations[0].id ?? null)
-        setB('authorize', { status: 'success', response: data })
+        setB('authorize', { status: 'success', response: data, debugId })
       } else {
-        setB('authorize', { status: 'error', response: data, error: `HTTP ${status}` })
+        setB('authorize', { status: 'error', response: data, error: `HTTP ${status}`, debugId })
       }
     } catch (e) { setB('authorize', { status: 'error', error: String(e) }) }
   }
@@ -200,10 +200,10 @@ export function ResearchMultiAddr() {
     if (!bAuthIdA) return
     setB('captureA', { status: 'loading' })
     try {
-      const { data, status } = await captureAuthorization(bAuthIdA)
+      const { data, status, debugId } = await captureAuthorization(bAuthIdA)
       setB('captureA', {
         status: status >= 200 && status < 300 ? 'success' : 'error',
-        response: data, error: status >= 400 ? `HTTP ${status}` : undefined,
+        response: data, error: status >= 400 ? `HTTP ${status}` : undefined, debugId,
       })
     } catch (e) { setB('captureA', { status: 'error', error: String(e) }) }
   }
@@ -212,10 +212,10 @@ export function ResearchMultiAddr() {
     if (!bAuthIdB) return
     setB('captureB', { status: 'loading' })
     try {
-      const { data, status } = await captureAuthorization(bAuthIdB)
+      const { data, status, debugId } = await captureAuthorization(bAuthIdB)
       setB('captureB', {
         status: status >= 200 && status < 300 ? 'success' : 'error',
-        response: data, error: status >= 400 ? `HTTP ${status}` : undefined,
+        response: data, error: status >= 400 ? `HTTP ${status}` : undefined, debugId,
       })
     } catch (e) { setB('captureB', { status: 'error', error: String(e) }) }
   }

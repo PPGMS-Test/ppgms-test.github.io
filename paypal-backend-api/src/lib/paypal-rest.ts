@@ -14,6 +14,7 @@ export class PayPalAuthError extends Error {
 export interface PayPalRestResponse {
   data: unknown
   status: number
+  debugId?: string
 }
 
 export function parseBasicAuth(req: Request): { clientId: string; clientSecret: string } {

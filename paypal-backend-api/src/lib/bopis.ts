@@ -35,7 +35,8 @@ async function postOrder(token: string, payload: unknown): Promise<PayPalRestRes
     body: JSON.stringify(payload),
   })
   const data = await res.json().catch(() => ({}))
-  return { data, status: res.status }
+  const debugId = res.headers.get('paypal-debug-id') ?? undefined
+  return { data, status: res.status, debugId }
 }
 
 export interface StoreAddress {
@@ -122,7 +123,8 @@ export async function authorizeOrder(orderId: string): Promise<PayPalRestRespons
     },
   )
   const data = await res.json().catch(() => ({}))
-  return { data, status: res.status }
+  const debugId = res.headers.get('paypal-debug-id') ?? undefined
+  return { data, status: res.status, debugId }
 }
 
 export async function captureAuthorization(authId: string, amount?: string): Promise<PayPalRestResponse> {
@@ -141,7 +143,8 @@ export async function captureAuthorization(authId: string, amount?: string): Pro
     },
   )
   const data = await res.json().catch(() => ({}))
-  return { data, status: res.status }
+  const debugId = res.headers.get('paypal-debug-id') ?? undefined
+  return { data, status: res.status, debugId }
 }
 
 export async function voidAuthorization(authId: string): Promise<PayPalRestResponse> {
@@ -153,10 +156,11 @@ export async function voidAuthorization(authId: string): Promise<PayPalRestRespo
       headers: { Authorization: `Bearer ${token}` },
     },
   )
+  const debugId = res.headers.get('paypal-debug-id') ?? undefined
   // PayPal returns 204 No Content on success; remap to 200 so our backend
   // can include a JSON body without violating HTTP 204 no-body rule.
-  if (res.status === 204) return { data: { status: 'VOIDED' }, status: 200 }
+  if (res.status === 204) return { data: { status: 'VOIDED' }, status: 200, debugId }
   const text = await res.text()
   const data = text ? JSON.parse(text) : {}
-  return { data, status: res.status }
+  return { data, status: res.status, debugId }
 }

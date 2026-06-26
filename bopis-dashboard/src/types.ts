@@ -4,6 +4,7 @@ export interface StepResult {
   status: StepStatus
   response?: unknown
   error?: string
+  debugId?: string
 }
 
 export interface StoreAddress {

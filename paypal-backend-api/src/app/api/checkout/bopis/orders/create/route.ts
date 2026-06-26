@@ -8,8 +8,8 @@ export function OPTIONS() { return corsOptions() }
 export async function POST(req: Request) {
   try {
     const body = (await req.json()) as CreateBopisOrderParams
-    const { data, status } = await createBopisOrder(body)
-    return corsJson(data, status)
+    const { data, status, debugId } = await createBopisOrder(body)
+    return corsJson(data, status, debugId)
   } catch {
     return corsJson({ error: 'Failed to create BOPIS order' }, 500)
   }

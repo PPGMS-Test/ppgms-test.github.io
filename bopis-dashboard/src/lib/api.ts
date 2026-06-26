@@ -5,13 +5,14 @@ const BASE = 'https://ppgms-test-github-io.pages.dev'
 async function req(
   path: string,
   init?: RequestInit,
-): Promise<{ data: unknown; status: number }> {
+): Promise<{ data: unknown; status: number; debugId?: string }> {
   const res = await fetch(`${BASE}${path}`, {
     headers: { 'Content-Type': 'application/json' },
     ...init,
   })
   const data = await res.json().catch(() => ({ _raw: `${res.status} ${res.statusText}` }))
-  return { data, status: res.status }
+  const debugId = res.headers.get('x-paypal-debug-id') ?? undefined
+  return { data, status: res.status, debugId }
 }
 
 export async function createBopisOrder(params: {

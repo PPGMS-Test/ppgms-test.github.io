@@ -74,13 +74,13 @@ export function PartialCapture() {
   const handleCreate = async () => {
     set('create', { status: 'loading' })
     try {
-      const { data, status } = await createBopisOrder(CREATE_REQUEST)
+      const { data, status, debugId } = await createBopisOrder(CREATE_REQUEST)
       if (status >= 200 && status < 300) {
         setOrderId((data as { id: string }).id)
         setClientToken(await getSandboxClientToken())
-        set('create', { status: 'success', response: data })
+        set('create', { status: 'success', response: data, debugId })
       } else {
-        set('create', { status: 'error', response: data, error: `HTTP ${status}` })
+        set('create', { status: 'error', response: data, error: `HTTP ${status}`, debugId })
       }
     } catch (e) {
       set('create', { status: 'error', error: String(e) })
@@ -91,15 +91,15 @@ export function PartialCapture() {
     if (!orderId) return
     set('authorize', { status: 'loading' })
     try {
-      const { data, status } = await authorizeOrder(orderId)
+      const { data, status, debugId } = await authorizeOrder(orderId)
       if (status >= 200 && status < 300) {
         const id = (data as {
           purchase_units: Array<{ payments: { authorizations: Array<{ id: string }> } }>
         }).purchase_units[0].payments.authorizations[0].id
         setAuthId(id)
-        set('authorize', { status: 'success', response: data })
+        set('authorize', { status: 'success', response: data, debugId })
       } else {
-        set('authorize', { status: 'error', response: data, error: `HTTP ${status}` })
+        set('authorize', { status: 'error', response: data, error: `HTTP ${status}`, debugId })
       }
     } catch (e) {
       set('authorize', { status: 'error', error: String(e) })
@@ -110,11 +110,12 @@ export function PartialCapture() {
     if (!authId) return
     set('capture', { status: 'loading' })
     try {
-      const { data, status } = await captureAuthorization(authId, '60.00')
+      const { data, status, debugId } = await captureAuthorization(authId, '60.00')
       set('capture', {
         status: status >= 200 && status < 300 ? 'success' : 'error',
         response: data,
         error: status >= 400 ? `HTTP ${status}` : undefined,
+        debugId,
       })
     } catch (e) {
       set('capture', { status: 'error', error: String(e) })
@@ -125,11 +126,12 @@ export function PartialCapture() {
     if (!authId) return
     set('void', { status: 'loading' })
     try {
-      const { data, status } = await voidAuthorization(authId)
+      const { data, status, debugId } = await voidAuthorization(authId)
       set('void', {
         status: status >= 200 && status < 300 ? 'success' : 'error',
         response: data,
         error: status >= 400 ? `HTTP ${status}` : undefined,
+        debugId,
       })
     } catch (e) {
       set('void', { status: 'error', error: String(e) })

@@ -10,8 +10,8 @@ export async function POST(
 ) {
   const { authId } = await params
   try {
-    const { data, status } = await voidAuthorization(authId)
-    return corsJson(data, status)
+    const { data, status, debugId } = await voidAuthorization(authId)
+    return corsJson(data, status, debugId)
   } catch (e) {
     return corsJson({ error: 'Failed to void authorization', detail: String(e) }, 500)
   }
