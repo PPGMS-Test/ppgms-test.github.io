@@ -6,6 +6,7 @@ import { JsonBlock } from './JsonBlock'
 interface Props {
   number: number
   title: string
+  badge?: { label: string; variant: 'green' | 'amber' | 'blue' | 'slate' }
   description: string
   requestUrl?: string
   requestBody?: unknown
@@ -15,9 +16,17 @@ interface Props {
   children?: React.ReactNode
 }
 
+const BADGE_STYLES = {
+  green: 'bg-green-100 text-green-700 border-green-200',
+  amber: 'bg-amber-100 text-amber-700 border-amber-200',
+  blue:  'bg-blue-100 text-blue-700 border-blue-200',
+  slate: 'bg-slate-100 text-slate-600 border-slate-200',
+}
+
 export function StepCard({
   number,
   title,
+  badge,
   description,
   requestUrl,
   requestBody,
@@ -41,6 +50,11 @@ export function StepCard({
             {number}
           </span>
           <h3 className="font-semibold text-sm">{title}</h3>
+          {badge && (
+            <span className={`border rounded px-1.5 py-0.5 text-xs font-medium ${BADGE_STYLES[badge.variant]}`}>
+              {badge.label}
+            </span>
+          )}
         </div>
         <StatusBadge status={result.status} />
       </div>

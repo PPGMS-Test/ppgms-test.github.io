@@ -184,7 +184,8 @@ export function StandardFlow() {
       <StepCard
         number={4}
         title="Capture at Pickup"
-        description="买家到店验证后捕获，资金正式扣款（full capture，body 为空）。"
+        badge={{ label: 'Full Capture', variant: 'green' }}
+        description="买家到店验证后捕获，资金正式扣款。body 为空 = 自动 capture 全额授权金额。"
         requestUrl={`POST https://api-m.sandbox.paypal.com/v2/payments/authorizations/${authId ?? '{authId}'}/capture`}
         result={steps.capture}
         onExecute={handleCapture}

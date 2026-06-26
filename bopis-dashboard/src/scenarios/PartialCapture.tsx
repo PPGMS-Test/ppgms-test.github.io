@@ -185,7 +185,8 @@ export function PartialCapture() {
       <StepCard
         number={4}
         title="Partial Capture ($60)"
-        description="只提货 $60，body 中指定 amount。"
+        badge={{ label: 'Partial Capture', variant: 'amber' }}
+        description="只提货 $60，body 中显式指定 amount。剩余 $40 授权仍然冻结。"
         requestUrl={`POST https://api-m.sandbox.paypal.com/v2/payments/authorizations/${authId ?? '{authId}'}/capture`}
         requestBody={{ amount: { currency_code: 'USD', value: '60.00' } }}
         result={steps.capture}
