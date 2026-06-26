@@ -2,7 +2,7 @@
   "name": "ppgms-test-monorepo",
   "version": "1.0.0",
   "private": true,
-  "packageManager": "pnpm@9.0.0",
+  "packageManager": "pnpm@11.7.0",
   "scripts": {
     "dev:homepage": "pnpm --filter github-homepage dev",
     "dev:api": "pnpm --filter paypal-backend-api dev",

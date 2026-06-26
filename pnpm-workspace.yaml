@@ -2,3 +2,14 @@ packages:
   - github-homepage
   - paypal-backend-api
   - applepay-dashboard
+  - bopis-dashboard
+allowBuilds:
+  '@scarf/scarf': set this to true or false
+  '@tree-sitter-grammars/tree-sitter-yaml': set this to true or false
+  core-js: set this to true or false
+  core-js-pure: set this to true or false
+  esbuild: set this to true or false
+  sharp: set this to true or false
+  tree-sitter: set this to true or false
+  tree-sitter-json: set this to true or false
+  workerd: set this to true or false
