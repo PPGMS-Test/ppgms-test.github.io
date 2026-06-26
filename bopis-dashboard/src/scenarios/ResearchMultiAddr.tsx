@@ -7,6 +7,7 @@ import {
   createBopisOrderMultiUnit,
   authorizeOrder,
   captureAuthorization,
+  getOrder,
   getSandboxClientToken,
 } from '@/lib/api'
 
@@ -77,8 +78,8 @@ const PAYPAL_CREATE_B = {
   payment_source: { paypal: { experience_context: EXPERIENCE_CONTEXT } },
 }
 
-type ExpAStep = 'create' | 'approve' | 'authorize' | 'capture1' | 'capture2'
-type ExpBStep = 'create' | 'approve' | 'authorize' | 'captureA' | 'captureB'
+type ExpAStep = 'create' | 'approve' | 'authorize' | 'capture1' | 'capture2' | 'details'
+type ExpBStep = 'create' | 'approve' | 'authorize' | 'captureA' | 'captureB' | 'details'
 
 export function ResearchMultiAddr() {
   const [tab, setTab] = useState<'A' | 'B'>('A')
@@ -89,6 +90,7 @@ export function ResearchMultiAddr() {
   const [aSteps, setASteps] = useState<Record<ExpAStep, StepResult>>({
     create: { status: 'idle' }, approve: { status: 'idle' },
     authorize: { status: 'idle' }, capture1: { status: 'idle' }, capture2: { status: 'idle' },
+    details: { status: 'idle' },
   })
   const setA = (id: ExpAStep, u: Partial<StepResult>) =>
     setASteps((p) => ({ ...p, [id]: { ...p[id], ...u } }))
@@ -100,6 +102,7 @@ export function ResearchMultiAddr() {
   const [bSteps, setBSteps] = useState<Record<ExpBStep, StepResult>>({
     create: { status: 'idle' }, approve: { status: 'idle' },
     authorize: { status: 'idle' }, captureA: { status: 'idle' }, captureB: { status: 'idle' },
+    details: { status: 'idle' },
   })
   const setB = (id: ExpBStep, u: Partial<StepResult>) =>
     setBSteps((p) => ({ ...p, [id]: { ...p[id], ...u } }))
@@ -157,6 +160,18 @@ export function ResearchMultiAddr() {
         response: data, error: status >= 400 ? `HTTP ${status}` : undefined, debugId,
       })
     } catch (e) { setA('capture2', { status: 'error', error: String(e) }) }
+  }
+
+  const aDetails = async () => {
+    if (!aOrderId) return
+    setA('details', { status: 'loading' })
+    try {
+      const { data, status, debugId } = await getOrder(aOrderId)
+      setA('details', {
+        status: status >= 200 && status < 300 ? 'success' : 'error',
+        response: data, error: status >= 400 ? `HTTP ${status}` : undefined, debugId,
+      })
+    } catch (e) { setA('details', { status: 'error', error: String(e) }) }
   }
 
   const bCreate = async () => {
@@ -220,6 +235,18 @@ export function ResearchMultiAddr() {
     } catch (e) { setB('captureB', { status: 'error', error: String(e) }) }
   }
 
+  const bDetails = async () => {
+    if (!bOrderId) return
+    setB('details', { status: 'loading' })
+    try {
+      const { data, status, debugId } = await getOrder(bOrderId)
+      setB('details', {
+        status: status >= 200 && status < 300 ? 'success' : 'error',
+        response: data, error: status >= 400 ? `HTTP ${status}` : undefined, debugId,
+      })
+    } catch (e) { setB('details', { status: 'error', error: String(e) }) }
+  }
+
   return (
     <div className="space-y-4">
       <div className="rounded-lg border border-purple-200 bg-purple-50 p-3 text-xs text-purple-900">
@@ -245,8 +272,8 @@ export function ResearchMultiAddr() {
       {tab === 'A' && (
         <div className="space-y-4">
           <div className="rounded border border-slate-200 bg-slate-50 p-2 text-xs text-slate-700">
-            创建 1 个 purchase_unit（Store A，$80）→ Authorize → 两次 Capture（$50 + $30）。
-            观察：capture response 中 shipping 地址是否固定为 Store A，能否在 capture 时改变？
+            创建 1 个 purchase_unit（Store A，$80）→ Authorize → 两次 Capture（$50 + $30）→ GET Order。
+            观察：GET Order response 中 purchase_units[0].shipping 地址是否固定为 Store A。
             <br /><strong>预期：❌ 地址固定在 Order 创建时的 Store A，capture 阶段无法更改。</strong>
           </div>
 
@@ -277,23 +304,29 @@ export function ResearchMultiAddr() {
             result={aSteps.authorize}
             onExecute={aAuthorize} disabled={aSteps.approve.status !== 'success'} />
 
-          <StepCard number={4} title="Capture 1 ($50) — Store A 地址固定"
+          <StepCard number={4} title="Capture 1 ($50)"
             badge={{ label: 'Partial Capture', variant: 'amber' }}
-            description="amount=50.00。观察 response 中 shipping 字段是否固定。"
+            description="amount=50.00。capture response 只含 id/status/links，无 shipping 信息。"
             requestUrl={`POST https://api-m.sandbox.paypal.com/v2/payments/authorizations/${aAuthId ?? '{authId}'}/capture`}
             requestBody={{ amount: { currency_code: 'USD', value: '50.00' } }}
             result={aSteps.capture1} onExecute={aCapture1}
             disabled={aSteps.authorize.status !== 'success'} />
 
-          <StepCard number={5} title="Capture 2 ($30) — 仍是 Store A 地址"
+          <StepCard number={5} title="Capture 2 ($30)"
             badge={{ label: 'Partial Capture', variant: 'amber' }}
-            description="amount=30.00。地址依然是 Store A，无法在 capture 阶段指定不同地址。"
+            description="amount=30.00。同上，response 无 shipping 信息。"
             requestUrl={`POST https://api-m.sandbox.paypal.com/v2/payments/authorizations/${aAuthId ?? '{authId}'}/capture`}
             requestBody={{ amount: { currency_code: 'USD', value: '30.00' } }}
             result={aSteps.capture2} onExecute={aCapture2}
             disabled={aSteps.capture1.status !== 'success'} />
 
-          {aSteps.capture2.status === 'success' && (
+          <StepCard number={6} title="View Order Details — 验证 shipping 地址"
+            description="GET Order — 在 purchase_units[0].shipping 中查看实际地址，确认两次 capture 均绑定 Store A。"
+            requestUrl={`GET https://api-m.sandbox.paypal.com/v2/checkout/orders/${aOrderId ?? '{orderId}'}`}
+            result={aSteps.details} onExecute={aDetails}
+            disabled={aSteps.capture2.status !== 'success'} />
+
+          {aSteps.details.status === 'success' && (
             <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-xs text-red-800">
               ❌ <strong>结论：</strong>单 purchase_unit 下，多次 capture 的 shipping 地址均固定为 Order 创建时的 Store A 地址。capture API 不接受 shipping 参数。
             </div>
@@ -304,8 +337,8 @@ export function ResearchMultiAddr() {
       {tab === 'B' && (
         <div className="space-y-4">
           <div className="rounded border border-slate-200 bg-slate-50 p-2 text-xs text-slate-700">
-            创建 2 个 purchase_unit（PU1=Store A $50，PU2=Store B $50）→ Authorize → 各自 Capture。
-            每个 PU 有独立的 authorizationId 和独立的 shipping 地址。
+            创建 2 个 purchase_unit（PU1=Store A $50，PU2=Store B $50）→ Authorize → 各自 Capture → GET Order。
+            每个 PU 有独立的 authorizationId 和独立的 shipping 地址，GET Order 可验证。
             <br /><strong>预期：✅ 可以在不同地点提货——但需要在 Order 创建时提前指定，不是在 capture 时指定。</strong>
           </div>
 
@@ -357,7 +390,13 @@ export function ResearchMultiAddr() {
             result={bSteps.captureB} onExecute={bCaptureB}
             disabled={bSteps.authorize.status !== 'success'} />
 
-          {bSteps.captureB.status === 'success' && (
+          <StepCard number={6} title="View Order Details — 验证两个 PU 的 shipping 地址"
+            description="GET Order — 在 purchase_units[].shipping 中确认 Store A / Store B 各自独立的地址。"
+            requestUrl={`GET https://api-m.sandbox.paypal.com/v2/checkout/orders/${bOrderId ?? '{orderId}'}`}
+            result={bSteps.details} onExecute={bDetails}
+            disabled={bSteps.captureB.status !== 'success'} />
+
+          {bSteps.details.status === 'success' && (
             <div className="rounded-lg border border-green-200 bg-green-50 p-3 text-xs text-green-800">
               ✅ <strong>结论：</strong>通过多 purchase_unit（每个 PU 在创建时指定不同 store 地址），可以实现"不同门店分别提货"。但地址必须在 Order 创建阶段确定，capture 阶段只是触发扣款，不能再改地址。
             </div>
