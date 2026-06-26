@@ -25,6 +25,32 @@ const CREATE_REQUEST = {
   pickupCode: 'PICK789',
 }
 
+// Raw PayPal API payload sent to POST /v2/checkout/orders
+const PAYPAL_CREATE_PAYLOAD = {
+  intent: 'AUTHORIZE',
+  purchase_units: [
+    {
+      amount: { currency_code: 'USD', value: '75.00' },
+      shipping: {
+        type: 'PICKUP_IN_STORE',
+        name: { full_name: 'Downtown Store #123' },
+        address: STORE_ADDRESS,
+      },
+      custom_id: 'PICKUP-PICK789',
+      description: 'Pickup at Downtown Store #123',
+    },
+  ],
+  payment_source: {
+    paypal: {
+      experience_context: {
+        shipping_preference: 'SET_PROVIDED_ADDRESS',
+        return_url: 'https://example.com/return',
+        cancel_url: 'https://example.com/cancel',
+      },
+    },
+  },
+}
+
 type StepId = 'create' | 'approve' | 'authorize' | 'capture' | 'details'
 type Steps = Record<StepId, StepResult>
 
@@ -118,8 +144,8 @@ export function StandardFlow() {
       <StepCard
         number={1}
         title="Create BOPIS Order"
-        description="POST /api/checkout/bopis/orders/create — 创建 intent=AUTHORIZE 订单，shipping.type=PICKUP_IN_STORE，资金冻结不扣款。"
-        requestBody={CREATE_REQUEST}
+        description="POST /v2/checkout/orders — 创建 intent=AUTHORIZE 订单，shipping.type=PICKUP_IN_STORE，资金冻结不扣款。"
+        requestBody={PAYPAL_CREATE_PAYLOAD}
         result={steps.create}
         onExecute={handleCreate}
       />
@@ -131,10 +157,10 @@ export function StandardFlow() {
         result={steps.approve}
         disabled={steps.create.status !== 'success'}
       >
-        {steps.create.status === 'success' && clientToken && (
+        {steps.create.status === 'success' && clientToken && orderId && (
           <PayPalButton
             clientToken={clientToken}
-            onCreateOrder={async () => ({ orderId: orderId! })}
+            orderId={orderId}
             onApprove={async (data) => {
               setOrderId(data.orderId)
               set('approve', { status: 'success', response: { orderId: data.orderId, status: 'APPROVED' } })

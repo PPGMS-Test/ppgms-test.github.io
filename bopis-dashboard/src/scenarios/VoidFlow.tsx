@@ -24,6 +24,32 @@ const CREATE_REQUEST = {
   pickupCode: 'VOID456',
 }
 
+// Raw PayPal API payload sent to POST /v2/checkout/orders
+const PAYPAL_CREATE_PAYLOAD = {
+  intent: 'AUTHORIZE',
+  purchase_units: [
+    {
+      amount: { currency_code: 'USD', value: '50.00' },
+      shipping: {
+        type: 'PICKUP_IN_STORE',
+        name: { full_name: 'Mountain View Store #789' },
+        address: STORE_ADDRESS,
+      },
+      custom_id: 'PICKUP-VOID456',
+      description: 'Pickup at Mountain View Store #789',
+    },
+  ],
+  payment_source: {
+    paypal: {
+      experience_context: {
+        shipping_preference: 'SET_PROVIDED_ADDRESS',
+        return_url: 'https://example.com/return',
+        cancel_url: 'https://example.com/cancel',
+      },
+    },
+  },
+}
+
 type StepId = 'create' | 'approve' | 'authorize' | 'void'
 type Steps = Record<StepId, StepResult>
 
@@ -94,16 +120,16 @@ export function VoidFlow() {
       </div>
 
       <StepCard number={1} title="Create BOPIS Order"
-        description="POST /api/checkout/bopis/orders/create"
-        requestBody={CREATE_REQUEST} result={steps.create} onExecute={handleCreate} />
+        description="POST /v2/checkout/orders — 创建 intent=AUTHORIZE 订单，shipping.type=PICKUP_IN_STORE。"
+        requestBody={PAYPAL_CREATE_PAYLOAD} result={steps.create} onExecute={handleCreate} />
 
       <StepCard number={2} title="Buyer Approval"
         description="买家 sandbox 批准——模拟已下单但尚未来取货。"
         result={steps.approve} disabled={steps.create.status !== 'success'}>
-        {steps.create.status === 'success' && clientToken && (
+        {steps.create.status === 'success' && clientToken && orderId && (
           <PayPalButton
             clientToken={clientToken}
-            onCreateOrder={async () => ({ orderId: orderId! })}
+            orderId={orderId}
             onApprove={async (d) => {
               setOrderId(d.orderId)
               set('approve', { status: 'success', response: { orderId: d.orderId } })
@@ -115,13 +141,13 @@ export function VoidFlow() {
       </StepCard>
 
       <StepCard number={3} title="Authorize Order"
-        description="POST /api/checkout/orders/{orderId}/authorize — 资金冻结，等待提货。"
-        requestBody={{ orderId }} result={steps.authorize}
+        description="POST /v2/checkout/orders/{orderId}/authorize — 资金冻结，等待提货，body 为空。"
+        requestBody={{}} result={steps.authorize}
         onExecute={handleAuthorize} disabled={steps.approve.status !== 'success'} />
 
       <StepCard number={4} title="Void Authorization (超时弃单)"
-        description="POST /api/payments/authorizations/{authId}/void — 买家未在规定时间内提货，系统释放冻结资金。返回 204 No Content。"
-        requestBody={{ authorizationId: authId }}
+        description="POST /v2/payments/authorizations/{authId}/void — 买家未在规定时间内提货，系统释放冻结资金。body 为空，返回 204。"
+        requestBody={{}}
         result={steps.void} onExecute={handleVoid}
         disabled={steps.authorize.status !== 'success'} />
 

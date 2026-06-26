@@ -25,6 +25,32 @@ const CREATE_REQUEST = {
   pickupCode: 'PART123',
 }
 
+// Raw PayPal API payload sent to POST /v2/checkout/orders
+const PAYPAL_CREATE_PAYLOAD = {
+  intent: 'AUTHORIZE',
+  purchase_units: [
+    {
+      amount: { currency_code: 'USD', value: '100.00' },
+      shipping: {
+        type: 'PICKUP_IN_STORE',
+        name: { full_name: 'Palo Alto Store #456' },
+        address: STORE_ADDRESS,
+      },
+      custom_id: 'PICKUP-PART123',
+      description: 'Pickup at Palo Alto Store #456',
+    },
+  ],
+  payment_source: {
+    paypal: {
+      experience_context: {
+        shipping_preference: 'SET_PROVIDED_ADDRESS',
+        return_url: 'https://example.com/return',
+        cancel_url: 'https://example.com/cancel',
+      },
+    },
+  },
+}
+
 type StepId = 'create' | 'approve' | 'authorize' | 'capture' | 'void'
 type Steps = Record<StepId, StepResult>
 
@@ -119,8 +145,8 @@ export function PartialCapture() {
       <StepCard
         number={1}
         title="Create BOPIS Order ($100)"
-        description="POST /api/checkout/bopis/orders/create — 授权 $100，模拟完整订单金额。"
-        requestBody={CREATE_REQUEST}
+        description="POST /v2/checkout/orders — 授权 $100，模拟完整订单金额。"
+        requestBody={PAYPAL_CREATE_PAYLOAD}
         result={steps.create}
         onExecute={handleCreate}
       />
@@ -132,10 +158,10 @@ export function PartialCapture() {
         result={steps.approve}
         disabled={steps.create.status !== 'success'}
       >
-        {steps.create.status === 'success' && clientToken && (
+        {steps.create.status === 'success' && clientToken && orderId && (
           <PayPalButton
             clientToken={clientToken}
-            onCreateOrder={async () => ({ orderId: orderId! })}
+            orderId={orderId}
             onApprove={async (data) => {
               setOrderId(data.orderId)
               set('approve', { status: 'success', response: { orderId: data.orderId, status: 'APPROVED' } })
@@ -149,8 +175,8 @@ export function PartialCapture() {
       <StepCard
         number={3}
         title="Authorize Order"
-        description="POST /api/checkout/orders/{orderId}/authorize — 冻结 $100。"
-        requestBody={{ orderId }}
+        description="POST /v2/checkout/orders/{orderId}/authorize — 冻结 $100，body 为空。"
+        requestBody={{}}
         result={steps.authorize}
         onExecute={handleAuthorize}
         disabled={steps.approve.status !== 'success'}
@@ -159,8 +185,8 @@ export function PartialCapture() {
       <StepCard
         number={4}
         title="Partial Capture ($60)"
-        description="POST /api/payments/authorizations/{authId}/capture — 只提货 $60，body 中指定 amount=60.00。"
-        requestBody={{ authorizationId: authId, amount: '60.00' }}
+        description="POST /v2/payments/authorizations/{authId}/capture — 只提货 $60，body 中指定 amount。"
+        requestBody={{ amount: { currency_code: 'USD', value: '60.00' } }}
         result={steps.capture}
         onExecute={handlePartialCapture}
         disabled={steps.authorize.status !== 'success'}
@@ -169,8 +195,8 @@ export function PartialCapture() {
       <StepCard
         number={5}
         title="Void Remainder ($40)"
-        description="POST /api/payments/authorizations/{authId}/void — 释放剩余 $40，不再扣款。"
-        requestBody={{ authorizationId: authId }}
+        description="POST /v2/payments/authorizations/{authId}/void — 释放剩余 $40，body 为空。"
+        requestBody={{}}
         result={steps.void}
         onExecute={handleVoid}
         disabled={steps.capture.status !== 'success'}

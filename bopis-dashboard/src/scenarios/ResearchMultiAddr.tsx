@@ -40,6 +40,43 @@ const EXP_B_REQUEST = {
   ],
 }
 
+const EXPERIENCE_CONTEXT = {
+  shipping_preference: 'SET_PROVIDED_ADDRESS',
+  return_url: 'https://example.com/return',
+  cancel_url: 'https://example.com/cancel',
+}
+
+// Raw PayPal API payloads
+const PAYPAL_CREATE_A = {
+  intent: 'AUTHORIZE',
+  purchase_units: [
+    {
+      amount: { currency_code: 'USD', value: '80.00' },
+      shipping: { type: 'PICKUP_IN_STORE', name: { full_name: 'Store A — San Jose' }, address: STORE_A },
+      custom_id: 'PICKUP-EXP-A',
+      description: 'Pickup at Store A — San Jose',
+    },
+  ],
+  payment_source: { paypal: { experience_context: EXPERIENCE_CONTEXT } },
+}
+
+const PAYPAL_CREATE_B = {
+  intent: 'AUTHORIZE',
+  purchase_units: [
+    {
+      reference_id: 'store-a',
+      amount: { currency_code: 'USD', value: '50.00' },
+      shipping: { type: 'PICKUP_IN_STORE', name: { full_name: 'Store A — San Jose' }, address: STORE_A },
+    },
+    {
+      reference_id: 'store-b',
+      amount: { currency_code: 'USD', value: '50.00' },
+      shipping: { type: 'PICKUP_IN_STORE', name: { full_name: 'Store B — Sunnyvale' }, address: STORE_B },
+    },
+  ],
+  payment_source: { paypal: { experience_context: EXPERIENCE_CONTEXT } },
+}
+
 type ExpAStep = 'create' | 'approve' | 'authorize' | 'capture1' | 'capture2'
 type ExpBStep = 'create' | 'approve' | 'authorize' | 'captureA' | 'captureB'
 
@@ -214,16 +251,16 @@ export function ResearchMultiAddr() {
           </div>
 
           <StepCard number={1} title="Create Order (Single PU, Store A, $80)"
-            description="POST /api/checkout/bopis/orders/create"
-            requestBody={EXP_A_REQUEST} result={aSteps.create} onExecute={aCreate} />
+            description="POST /v2/checkout/orders — 单 purchase_unit，Store A 地址固定在创建时。"
+            requestBody={PAYPAL_CREATE_A} result={aSteps.create} onExecute={aCreate} />
 
           <StepCard number={2} title="Buyer Approval"
             description="PayPal sandbox 批准。"
             result={aSteps.approve} disabled={aSteps.create.status !== 'success'}>
-            {aSteps.create.status === 'success' && aClientToken && (
+            {aSteps.create.status === 'success' && aClientToken && aOrderId && (
               <PayPalButton
                 clientToken={aClientToken}
-                onCreateOrder={async () => ({ orderId: aOrderId! })}
+                orderId={aOrderId}
                 onApprove={async (d) => {
                   setAOrderId(d.orderId)
                   setA('approve', { status: 'success', response: { orderId: d.orderId } })
@@ -235,19 +272,19 @@ export function ResearchMultiAddr() {
           </StepCard>
 
           <StepCard number={3} title="Authorize Order"
-            description="POST /api/checkout/orders/{orderId}/authorize"
-            requestBody={{ orderId: aOrderId }} result={aSteps.authorize}
+            description="POST /v2/checkout/orders/{orderId}/authorize — body 为空。"
+            requestBody={{}} result={aSteps.authorize}
             onExecute={aAuthorize} disabled={aSteps.approve.status !== 'success'} />
 
           <StepCard number={4} title="Capture 1 ($50) — Store A 地址固定"
-            description="POST /api/payments/authorizations/{authId}/capture，amount=50.00。观察 response 中 shipping 字段。"
-            requestBody={{ authorizationId: aAuthId, amount: '50.00' }}
+            description="POST /v2/payments/authorizations/{authId}/capture，amount=50.00。观察 response 中 shipping 字段。"
+            requestBody={{ amount: { currency_code: 'USD', value: '50.00' } }}
             result={aSteps.capture1} onExecute={aCapture1}
             disabled={aSteps.authorize.status !== 'success'} />
 
           <StepCard number={5} title="Capture 2 ($30) — 仍是 Store A 地址"
-            description="同一 authId 再次 capture $30。地址依然是 Store A，无法在 capture 阶段指定不同地址。"
-            requestBody={{ authorizationId: aAuthId, amount: '30.00' }}
+            description="POST /v2/payments/authorizations/{authId}/capture，amount=30.00。地址依然是 Store A，无法在 capture 阶段指定不同地址。"
+            requestBody={{ amount: { currency_code: 'USD', value: '30.00' } }}
             result={aSteps.capture2} onExecute={aCapture2}
             disabled={aSteps.capture1.status !== 'success'} />
 
@@ -268,16 +305,16 @@ export function ResearchMultiAddr() {
           </div>
 
           <StepCard number={1} title="Create Multi-Unit Order (Store A + Store B)"
-            description="POST /api/checkout/bopis/orders/create-multi — 2 个 purchase_unit，各自不同地址。"
-            requestBody={EXP_B_REQUEST} result={bSteps.create} onExecute={bCreate} />
+            description="POST /v2/checkout/orders — 2 个 purchase_unit，各自不同地址、各自独立 authorizationId。"
+            requestBody={PAYPAL_CREATE_B} result={bSteps.create} onExecute={bCreate} />
 
           <StepCard number={2} title="Buyer Approval"
             description="PayPal sandbox 批准整个订单（含两个 PU）。"
             result={bSteps.approve} disabled={bSteps.create.status !== 'success'}>
-            {bSteps.create.status === 'success' && bClientToken && (
+            {bSteps.create.status === 'success' && bClientToken && bOrderId && (
               <PayPalButton
                 clientToken={bClientToken}
-                onCreateOrder={async () => ({ orderId: bOrderId! })}
+                orderId={bOrderId}
                 onApprove={async (d) => {
                   setBOrderId(d.orderId)
                   setB('approve', { status: 'success', response: { orderId: d.orderId } })
@@ -289,8 +326,8 @@ export function ResearchMultiAddr() {
           </StepCard>
 
           <StepCard number={3} title="Authorize Order → 得到两个 authId"
-            description="POST /api/checkout/orders/{orderId}/authorize — 每个 PU 各自生成一个 authorizationId。"
-            requestBody={{ orderId: bOrderId }} result={bSteps.authorize}
+            description="POST /v2/checkout/orders/{orderId}/authorize — 每个 PU 各自生成一个 authorizationId，body 为空。"
+            requestBody={{}} result={bSteps.authorize}
             onExecute={bAuthorize} disabled={bSteps.approve.status !== 'success'} />
 
           {bAuthIdA && bAuthIdB && (
@@ -301,14 +338,14 @@ export function ResearchMultiAddr() {
           )}
 
           <StepCard number={4} title="Capture authId_A (Store A 提货)"
-            description="POST /api/payments/authorizations/{authIdA}/capture — Store A 提货完成，扣 $50。"
-            requestBody={{ authorizationId: bAuthIdA, store: 'Store A — San Jose' }}
+            description="POST /v2/payments/authorizations/{authIdA}/capture — Store A 提货完成，扣 $50，body 为空（full capture）。"
+            requestBody={{}}
             result={bSteps.captureA} onExecute={bCaptureA}
             disabled={bSteps.authorize.status !== 'success'} />
 
           <StepCard number={5} title="Capture authId_B (Store B 提货)"
-            description="POST /api/payments/authorizations/{authIdB}/capture — Store B 提货完成，扣 $50。"
-            requestBody={{ authorizationId: bAuthIdB, store: 'Store B — Sunnyvale' }}
+            description="POST /v2/payments/authorizations/{authIdB}/capture — Store B 提货完成，扣 $50，body 为空（full capture）。"
+            requestBody={{}}
             result={bSteps.captureB} onExecute={bCaptureB}
             disabled={bSteps.authorize.status !== 'success'} />
 
