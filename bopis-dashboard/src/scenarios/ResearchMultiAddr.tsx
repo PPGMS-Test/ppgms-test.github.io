@@ -327,8 +327,10 @@ export function ResearchMultiAddr() {
             disabled={aSteps.capture2.status !== 'success'} />
 
           {aSteps.details.status === 'success' && (
-            <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-xs text-red-800">
-              ❌ <strong>结论：</strong>单 purchase_unit 下，多次 capture 的 shipping 地址均固定为 Order 创建时的 Store A 地址。capture API 不接受 shipping 参数。
+            <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900 space-y-1">
+              <p className="font-semibold">📌 观察要点</p>
+              <p>① <code className="font-mono">purchaseUnits[0].shipping.address</code> — 两次 capture 均绑定同一个 PU，地址固定为创建时的 Store A，capture 阶段无法修改。</p>
+              <p>② <code className="font-mono">payments.captures[*].finalCapture</code> — 两次 capture 的响应里都是 <code className="font-mono">true</code>，包括第一次只扣了 $50 的时候。生产环境做多次 partial capture 时，建议只在最后一次 request body 里显式传 <code className="font-mono">final_capture: true</code>，前几次不传。</p>
             </div>
           )}
         </div>
