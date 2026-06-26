@@ -8,6 +8,16 @@ const __dirname = fileURLToPath(new URL('.', import.meta.url))
 export default defineConfig({
   plugins: [react()],
   resolve: { alias: { '@': resolve(__dirname, 'src') } },
-  server: { port: 5174, open: false, host: true },
+  server: {
+    port: 5174,
+    open: false,
+    host: true,
+    proxy: {
+      '/api': {
+        target: 'http://localhost:3000',
+        changeOrigin: true,
+      },
+    },
+  },
   build: { outDir: 'dist', emptyOutDir: true },
 })

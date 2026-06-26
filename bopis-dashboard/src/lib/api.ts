@@ -1,6 +1,6 @@
 import type { StoreAddress } from '@/types'
 
-const BASE = 'https://ppgms-test-github-io.pages.dev'
+const BASE = import.meta.env.DEV ? '' : 'https://ppgms-test-github-io.pages.dev'
 
 async function req(
   path: string,
@@ -60,7 +60,9 @@ export async function getOrder(orderId: string) {
 }
 
 export async function getSandboxClientToken(): Promise<string> {
-  const res = await fetch(`${BASE}/api/auth/sandbox-client-token`)
+  const res = await fetch(`${BASE}/api/auth/sandbox-client-token`, {
+    headers: { 'Content-Type': 'application/json' },
+  })
   const data = (await res.json()) as { accessToken?: string }
   if (!data.accessToken) throw new Error('Failed to get client token')
   return data.accessToken
