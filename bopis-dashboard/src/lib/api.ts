@@ -1,6 +1,6 @@
 import type { StoreAddress } from '@/types'
 
-const BASE = import.meta.env.DEV ? '' : 'https://ppgms-test-github-io.pages.dev'
+const BASE = 'https://ppgms-test-github-io.pages.dev'
 
 async function req(
   path: string,
