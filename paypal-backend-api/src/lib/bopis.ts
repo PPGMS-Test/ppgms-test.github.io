@@ -118,7 +118,7 @@ export async function authorizeOrder(orderId: string): Promise<PayPalRestRespons
     `${BASE}/v2/checkout/orders/${encodeURIComponent(orderId)}/authorize`,
     {
       method: 'POST',
-      headers: { Authorization: `Bearer ${token}` },
+      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
     },
   )
   const data = await res.json().catch(() => ({}))
