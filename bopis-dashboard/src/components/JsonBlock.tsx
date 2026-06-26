@@ -31,15 +31,17 @@ export function JsonBlock({ label, data, defaultOpen = false }: Props) {
         {label}
       </button>
       {open && (
-        <div className="relative mt-1">
-          <button
-            onClick={handleCopy}
-            title="复制 JSON"
-            className="absolute top-2 right-2 p-1 rounded text-slate-400 hover:text-slate-100 hover:bg-slate-700 transition-colors z-10"
-          >
-            {copied ? <Check className="h-3.5 w-3.5 text-green-400" /> : <Copy className="h-3.5 w-3.5" />}
-          </button>
-          <pre className="p-3 bg-slate-900 text-slate-100 rounded-md overflow-auto min-h-[4rem] h-64 resize-y text-[11px] leading-relaxed">
+        <div className="mt-1">
+          <div className="flex justify-end bg-slate-900 rounded-t-md px-2 py-1 border-b border-slate-700">
+            <button
+              onClick={handleCopy}
+              title="复制 JSON"
+              className="p-1 rounded text-slate-400 hover:text-slate-100 hover:bg-slate-700 transition-colors"
+            >
+              {copied ? <Check className="h-3.5 w-3.5 text-green-400" /> : <Copy className="h-3.5 w-3.5" />}
+            </button>
+          </div>
+          <pre className="p-3 bg-slate-900 text-slate-100 rounded-b-md overflow-auto min-h-[4rem] h-64 resize-y text-[11px] leading-relaxed">
             {json}
           </pre>
         </div>
