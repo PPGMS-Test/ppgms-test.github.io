@@ -174,8 +174,8 @@ export function StandardFlow() {
       <StepCard
         number={3}
         title="Authorize Order"
-        description="POST /api/checkout/orders/{orderId}/authorize — 服务端授权，资金进入冻结状态，返回 authorizationId。"
-        requestBody={{ orderId }}
+        description="服务端授权，资金进入冻结状态，返回 authorizationId。"
+        requestUrl={`POST https://api-m.sandbox.paypal.com/v2/checkout/orders/${orderId ?? '{orderId}'}/authorize`}
         result={steps.authorize}
         onExecute={handleAuthorize}
         disabled={steps.approve.status !== 'success'}
@@ -184,8 +184,8 @@ export function StandardFlow() {
       <StepCard
         number={4}
         title="Capture at Pickup"
-        description="POST /api/payments/authorizations/{authId}/capture — 买家到店验证后捕获，资金正式扣款。"
-        requestBody={{ authorizationId: authId }}
+        description="买家到店验证后捕获，资金正式扣款（full capture，body 为空）。"
+        requestUrl={`POST https://api-m.sandbox.paypal.com/v2/payments/authorizations/${authId ?? '{authId}'}/capture`}
         result={steps.capture}
         onExecute={handleCapture}
         disabled={steps.authorize.status !== 'success'}
@@ -194,8 +194,8 @@ export function StandardFlow() {
       <StepCard
         number={5}
         title="View Order Details"
-        description="GET /api/checkout/orders/{orderId} — 查看完整订单状态，确认所有字段正确。"
-        requestBody={{ orderId }}
+        description="查看完整订单状态，确认所有字段正确。"
+        requestUrl={`GET https://api-m.sandbox.paypal.com/v2/checkout/orders/${orderId ?? '{orderId}'}`}
         result={steps.details}
         onExecute={handleDetails}
         disabled={steps.capture.status !== 'success'}

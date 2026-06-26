@@ -175,8 +175,8 @@ export function PartialCapture() {
       <StepCard
         number={3}
         title="Authorize Order"
-        description="POST /v2/checkout/orders/{orderId}/authorize — 冻结 $100，body 为空。"
-        requestBody={{}}
+        description="冻结 $100，body 为空。"
+        requestUrl={`POST https://api-m.sandbox.paypal.com/v2/checkout/orders/${orderId ?? '{orderId}'}/authorize`}
         result={steps.authorize}
         onExecute={handleAuthorize}
         disabled={steps.approve.status !== 'success'}
@@ -185,7 +185,8 @@ export function PartialCapture() {
       <StepCard
         number={4}
         title="Partial Capture ($60)"
-        description="POST /v2/payments/authorizations/{authId}/capture — 只提货 $60，body 中指定 amount。"
+        description="只提货 $60，body 中指定 amount。"
+        requestUrl={`POST https://api-m.sandbox.paypal.com/v2/payments/authorizations/${authId ?? '{authId}'}/capture`}
         requestBody={{ amount: { currency_code: 'USD', value: '60.00' } }}
         result={steps.capture}
         onExecute={handlePartialCapture}
@@ -195,8 +196,8 @@ export function PartialCapture() {
       <StepCard
         number={5}
         title="Void Remainder ($40)"
-        description="POST /v2/payments/authorizations/{authId}/void — 释放剩余 $40，body 为空。"
-        requestBody={{}}
+        description="释放剩余 $40，body 为空。"
+        requestUrl={`POST https://api-m.sandbox.paypal.com/v2/payments/authorizations/${authId ?? '{authId}'}/void`}
         result={steps.void}
         onExecute={handleVoid}
         disabled={steps.capture.status !== 'success'}

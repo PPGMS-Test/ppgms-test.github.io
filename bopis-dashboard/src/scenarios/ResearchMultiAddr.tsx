@@ -272,18 +272,21 @@ export function ResearchMultiAddr() {
           </StepCard>
 
           <StepCard number={3} title="Authorize Order"
-            description="POST /v2/checkout/orders/{orderId}/authorize — body 为空。"
-            requestBody={{}} result={aSteps.authorize}
+            description="body 为空。"
+            requestUrl={`POST https://api-m.sandbox.paypal.com/v2/checkout/orders/${aOrderId ?? '{orderId}'}/authorize`}
+            result={aSteps.authorize}
             onExecute={aAuthorize} disabled={aSteps.approve.status !== 'success'} />
 
           <StepCard number={4} title="Capture 1 ($50) — Store A 地址固定"
-            description="POST /v2/payments/authorizations/{authId}/capture，amount=50.00。观察 response 中 shipping 字段。"
+            description="amount=50.00。观察 response 中 shipping 字段是否固定。"
+            requestUrl={`POST https://api-m.sandbox.paypal.com/v2/payments/authorizations/${aAuthId ?? '{authId}'}/capture`}
             requestBody={{ amount: { currency_code: 'USD', value: '50.00' } }}
             result={aSteps.capture1} onExecute={aCapture1}
             disabled={aSteps.authorize.status !== 'success'} />
 
           <StepCard number={5} title="Capture 2 ($30) — 仍是 Store A 地址"
-            description="POST /v2/payments/authorizations/{authId}/capture，amount=30.00。地址依然是 Store A，无法在 capture 阶段指定不同地址。"
+            description="amount=30.00。地址依然是 Store A，无法在 capture 阶段指定不同地址。"
+            requestUrl={`POST https://api-m.sandbox.paypal.com/v2/payments/authorizations/${aAuthId ?? '{authId}'}/capture`}
             requestBody={{ amount: { currency_code: 'USD', value: '30.00' } }}
             result={aSteps.capture2} onExecute={aCapture2}
             disabled={aSteps.capture1.status !== 'success'} />
@@ -326,8 +329,9 @@ export function ResearchMultiAddr() {
           </StepCard>
 
           <StepCard number={3} title="Authorize Order → 得到两个 authId"
-            description="POST /v2/checkout/orders/{orderId}/authorize — 每个 PU 各自生成一个 authorizationId，body 为空。"
-            requestBody={{}} result={bSteps.authorize}
+            description="每个 PU 各自生成一个 authorizationId，body 为空。"
+            requestUrl={`POST https://api-m.sandbox.paypal.com/v2/checkout/orders/${bOrderId ?? '{orderId}'}/authorize`}
+            result={bSteps.authorize}
             onExecute={bAuthorize} disabled={bSteps.approve.status !== 'success'} />
 
           {bAuthIdA && bAuthIdB && (
@@ -338,14 +342,14 @@ export function ResearchMultiAddr() {
           )}
 
           <StepCard number={4} title="Capture authId_A (Store A 提货)"
-            description="POST /v2/payments/authorizations/{authIdA}/capture — Store A 提货完成，扣 $50，body 为空（full capture）。"
-            requestBody={{}}
+            description="Store A 提货完成，扣 $50，body 为空（full capture）。"
+            requestUrl={`POST https://api-m.sandbox.paypal.com/v2/payments/authorizations/${bAuthIdA ?? '{authIdA}'}/capture`}
             result={bSteps.captureA} onExecute={bCaptureA}
             disabled={bSteps.authorize.status !== 'success'} />
 
           <StepCard number={5} title="Capture authId_B (Store B 提货)"
-            description="POST /v2/payments/authorizations/{authIdB}/capture — Store B 提货完成，扣 $50，body 为空（full capture）。"
-            requestBody={{}}
+            description="Store B 提货完成，扣 $50，body 为空（full capture）。"
+            requestUrl={`POST https://api-m.sandbox.paypal.com/v2/payments/authorizations/${bAuthIdB ?? '{authIdB}'}/capture`}
             result={bSteps.captureB} onExecute={bCaptureB}
             disabled={bSteps.authorize.status !== 'success'} />
 

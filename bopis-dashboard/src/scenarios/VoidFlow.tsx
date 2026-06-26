@@ -141,13 +141,14 @@ export function VoidFlow() {
       </StepCard>
 
       <StepCard number={3} title="Authorize Order"
-        description="POST /v2/checkout/orders/{orderId}/authorize — 资金冻结，等待提货，body 为空。"
-        requestBody={{}} result={steps.authorize}
+        description="资金冻结，等待提货，body 为空。"
+        requestUrl={`POST https://api-m.sandbox.paypal.com/v2/checkout/orders/${orderId ?? '{orderId}'}/authorize`}
+        result={steps.authorize}
         onExecute={handleAuthorize} disabled={steps.approve.status !== 'success'} />
 
       <StepCard number={4} title="Void Authorization (超时弃单)"
-        description="POST /v2/payments/authorizations/{authId}/void — 买家未在规定时间内提货，系统释放冻结资金。body 为空，返回 204。"
-        requestBody={{}}
+        description="买家未在规定时间内提货，系统释放冻结资金。body 为空，PayPal 返回 204。"
+        requestUrl={`POST https://api-m.sandbox.paypal.com/v2/payments/authorizations/${authId ?? '{authId}'}/void`}
         result={steps.void} onExecute={handleVoid}
         disabled={steps.authorize.status !== 'success'} />
 

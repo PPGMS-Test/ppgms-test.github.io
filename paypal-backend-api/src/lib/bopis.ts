@@ -118,7 +118,7 @@ export async function authorizeOrder(orderId: string): Promise<PayPalRestRespons
     `${BASE}/v2/checkout/orders/${encodeURIComponent(orderId)}/authorize`,
     {
       method: 'POST',
-      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+      headers: { Authorization: `Bearer ${token}` },
     },
   )
   const data = await res.json().catch(() => ({}))
@@ -150,10 +150,13 @@ export async function voidAuthorization(authId: string): Promise<PayPalRestRespo
     `${BASE}/v2/payments/authorizations/${encodeURIComponent(authId)}/void`,
     {
       method: 'POST',
-      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+      headers: { Authorization: `Bearer ${token}` },
     },
   )
-  if (res.status === 204) return { data: { status: 'VOIDED' }, status: 204 }
-  const data = await res.json().catch(() => ({}))
+  // PayPal returns 204 No Content on success; remap to 200 so our backend
+  // can include a JSON body without violating HTTP 204 no-body rule.
+  if (res.status === 204) return { data: { status: 'VOIDED' }, status: 200 }
+  const text = await res.text()
+  const data = text ? JSON.parse(text) : {}
   return { data, status: res.status }
 }

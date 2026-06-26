@@ -12,7 +12,7 @@ export async function POST(
   try {
     const { data, status } = await authorizeOrder(orderId)
     return corsJson(data, status)
-  } catch {
-    return corsJson({ error: 'Failed to authorize order' }, 500)
+  } catch (e) {
+    return corsJson({ error: 'Failed to authorize order', detail: String(e) }, 500)
   }
 }

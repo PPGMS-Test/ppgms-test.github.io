@@ -7,6 +7,7 @@ interface Props {
   number: number
   title: string
   description: string
+  requestUrl?: string
   requestBody?: unknown
   result: StepResult
   onExecute?: () => Promise<void>
@@ -18,6 +19,7 @@ export function StepCard({
   number,
   title,
   description,
+  requestUrl,
   requestBody,
   result,
   onExecute,
@@ -45,8 +47,16 @@ export function StepCard({
 
       <p className="text-xs text-muted-foreground">{description}</p>
 
+      {requestUrl !== undefined && (
+        <div className="space-y-1">
+          <p className="text-xs font-medium text-muted-foreground">Request</p>
+          <code className="block text-xs font-mono bg-muted px-2 py-1.5 rounded break-all leading-relaxed">
+            {requestUrl}
+          </code>
+        </div>
+      )}
       {requestBody !== undefined && (
-        <JsonBlock label="Request Body" data={requestBody} defaultOpen={false} />
+        <JsonBlock label="Body" data={requestBody} defaultOpen={false} />
       )}
 
       {onExecute && (

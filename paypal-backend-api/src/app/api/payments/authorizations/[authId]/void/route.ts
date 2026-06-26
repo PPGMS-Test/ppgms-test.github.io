@@ -12,7 +12,7 @@ export async function POST(
   try {
     const { data, status } = await voidAuthorization(authId)
     return corsJson(data, status)
-  } catch {
-    return corsJson({ error: 'Failed to void authorization' }, 500)
+  } catch (e) {
+    return corsJson({ error: 'Failed to void authorization', detail: String(e) }, 500)
   }
 }
