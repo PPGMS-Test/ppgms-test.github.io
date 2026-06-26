@@ -16,5 +16,11 @@ paypal-mobile/andriod-test/build
 paypal-mobile/andriod-test/app/build
 
 pnpm-lock.yaml
+
+# superpowers
 .superpowers
 enhance-context-page
+docs/superpowers
+
+# macOS
+.DS_Store
