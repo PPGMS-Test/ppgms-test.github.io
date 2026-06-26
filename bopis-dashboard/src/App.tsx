@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import { ShoppingBag, Scissors, FlaskConical, Ban } from 'lucide-react'
+
+const TAB_STORAGE_KEY = 'bopis-dashboard-active-tab'
 import { StandardFlow } from '@/scenarios/StandardFlow'
 import { PartialCapture } from '@/scenarios/PartialCapture'
 import { ResearchMultiAddr } from '@/scenarios/ResearchMultiAddr'
@@ -15,7 +17,15 @@ const TABS = [
 type TabId = (typeof TABS)[number]['id']
 
 export default function App() {
-  const [active, setActive] = useState<TabId>('standard')
+  const [active, setActive] = useState<TabId>(() => {
+    const saved = localStorage.getItem(TAB_STORAGE_KEY)
+    return (TABS.some((t) => t.id === saved) ? saved : 'standard') as TabId
+  })
+
+  const switchTab = (id: TabId) => {
+    setActive(id)
+    localStorage.setItem(TAB_STORAGE_KEY, id)
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 py-8 px-4">
@@ -35,7 +45,7 @@ export default function App() {
           {TABS.map(({ id, label, icon: Icon }) => (
             <button
               key={id}
-              onClick={() => setActive(id)}
+              onClick={() => switchTab(id)}
               className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium border-b-2 whitespace-nowrap transition-colors ${
                 active === id
                   ? 'border-primary text-primary'

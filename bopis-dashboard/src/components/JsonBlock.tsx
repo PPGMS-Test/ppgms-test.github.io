@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { ChevronDown, ChevronRight } from 'lucide-react'
+import { ChevronDown, ChevronRight, Copy, Check } from 'lucide-react'
 
 interface Props {
   label: string
@@ -9,7 +9,17 @@ interface Props {
 
 export function JsonBlock({ label, data, defaultOpen = false }: Props) {
   const [open, setOpen] = useState(defaultOpen)
+  const [copied, setCopied] = useState(false)
   if (data === undefined) return null
+
+  const json = JSON.stringify(data, null, 2)
+
+  const handleCopy = async (e: React.MouseEvent) => {
+    e.stopPropagation()
+    await navigator.clipboard.writeText(json)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 1500)
+  }
 
   return (
     <div className="text-xs">
@@ -21,9 +31,18 @@ export function JsonBlock({ label, data, defaultOpen = false }: Props) {
         {label}
       </button>
       {open && (
-        <pre className="mt-1 p-3 bg-slate-900 text-slate-100 rounded-md overflow-auto min-h-[4rem] h-64 resize-y text-[11px] leading-relaxed">
-          {JSON.stringify(data, null, 2)}
-        </pre>
+        <div className="relative mt-1">
+          <button
+            onClick={handleCopy}
+            title="复制 JSON"
+            className="absolute top-2 right-2 p-1 rounded text-slate-400 hover:text-slate-100 hover:bg-slate-700 transition-colors z-10"
+          >
+            {copied ? <Check className="h-3.5 w-3.5 text-green-400" /> : <Copy className="h-3.5 w-3.5" />}
+          </button>
+          <pre className="p-3 bg-slate-900 text-slate-100 rounded-md overflow-auto min-h-[4rem] h-64 resize-y text-[11px] leading-relaxed">
+            {json}
+          </pre>
+        </div>
       )}
     </div>
   )
