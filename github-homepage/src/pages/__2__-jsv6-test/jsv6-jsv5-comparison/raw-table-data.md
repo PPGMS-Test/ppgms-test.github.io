@@ -12,8 +12,8 @@
 | ACDC 信用卡支付 | ✅ | ✅ |
 | Apple Pay | ✅ | ✅ |
 | Google Pay | ✅ | ✅ |
-| APM | 已发布5个 | ✅ |
-| Vault | ❌（Wallet无Returning UX） | ✅ |
+| APM | 已发布6个 | ✅ |
+| Vault / Fastlane | ✅（必须用 clientToken 初始化） | ✅ |
 
 ## B. 产品技术性能指标
 
@@ -44,13 +44,13 @@
 |--------------------------|-----------------------------------------|--------------|
 | PayPal Wallet            | ✅                                       | ✅            |
 | Pay Later                | ✅                                       | ✅            |
-| Pay Later Message        | ❌ <br><sub>不支持跨境消息 (cross-border-message)</sub> | ✅            |
+| Pay Later Message        | ✅ <br><sub>已支持跨境消息 (cross-border-messaging)</sub> | ✅            |
 | BCDC Standalone Button   | ❌ <br><sub>inline 模式下 auto expansion 有问题</sub> | ✅            |
 | ACDC 信用卡支付          | ✅                                       | ✅            |
 | Apple Pay                | ✅                                       | ✅            |
 | Google Pay               | ✅                                       | ✅            |
-| APM（本地支付方式）      | 已发布 5 个                              | ✅            |
-| Vault（Returning UX）    | ❌ <br><sub>Wallet 无 Returning 用户体验</sub> | ✅            |
+| APM（本地支付方式）      | 已发布 6 个                              | ✅            |
+| Vault / Fastlane         | ✅ <br><sub>必须使用 <code>clientToken</code> 初始化</sub> | ✅            |
 
 ## B. 产品技术性能指标
 
@@ -62,3 +62,17 @@
 | 代码实现             | <span style="color:#2e7d32; font-weight:bold">✅ 支持模块化与设计模式，加载近乎瞬时</span> | —                                      |
 | UI 兼容性            | <span style="color:#2e7d32; font-weight:bold">✅ 使用 Shadow DOM，对 iframe 更友好</span> | 无法嵌套 iframe                        |
 | 定制化               | <span style="color:#2e7d32; font-weight:bold">✅ 支持自定义按钮样式</span>      | 必须使用 PayPal 官方按钮               |
+
+---
+
+## C. 认证模型（v6 新变化）
+
+> v6 SDK 6.54.5 起，`paypal.createInstance()` 同时支持 `clientId` 和 `clientToken`，二者**互斥**（同时传入会抛 `must provide only clientToken or clientId`）。
+
+| 维度 | v6 — clientId 模式 | v6 — clientToken 模式 | v5 |
+|------|--------------------|------------------------|----|
+| 适用场景 | Wallet / ACDC / BCDC / Apple Pay / Google Pay / Pay Later / APM | **Vault、Fastlane 必须**；其它场景可选 | 所有场景 |
+| 凭证形态 | 直接传入字符串 `clientId` | 后端生成的短效 JWT | URL 参数 `client-id=xxx` |
+| 前端是否暴露 client-id | 是（与 v5 等价） | 否 | 是 |
+| 需要后端额外接口 | 否 | 是（`/api/auth/...-client-token`） | 否 |
+| 内部 auth 类型 | `MERCHANT_AUTH_TYPE.CLIENT_ID_ONLY` | `PAYPAL_CLIENT_TOKEN` / `BRAINTREE_CLIENT_TOKEN` | — |

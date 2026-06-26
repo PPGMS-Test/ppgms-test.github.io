@@ -38,7 +38,7 @@
       <!-- Stats -->
       <div class="stats">
         <div class="stat-card">
-          <div class="stat-number">8/9</div>
+          <div class="stat-number">9/9</div>
           <div class="stat-label">Core Features</div>
         </div>
         <div class="stat-card">
@@ -114,8 +114,8 @@
                 <td class="v5-cell"><span class="icon-check"><i class="fas fa-check-circle"></i> 支持</span></td>
               </tr>
               <tr>
-                <td class="feature-name">Vault（Returning UX）</td>
-                <td class="v6-cell"><span class="icon-cross"><i class="fas fa-times-circle"></i> Wallet 没有 returning UX</span></td>
+                <td class="feature-name">Vault / Fastlane</td>
+                <td class="v6-cell"><span class="icon-check"><i class="fas fa-check-circle"></i> 支持（必须用 <span class="code-badge">clientToken</span> 初始化）</span></td>
                 <td class="v5-cell"><span class="icon-check"><i class="fas fa-check-circle"></i> 支持</span></td>
               </tr>
             </tbody>
@@ -207,17 +207,17 @@
               <tr>
                 <td class="feature-name">初始化方式</td>
                 <td class="v5-cell">URL Query String 传参（client-id、currency、enable-funding 等）</td>
-                <td class="v6-cell">运行时调用 <span class="code-badge">paypal.createInstance({ clientToken, components, pageType })</span></td>
+                <td class="v6-cell">运行时调用 <span class="code-badge">paypal.createInstance({ clientId | clientToken, components, pageType })</span>，<span class="code-badge">clientId</span> 与 <span class="code-badge">clientToken</span> 二选一</td>
               </tr>
               <tr>
                 <td class="feature-name">认证模型</td>
                 <td class="v5-cell"><span class="negative">client-id 公开写在 script src 里</span></td>
-                <td class="v6-cell"><span class="positive">Client Token（后端生成短效 token）注入 SDK 实例，client-id 不暴露</span></td>
+                <td class="v6-cell"><span class="positive">双模式：<span class="code-badge">clientId</span> 直接初始化（与 v5 同等便利）<br><span class="code-badge">clientToken</span>（后端生成短效 token）则更安全，<strong>Vault / Fastlane 必须使用 clientToken</strong></span></td>
               </tr>
               <tr>
                 <td class="feature-name">SDK 加载机制</td>
                 <td class="v5-cell">动态向 DOM 插入 <span class="code-badge">&lt;script&gt;</span> 标签，URL 包含全部配置参数</td>
-                <td class="v6-cell">先加载核心 SDK 脚本，再通过 JS 代码配置初始化</td>
+                <td class="v6-cell">先加载 <span class="code-badge">/web-sdk/v6/core</span>，再在运行时调 <span class="code-badge">createInstance</span> 完成配置</td>
               </tr>
               <tr>
                 <td class="feature-name">按钮 API 风格</td>
@@ -260,12 +260,12 @@
               <tr>
                 <td class="feature-name">Step 1 — 初始化</td>
                 <td>根据支付方式动态构建 SDK URL，加载脚本</td>
-                <td>加载 core SDK，调后端拿 <span class="code-badge">clientToken</span></td>
+                <td>加载 core SDK；普通场景可直接用 <span class="code-badge">clientId</span>，Vault / Fastlane 仍需先调后端拿 <span class="code-badge">clientToken</span></td>
               </tr>
               <tr>
                 <td class="feature-name">Step 2 — 实例化</td>
                 <td>调用 <span class="code-badge">window.paypal.Buttons()</span> 直接渲染按钮</td>
-                <td><span class="code-badge">paypal.createInstance({ clientToken, components, pageType })</span> 创建 SDK 实例</td>
+                <td><span class="code-badge">paypal.createInstance({ clientId | clientToken, components, pageType })</span> 创建 SDK 实例</td>
               </tr>
               <tr>
                 <td class="feature-name">Step 3 — 用户交互</td>
@@ -359,19 +359,24 @@
             </thead>
             <tbody>
               <tr>
-                <td class="feature-name">前端暴露的凭证</td>
-                <td><span class="negative">client-id 写在 script src URL 里，任何人打开 DevTools 即可看到</span></td>
-                <td><span class="positive">仅暴露短效 clientToken（服务端生成，有效期短，泄露风险低）</span></td>
+                <td class="feature-name">支持的初始化凭证</td>
+                <td><span class="code-badge">client-id</span>（URL 参数，唯一选项）</td>
+                <td><strong>双模式</strong>：<span class="code-badge">clientId</span>（运行时传入）或 <span class="code-badge">clientToken</span>（短效 JWT）。两者互斥，<strong>Vault / Fastlane 必须 clientToken</strong></td>
               </tr>
               <tr>
-                <td class="feature-name">client-id 位置</td>
-                <td><span class="negative">前端 URL 参数（公开）</span></td>
-                <td><span class="positive">仅存在于后端环境变量，前端完全不感知</span></td>
+                <td class="feature-name">前端暴露的凭证</td>
+                <td><span class="negative">client-id 写在 script src URL 里，任何人打开 DevTools 即可看到</span></td>
+                <td><span class="neutral">clientId 模式同样会暴露在前端（与 v5 等价）；clientToken 模式只暴露短效 token，client-id 留在后端</span></td>
               </tr>
               <tr>
                 <td class="feature-name">clientToken 获取</td>
                 <td><span class="neutral">无此概念</span></td>
-                <td>页面加载时调用后端接口 <span class="code-badge">/api/paypal/client-token</span> 获取，再传入 SDK</td>
+                <td>需要时调用后端接口（如 <span class="code-badge">/api/auth/sandbox-client-token</span>）拿一次性 token，再传给 <span class="code-badge">createInstance</span></td>
+              </tr>
+              <tr>
+                <td class="feature-name">何时必须用 clientToken</td>
+                <td><span class="neutral">—</span></td>
+                <td><span class="negative">Vault（保存支付方式）、Fastlane</span>。其余场景（Wallet、ACDC、BCDC、Apple/Google Pay、Pay Later、APM）clientId 即可</td>
               </tr>
               <tr>
                 <td class="feature-name">Partner Attribution（BN Code）</td>
@@ -381,7 +386,7 @@
               <tr>
                 <td class="feature-name">后端鉴权方式</td>
                 <td>Bearer Token（OAuth2 client_credentials）</td>
-                <td>Basic Auth（<span class="code-badge">base64(clientId:secret)</span>），适合服务端直接调用</td>
+                <td>Basic Auth（<span class="code-badge">base64(clientId:secret)</span>）换 access token；clientToken 端点同样需要后端 OAuth 鉴权</td>
               </tr>
             </tbody>
           </table>
@@ -454,7 +459,7 @@
             <h3><i class="fas fa-rocket" style="color:var(--success)"></i> SDK v6 的设计方向</h3>
             <ul>
               <li>Run-time 配置，不依赖 URL 参数</li>
-              <li>client-id 完全隐藏在后端，安全性更高</li>
+              <li>双认证模式：<code>clientId</code> 快速接入 / <code>clientToken</code> 更安全（Vault、Fastlane 必须）</li>
               <li>开发者持有 PaymentSession 引用，完全控制触发时机</li>
               <li>presentationMode 显式控制弹窗 / 重定向行为</li>
               <li>多币种 / 多国家切换无需重载 SDK</li>

@@ -1,0 +1,730 @@
+<!doctype html>
+<html lang="zh-CN">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>PayPal Orders V2 — 商户账号异常错误码清单</title>
+        <link
+            href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap"
+            rel="stylesheet"
+        />
+        <style>
+            :root {
+                --bg-1: #0b1020;
+                --bg-2: #131a30;
+                --panel: rgba(255, 255, 255, 0.04);
+                --panel-strong: rgba(255, 255, 255, 0.07);
+                --border: rgba(255, 255, 255, 0.08);
+                --border-strong: rgba(255, 255, 255, 0.16);
+                --text: #e8ecf5;
+                --text-dim: #9aa3b8;
+                --text-muted: #6b748d;
+                --accent: #6ea8fe;
+                --accent-2: #b794ff;
+
+                --c-account: #ef4444;
+                --c-kyc: #f59e0b;
+                --c-risk: #ec4899;
+                --c-product: #06b6d4;
+                --c-region: #22c55e;
+                --c-auth: #8b5cf6;
+            }
+
+            * {
+                box-sizing: border-box;
+            }
+
+            html,
+            body {
+                margin: 0;
+                padding: 0;
+                background:
+                    radial-gradient(1200px 600px at 10% -10%, rgba(110, 168, 254, 0.18), transparent 60%),
+                    radial-gradient(900px 500px at 110% 10%, rgba(183, 148, 255, 0.16), transparent 60%),
+                    linear-gradient(180deg, var(--bg-1), var(--bg-2));
+                background-attachment: fixed;
+                color: var(--text);
+                font-family:
+                    "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+                    "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+                font-size: 14px;
+                line-height: 1.55;
+                min-height: 100vh;
+                -webkit-font-smoothing: antialiased;
+            }
+
+            .wrap {
+                max-width: 1180px;
+                margin: 0 auto;
+                padding: 40px 28px 80px;
+            }
+
+            header.hero {
+                position: relative;
+                padding: 32px 28px;
+                border: 1px solid var(--border);
+                border-radius: 20px;
+                background:
+                    linear-gradient(135deg, rgba(110, 168, 254, 0.12), rgba(183, 148, 255, 0.08)),
+                    var(--panel);
+                backdrop-filter: blur(8px);
+                overflow: hidden;
+            }
+            header.hero::after {
+                content: "";
+                position: absolute;
+                inset: 0;
+                background:
+                    radial-gradient(400px 160px at 90% 0%, rgba(110, 168, 254, 0.25), transparent 70%);
+                pointer-events: none;
+            }
+            .date-badge {
+                position: absolute;
+                top: 18px;
+                right: 18px;
+                display: inline-flex;
+                align-items: center;
+                gap: 8px;
+                padding: 7px 13px 7px 11px;
+                border-radius: 999px;
+                background: rgba(255, 255, 255, 0.05);
+                border: 1px solid var(--border-strong);
+                font-family: "JetBrains Mono", monospace;
+                font-size: 11.5px;
+                font-weight: 600;
+                color: var(--text);
+                letter-spacing: 0.02em;
+                backdrop-filter: blur(6px);
+                z-index: 1;
+                box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18);
+            }
+            .date-badge svg {
+                color: var(--accent);
+            }
+            .date-badge .label {
+                color: var(--text);
+                opacity: 0.85;
+                font-weight: 500;
+                font-family: "Inter", sans-serif;
+                font-size: 11.5px;
+            }
+            @media (max-width: 720px) {
+                .date-badge {
+                    position: static;
+                    margin-top: 14px;
+                    align-self: flex-start;
+                }
+            }
+            .eyebrow {
+                font-family: "JetBrains Mono", monospace;
+                font-size: 12px;
+                letter-spacing: 0.15em;
+                color: var(--accent);
+                text-transform: uppercase;
+                margin-bottom: 10px;
+            }
+            h1 {
+                margin: 0 0 8px;
+                font-size: 28px;
+                font-weight: 800;
+                letter-spacing: -0.01em;
+                background: linear-gradient(120deg, #fff, #c8d3ec 60%, var(--accent));
+                -webkit-background-clip: text;
+                background-clip: text;
+                color: transparent;
+            }
+            .sub {
+                color: var(--text-dim);
+                font-size: 14px;
+                max-width: 760px;
+            }
+
+            .stats {
+                display: flex;
+                gap: 12px;
+                flex-wrap: wrap;
+                margin-top: 18px;
+            }
+            .stat {
+                display: inline-flex;
+                align-items: center;
+                gap: 8px;
+                padding: 6px 12px;
+                border: 1px solid var(--border-strong);
+                border-radius: 999px;
+                background: rgba(255, 255, 255, 0.03);
+                font-size: 12px;
+                color: var(--text-dim);
+            }
+            .stat b {
+                color: var(--text);
+                font-weight: 600;
+            }
+            .stat .dot {
+                width: 8px;
+                height: 8px;
+                border-radius: 50%;
+                background: var(--accent);
+                box-shadow: 0 0 10px var(--accent);
+            }
+
+            .toolbar {
+                display: flex;
+                gap: 10px;
+                flex-wrap: wrap;
+                margin: 26px 0 18px;
+                align-items: center;
+            }
+            .search {
+                flex: 1 1 280px;
+                min-width: 240px;
+                position: relative;
+            }
+            .search input {
+                width: 100%;
+                padding: 11px 14px 11px 38px;
+                border-radius: 12px;
+                background: var(--panel);
+                border: 1px solid var(--border-strong);
+                color: var(--text);
+                font-size: 13px;
+                outline: none;
+                transition: border-color 0.15s ease, box-shadow 0.15s ease;
+            }
+            .search input::placeholder {
+                color: var(--text-muted);
+            }
+            .search input:focus {
+                border-color: var(--accent);
+                box-shadow: 0 0 0 4px rgba(110, 168, 254, 0.18);
+            }
+            .search svg {
+                position: absolute;
+                left: 12px;
+                top: 50%;
+                transform: translateY(-50%);
+                color: var(--text-muted);
+            }
+            .filters {
+                display: flex;
+                gap: 6px;
+                flex-wrap: wrap;
+            }
+            .chip {
+                padding: 7px 12px;
+                border-radius: 999px;
+                background: var(--panel);
+                border: 1px solid var(--border-strong);
+                color: var(--text-dim);
+                font-size: 12px;
+                cursor: pointer;
+                transition: all 0.15s ease;
+                user-select: none;
+                display: inline-flex;
+                align-items: center;
+                gap: 6px;
+            }
+            .chip:hover {
+                color: var(--text);
+                border-color: rgba(255, 255, 255, 0.3);
+            }
+            .chip.active {
+                color: #fff;
+                background: rgba(110, 168, 254, 0.15);
+                border-color: var(--accent);
+            }
+            .chip .swatch {
+                width: 8px;
+                height: 8px;
+                border-radius: 50%;
+            }
+
+            section.group {
+                margin-top: 28px;
+            }
+            .group-head {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                margin: 0 0 12px;
+                padding: 0 4px;
+            }
+            .group-num {
+                width: 28px;
+                height: 28px;
+                border-radius: 8px;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                font-family: "JetBrains Mono", monospace;
+                font-size: 13px;
+                font-weight: 700;
+                color: #fff;
+                flex-shrink: 0;
+            }
+            .group-title {
+                font-size: 16px;
+                font-weight: 700;
+                color: var(--text);
+            }
+            .group-hint {
+                color: var(--text-muted);
+                font-size: 12px;
+                margin-left: 4px;
+            }
+
+            .card {
+                border: 1px solid var(--border);
+                border-radius: 16px;
+                background: var(--panel);
+                overflow: hidden;
+                backdrop-filter: blur(6px);
+            }
+
+            table {
+                width: 100%;
+                border-collapse: collapse;
+                font-size: 13px;
+            }
+            thead th {
+                text-align: left;
+                font-weight: 600;
+                font-size: 11px;
+                letter-spacing: 0.08em;
+                text-transform: uppercase;
+                color: var(--text-muted);
+                background: rgba(255, 255, 255, 0.03);
+                padding: 12px 16px;
+                border-bottom: 1px solid var(--border);
+                white-space: nowrap;
+            }
+            tbody td {
+                padding: 14px 16px;
+                border-bottom: 1px solid var(--border);
+                vertical-align: top;
+            }
+            tbody tr:last-child td {
+                border-bottom: none;
+            }
+            tbody tr {
+                transition: background 0.12s ease;
+            }
+            tbody tr:hover {
+                background: rgba(255, 255, 255, 0.025);
+            }
+
+            .col-idx {
+                width: 48px;
+                color: var(--text-muted);
+                font-family: "JetBrains Mono", monospace;
+                font-weight: 600;
+            }
+            .code {
+                font-family: "JetBrains Mono", monospace;
+                font-weight: 600;
+                color: var(--text);
+                font-size: 12.5px;
+                word-break: break-all;
+            }
+            .code.lower {
+                color: #d8b4ff;
+            }
+
+            .status {
+                display: inline-flex;
+                align-items: center;
+                gap: 6px;
+                padding: 3px 9px;
+                border-radius: 6px;
+                font-family: "JetBrains Mono", monospace;
+                font-size: 11.5px;
+                font-weight: 600;
+                white-space: nowrap;
+            }
+            .status.s422 {
+                color: #fcd34d;
+                background: rgba(245, 158, 11, 0.13);
+                border: 1px solid rgba(245, 158, 11, 0.35);
+            }
+            .status.s422-400 {
+                color: #fcd34d;
+                background: rgba(245, 158, 11, 0.13);
+                border: 1px solid rgba(245, 158, 11, 0.35);
+            }
+            .status.s401 {
+                color: #fca5a5;
+                background: rgba(239, 68, 68, 0.13);
+                border: 1px solid rgba(239, 68, 68, 0.35);
+            }
+            .status.s403 {
+                color: #f9a8d4;
+                background: rgba(236, 72, 153, 0.13);
+                border: 1px solid rgba(236, 72, 153, 0.35);
+            }
+
+            .desc {
+                color: var(--text);
+                line-height: 1.6;
+            }
+            .desc .note {
+                display: block;
+                margin-top: 4px;
+                color: var(--text-muted);
+                font-size: 12px;
+            }
+
+            .copy-btn {
+                background: transparent;
+                border: 1px solid transparent;
+                color: var(--text-muted);
+                cursor: pointer;
+                padding: 2px 6px;
+                border-radius: 5px;
+                font-size: 11px;
+                margin-left: 6px;
+                opacity: 0;
+                transition: opacity 0.15s ease, all 0.12s ease;
+                vertical-align: middle;
+            }
+            tr:hover .copy-btn {
+                opacity: 1;
+            }
+            .copy-btn:hover {
+                color: var(--text);
+                border-color: var(--border-strong);
+                background: rgba(255, 255, 255, 0.04);
+            }
+            .copy-btn.ok {
+                color: #86efac;
+                border-color: rgba(34, 197, 94, 0.4);
+                opacity: 1;
+            }
+
+            .group-bar {
+                width: 4px;
+                border-radius: 4px;
+                align-self: stretch;
+                flex-shrink: 0;
+            }
+
+            footer {
+                margin-top: 40px;
+                text-align: center;
+                color: var(--text-muted);
+                font-size: 12px;
+            }
+            footer a {
+                color: var(--accent);
+                text-decoration: none;
+            }
+            footer a:hover {
+                text-decoration: underline;
+            }
+
+            .empty {
+                padding: 28px;
+                text-align: center;
+                color: var(--text-muted);
+                font-size: 13px;
+            }
+            section.group.hidden {
+                display: none;
+            }
+
+            mark {
+                background: rgba(110, 168, 254, 0.28);
+                color: #fff;
+                padding: 0 2px;
+                border-radius: 3px;
+            }
+
+            @media (max-width: 720px) {
+                .wrap {
+                    padding: 24px 16px 60px;
+                }
+                h1 {
+                    font-size: 22px;
+                }
+                thead th,
+                tbody td {
+                    padding: 10px 12px;
+                }
+                .col-idx {
+                    width: 36px;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <div class="wrap">
+            <header class="hero">
+                <span class="date-badge" title="本页错误码数据基于 2026 年 6 月 PayPal 公开文档与内部观察整理">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="4" width="18" height="18" rx="2"></rect>
+                        <line x1="16" y1="2" x2="16" y2="6"></line>
+                        <line x1="8" y1="2" x2="8" y2="6"></line>
+                        <line x1="3" y1="10" x2="21" y2="10"></line>
+                    </svg>
+                    <span class="label">数据更新于</span>
+                    2026.06
+                </span>
+                <div class="eyebrow">PayPal · Orders V2 API</div>
+                <h1>商户账号异常错误码清单</h1>
+                <p class="sub">
+                    汇总 PayPal Orders V2 API 在
+                    <strong style="color: var(--text)">Create Order / Capture / Authorize</strong>
+                    场景下，由<strong style="color: var(--text)">商户侧（Payee）</strong>问题导致的错误码。
+                    用于快速定位是账号状态、KYC、风控、产品权限、地区限制还是授权主体的问题。
+                </p>
+                <div class="stats">
+                    <span class="stat"><span class="dot"></span><b>26</b> 个错误码</span>
+                    <span class="stat"><b>6</b> 大类别</span>
+                    <span class="stat">HTTP <b>401 / 403 / 422</b></span>
+                </div>
+            </header>
+
+            <div class="toolbar">
+                <div class="search">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="11" cy="11" r="7"></circle>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg>
+                    <input id="search" type="text" placeholder="搜索错误码、关键字（如 KYC / 风控 / token）…" autocomplete="off" />
+                </div>
+                <div class="filters" id="filters">
+                    <span class="chip active" data-filter="all">全部</span>
+                </div>
+            </div>
+
+            <main id="groups"></main>
+
+            <footer>
+                参考自 PayPal Developer ·
+                <a href="https://developer.paypal.com/docs/api/orders/v2/" target="_blank" rel="noopener">Orders V2 API</a>
+                · 错误码分类仅供排查参考
+            </footer>
+        </div>
+
+        <script>
+            const DATA = [
+                {
+                    id: "account",
+                    num: "01",
+                    title: "账号状态类",
+                    hint: "账号本身不可用",
+                    color: "var(--c-account)",
+                    rows: [
+                        ["PAYEE_ACCOUNT_RESTRICTED", "422-400", "商户账号受限，无法收款"],
+                        ["PAYEE_ACCOUNT_LOCKED_OR_CLOSED", "422", "商户账号被锁定或已关闭"],
+                        ["PAYEE_ACCOUNT_INVALID", "422", "商户标识（merchant_id / email）无效或不存在"],
+                        ["RESTRICTED_OR_INACTIVE_ACCOUNT", "422", "商户账号受限或未激活"],
+                    ],
+                },
+                {
+                    id: "kyc",
+                    num: "02",
+                    title: "KYC / 额度限制类",
+                    hint: "合规未完成或超限",
+                    color: "var(--c-kyc)",
+                    rows: [
+                        ["TRANSACTION_RECEIVING_LIMIT_EXCEEDED", "422", "商户收款累计额度超限（需完成 KYC / 升级账户）"],
+                        ["TRANSACTION_LIMIT_EXCEEDED", "422", "单笔交易金额超过商户允许的限额"],
+                        ["DELAYED_DISBURSEMENT_NOT_SUPPORTED_FOR_KYC_INCOMPLETE_PAYEE", "422", "商户 KYC 未完成，不支持延迟结算"],
+                        ["PARTNER_SETTLEMENT_NOT_SUPPORTED_FOR_KYC_INCOMPLETE_PAYEE", "422", "商户 KYC 未完成，不支持平台代收结算"],
+                        ["UNSUPPORTED_INTENT_FOR_KYC_INCOMPLETE_PAYEE", "422", "商户 KYC 未完成，不支持 AUTHORIZE 模式"],
+                    ],
+                },
+                {
+                    id: "risk",
+                    num: "03",
+                    title: "风控 / 反欺诈拦截类",
+                    hint: "风险系统对商户侧的限制",
+                    color: "var(--c-risk)",
+                    rows: [
+                        ["PAYMENT_DENIED", "422", "PayPal 风控拒绝该交易", "内部常见原因：UNAUTH_CC_RISK"],
+                        ["PAYEE_BLOCKED_TRANSACTION", "422", "商户的 Fraud / Chargeback Protection 规则拦截了交易"],
+                        ["TRANSACTION_BLOCKED_BY_PAYEE", "422", "商户自定义风控策略拦截了交易"],
+                        ["DOMESTIC_TRANSACTION_REQUIRED", "422", "要求收付款双方在同一国家（监管 / 合规限制）"],
+                    ],
+                },
+                {
+                    id: "product",
+                    num: "04",
+                    title: "产品能力 / 权限未开通类",
+                    hint: "账号活跃但缺少某项能力",
+                    color: "var(--c-product)",
+                    rows: [
+                        ["PAYEE_NOT_ENABLED_FOR_CARD_PROCESSING", "422", "商户未开通卡支付能力"],
+                        ["API_CALLER_INELIGIBLE_FOR_UNBRANDED_CARD_PAYMENTS", "422", "API 调用方不具备无标牌卡支付（UCC）资格"],
+                        ["NOT_ELIGIBLE_FOR_TOKEN_PROCESSING", "403", "不允许使用指定类型的 token 进行支付"],
+                        ["PAYMENT_ORIGIN_NOT_ENABLED", "422", "未开通指定的 payment_origin 通道"],
+                        ["PAYEE_PRICING_TIER_ID_NOT_ENABLED", "422", "未开通指定的定价等级"],
+                        ["PLATFORM_FEES_NOT_SUPPORTED", "422", "未开通平台费能力"],
+                    ],
+                },
+                {
+                    id: "region",
+                    num: "05",
+                    title: "国家 / 币种 / 地区配置限制类",
+                    hint: "区域、币种与本地化能力的边界",
+                    color: "var(--c-region)",
+                    rows: [
+                        ["PARTNER_OR_MERCHANT_RESTRICTED_FOR_COUNTRY", "422", "商户 / 平台不允许在指定国家使用该支付方式"],
+                        ["COUNTRY_NOT_SUPPORTED_BY_PAYMENT_SOURCE", "422", "该支付方式不支持指定国家"],
+                        ["LOCALE_NOT_SUPPORTED_BY_PAYMENT_SOURCE", "422", "该支付方式不支持指定的 locale"],
+                        ["UNSUPPORTED_PAYEE_CURRENCY", "422", "商户不接受该币种"],
+                        ["BANK_VERIFICATION_REQUIRED", "422", "商户需先验证银行账户才能收款"],
+                    ],
+                },
+                {
+                    id: "auth",
+                    num: "06",
+                    title: "认证主体 / 授权映射类",
+                    hint: "Auth-Assertion 与权限边界",
+                    color: "var(--c-auth)",
+                    rows: [
+                        ["invalid_subject", "401", "Auth-Assertion 中的商户 email / payer_id 无效、未确认或被锁定"],
+                        ["PERMISSION_DENIED", "403", "调用方与订单所有者不匹配，无权操作该订单"],
+                    ],
+                },
+            ];
+
+            const statusClass = (code) => {
+                if (code === "422-400") return "s422-400";
+                if (code === "422") return "s422";
+                if (code === "401") return "s401";
+                if (code === "403") return "s403";
+                return "s422";
+            };
+            const statusLabel = (code) => (code === "422-400" ? "422 / 400" : code);
+
+            const groupsEl = document.getElementById("groups");
+            const filtersEl = document.getElementById("filters");
+            const searchEl = document.getElementById("search");
+
+            let activeFilter = "all";
+            let counter = 0;
+
+            DATA.forEach((g) => {
+                const chip = document.createElement("span");
+                chip.className = "chip";
+                chip.dataset.filter = g.id;
+                chip.innerHTML = `<span class="swatch" style="background:${g.color}"></span>${g.title}`;
+                chip.addEventListener("click", () => setFilter(g.id));
+                filtersEl.appendChild(chip);
+            });
+
+            filtersEl.querySelector('[data-filter="all"]').addEventListener("click", () => setFilter("all"));
+
+            DATA.forEach((g) => {
+                const section = document.createElement("section");
+                section.className = "group";
+                section.dataset.group = g.id;
+
+                let rowsHtml = "";
+                g.rows.forEach((r) => {
+                    counter += 1;
+                    const [code, status, desc, note] = r;
+                    const isLower = code === code.toLowerCase();
+                    rowsHtml += `
+                        <tr data-code="${code.toLowerCase()}" data-desc="${(desc + " " + (note || "")).toLowerCase()}">
+                            <td class="col-idx">${String(counter).padStart(2, "0")}</td>
+                            <td>
+                                <span class="code${isLower ? " lower" : ""}">${code}</span>
+                                <button class="copy-btn" data-copy="${code}" title="复制">复制</button>
+                            </td>
+                            <td><span class="status ${statusClass(status)}">HTTP ${statusLabel(status)}</span></td>
+                            <td class="desc">${desc}${note ? `<span class="note">↳ ${note}</span>` : ""}</td>
+                        </tr>
+                    `;
+                });
+
+                section.innerHTML = `
+                    <div class="group-head">
+                        <span class="group-bar" style="background:${g.color}"></span>
+                        <span class="group-num" style="background:${g.color}">${g.num}</span>
+                        <span class="group-title">${g.title}</span>
+                        <span class="group-hint">· ${g.hint}</span>
+                    </div>
+                    <div class="card">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th class="col-idx">#</th>
+                                    <th>错误码</th>
+                                    <th>HTTP 状态</th>
+                                    <th>说明</th>
+                                </tr>
+                            </thead>
+                            <tbody>${rowsHtml}</tbody>
+                        </table>
+                    </div>
+                `;
+                groupsEl.appendChild(section);
+            });
+
+            function setFilter(id) {
+                activeFilter = id;
+                filtersEl.querySelectorAll(".chip").forEach((c) => {
+                    c.classList.toggle("active", c.dataset.filter === id);
+                });
+                applyFilter();
+            }
+
+            function applyFilter() {
+                const q = searchEl.value.trim().toLowerCase();
+                document.querySelectorAll("section.group").forEach((sec) => {
+                    const gid = sec.dataset.group;
+                    let visibleRows = 0;
+                    sec.querySelectorAll("tbody tr").forEach((tr) => {
+                        const code = tr.dataset.code;
+                        const desc = tr.dataset.desc;
+                        const matchText = !q || code.includes(q) || desc.includes(q);
+                        const show = matchText;
+                        tr.style.display = show ? "" : "none";
+                        if (show) visibleRows += 1;
+                        highlight(tr, q);
+                    });
+                    const groupMatch = activeFilter === "all" || activeFilter === gid;
+                    sec.classList.toggle("hidden", !groupMatch || visibleRows === 0);
+                });
+            }
+
+            function highlight(tr, q) {
+                const codeEl = tr.querySelector(".code");
+                const descEl = tr.querySelector(".desc");
+                if (!codeEl || !descEl) return;
+                if (!codeEl.dataset.raw) codeEl.dataset.raw = codeEl.textContent;
+                if (!descEl.dataset.raw) descEl.dataset.raw = descEl.innerHTML;
+                if (!q) {
+                    codeEl.textContent = codeEl.dataset.raw;
+                    descEl.innerHTML = descEl.dataset.raw;
+                    return;
+                }
+                const re = new RegExp(`(${q.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")})`, "gi");
+                codeEl.innerHTML = codeEl.dataset.raw.replace(re, "<mark>$1</mark>");
+                descEl.innerHTML = descEl.dataset.raw.replace(re, "<mark>$1</mark>");
+            }
+
+            searchEl.addEventListener("input", applyFilter);
+
+            document.addEventListener("click", async (e) => {
+                const btn = e.target.closest(".copy-btn");
+                if (!btn) return;
+                try {
+                    await navigator.clipboard.writeText(btn.dataset.copy);
+                    const orig = btn.textContent;
+                    btn.textContent = "已复制";
+                    btn.classList.add("ok");
+                    setTimeout(() => {
+                        btn.textContent = orig;
+                        btn.classList.remove("ok");
+                    }, 1200);
+                } catch (err) {
+                    btn.textContent = "失败";
+                    setTimeout(() => (btn.textContent = "复制"), 1200);
+                }
+            });
+        </script>
+    </body>
+</html>

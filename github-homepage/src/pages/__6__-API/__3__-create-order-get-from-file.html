@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Create Order - GET_FROM_FILE - PayPal Web SDK v6</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+      :root {
+        --bg: linear-gradient(135deg, #f5f8ff 0%, #e7eefc 100%);
+        --text: #0f1a2a;
+        --muted: #5a6b87;
+        --accent: #0b6ef6;
+        --border: #d5deec;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 32px;
+        background: var(--bg);
+        font-family: "Space Grotesk", "Segoe UI", sans-serif;
+        color: var(--text);
+      }
+      .card {
+        width: min(720px, 100%);
+        background: #fff;
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        box-shadow: 0 12px 40px rgba(15, 26, 42, 0.08);
+        padding: 28px 32px;
+      }
+      h1 { margin: 0 0 8px; font-size: 22px; letter-spacing: -0.02em; }
+      .subtitle { margin: 0 0 18px; color: var(--muted); font-size: 14px; line-height: 1.5; }
+      code { background: #eef3fb; padding: 2px 6px; border-radius: 4px; font-size: 12px; color: var(--accent); }
+      .notice {
+        position: relative;
+        display: flex;
+        gap: 12px;
+        margin: 0 0 18px;
+        padding: 16px 18px;
+        border-radius: 14px;
+        font-size: 13px;
+        line-height: 1.65;
+        color: #2a3654;
+        background: linear-gradient(135deg, rgba(234, 241, 253, 0.55) 0%, rgba(246, 238, 255, 0.45) 100%);
+        backdrop-filter: blur(14px) saturate(170%);
+        -webkit-backdrop-filter: blur(14px) saturate(170%);
+        border: 1px solid rgba(255, 255, 255, 0.75);
+        box-shadow:
+          inset 0 1px 0 rgba(255, 255, 255, 0.85),
+          inset 0 0 0 1px rgba(11, 110, 246, 0.04),
+          0 1px 2px rgba(15, 26, 42, 0.04),
+          0 10px 28px -10px rgba(11, 110, 246, 0.35),
+          0 6px 18px -8px rgba(160, 110, 240, 0.28);
+        overflow: hidden;
+        isolation: isolate;
+      }
+      .notice::before {
+        content: "";
+        position: absolute;
+        top: -60%;
+        left: -10%;
+        width: 55%;
+        height: 220%;
+        background: radial-gradient(ellipse at center, rgba(11, 110, 246, 0.55) 0%, transparent 65%);
+        filter: blur(28px);
+        z-index: -1;
+        pointer-events: none;
+        animation: drift1 14s ease-in-out infinite alternate;
+      }
+      .notice::after {
+        content: "";
+        position: absolute;
+        top: -40%;
+        right: -15%;
+        width: 50%;
+        height: 200%;
+        background: radial-gradient(ellipse at center, rgba(184, 122, 240, 0.5) 0%, transparent 65%);
+        filter: blur(34px);
+        z-index: -1;
+        pointer-events: none;
+        animation: drift2 18s ease-in-out infinite alternate;
+      }
+      @keyframes drift1 {
+        from { transform: translate(0, 0) scale(1); }
+        to   { transform: translate(18%, 8%) scale(1.15); }
+      }
+      @keyframes drift2 {
+        from { transform: translate(0, 0) scale(1); }
+        to   { transform: translate(-14%, -6%) scale(1.12); }
+      }
+      .notice-icon {
+        position: relative;
+        flex-shrink: 0;
+        width: 18px;
+        height: 18px;
+        margin-top: 2px;
+        color: var(--accent);
+        filter: drop-shadow(0 0 6px rgba(11, 110, 246, 0.4));
+      }
+      .notice-body { position: relative; flex: 1; min-width: 0; }
+      .notice strong {
+        font-weight: 600;
+        color: #15203c;
+      }
+      .notice a {
+        position: relative;
+        color: var(--accent);
+        text-decoration: none;
+        padding: 0 2px;
+        border-bottom: 1px solid rgba(11, 110, 246, 0.4);
+        transition: all 0.2s ease;
+      }
+      .notice a:hover {
+        border-bottom-color: var(--accent);
+        text-shadow: 0 0 12px rgba(11, 110, 246, 0.5);
+      }
+      #button-container {
+        margin-top: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 22px;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        background: #f9fbff;
+      }
+      paypal-button { width: 240px; height: 54px; }
+      .log-section { margin-top: 14px; }
+      .log-section pre {
+        margin: 6px 0 0;
+        max-height: 240px;
+        overflow: auto;
+        background: #0f1a2a;
+        color: #d6e1f5;
+        padding: 14px 16px;
+        border-radius: 10px;
+        font-size: 12px;
+        line-height: 1.5;
+        white-space: pre-wrap;
+        word-break: break-word;
+      }
+      .label {
+        font-size: 12px;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+      }
+    </style>
+  </head>
+
+  <body>
+    <main class="card">
+      <h1>Create Order with <code>GET_FROM_FILE</code></h1>
+      <p class="subtitle">
+        测试通过 PayPal Rest API 创建订单时，使用
+        <code>experience_context.shipping_preference = "GET_FROM_FILE"</code>
+        从 PayPal 账户中拉取 buyer 的 shipping address。
+        授权完成后会展示 order 详情中返回的 buyer 信息。
+      </p>
+
+      <div class="notice">
+        <svg class="notice-icon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="10" cy="10" r="8.5" stroke="currentColor" stroke-width="1.5"/>
+          <path d="M10 9v5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          <circle cx="10" cy="6.2" r="1" fill="currentColor"/>
+        </svg>
+        <div class="notice-body">
+          电话号码属于买家个人信息(PII), PayPal 默认不会在 payer 对象中返回。
+          如需收集，请在 Account Settings 的
+          <strong>Website Payments → Website Preferences</strong> 中开启
+          <a href="https://www.sandbox.paypal.com/unifiedsettings/webPreferences" target="_blank" rel="noopener noreferrer">Contact telephone number</a>
+          选项。
+        </div>
+      </div>
+
+      <div id="button-container">
+        <paypal-button id="paypal-button" hidden></paypal-button>
+      </div>
+
+      <div class="log-section">
+        <div class="label">1. GET Order (after approve)</div>
+        <pre id="log-get-before">等待支付授权...</pre>
+      </div>
+      <div class="log-section">
+        <div class="label">2. Capture Order Response</div>
+        <pre id="log-capture">等待 capture...</pre>
+      </div>
+      <div class="log-section">
+        <div class="label">3. GET Order (after capture)</div>
+        <pre id="log-get-after">等待 capture 完成...</pre>
+      </div>
+    </main>
+
+    <script>
+      const BACKEND = "https://ppgms-test-github-io.pages.dev";
+
+      function writeLog(id, data) {
+        const el = document.getElementById(id);
+        el.textContent = typeof data === "string" ? data : JSON.stringify(data, null, 2);
+        console.log(id, data);
+      }
+
+      async function getBrowserSafeClientToken() {
+        const response = await fetch(`${BACKEND}/api/auth/sandbox-client-token`, {
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
+        });
+        const { accessToken } = await response.json();
+        return accessToken;
+      }
+
+      async function createOrder() {
+        const orderPayload = {
+          intent: "CAPTURE",
+          paymentSource: {
+            paypal: {
+              experienceContext: {
+                // 关键：让 PayPal 从 buyer 账户文件中获取收货地址
+                shippingPreference: "GET_FROM_FILE",
+                userAction: "PAY_NOW",
+                returnUrl: window.location.href,
+                cancelUrl: window.location.href,
+              },
+            },
+          },
+          purchaseUnits: [
+            {
+              amount: {
+                currencyCode: "USD",
+                value: "10.00",
+                breakdown: {
+                  itemTotal: { currencyCode: "USD", value: "10.00" },
+                },
+              },
+            },
+          ],
+        };
+
+        const response = await fetch(`${BACKEND}/api/checkout/orders/create`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(orderPayload),
+        });
+        const data = await response.json();
+        return { orderId: data.id };
+      }
+
+      async function getOrder(orderId) {
+        const response = await fetch(
+          `${BACKEND}/api/checkout/orders/${orderId}`,
+          { method: "GET", headers: { "Content-Type": "application/json" } }
+        );
+        return response.json();
+      }
+
+      async function captureOrder(orderId) {
+        const response = await fetch(
+          `${BACKEND}/api/checkout/orders/${orderId}/capture`,
+          { method: "POST", headers: { "Content-Type": "application/json" } }
+        );
+        return response.json();
+      }
+
+      const paymentSessionOptions = {
+        async onApprove(data) {
+          console.log("onApprove", data);
+          try {
+            const beforeCapture = await getOrder(data.orderId);
+            writeLog("log-get-before", beforeCapture);
+
+            const captureResp = await captureOrder(data.orderId);
+            writeLog("log-capture", captureResp);
+
+            const afterCapture = await getOrder(data.orderId);
+            writeLog("log-get-after", afterCapture);
+          } catch (err) {
+            writeLog("log-capture", `Error: ${err?.message || String(err)}`);
+          }
+        },
+        onCancel(data) { writeLog("log-get-before", { onCancel: data }); },
+        onError(error) { writeLog("log-get-before", `onError: ${error?.message || String(error)}`); },
+      };
+
+      async function onPayPalWebSdkLoaded() {
+        try {
+          const clientToken = await getBrowserSafeClientToken();
+          const sdkInstance = await window.paypal.createInstance({
+            clientToken,
+            components: ["paypal-payments"],
+            pageType: "checkout",
+          });
+          const session = sdkInstance.createPayPalOneTimePaymentSession(paymentSessionOptions);
+
+          const paypalButton = document.querySelector("#paypal-button");
+          paypalButton.removeAttribute("hidden");
+          paypalButton.addEventListener("click", async () => {
+            try {
+              await session.start({ presentationMode: "popup" }, createOrder());
+            } catch (err) {
+              writeLog("log-get-before", `start error: ${err?.message || String(err)}`);
+            }
+          });
+        } catch (err) {
+          writeLog("log-get-before", `init error: ${err?.message || String(err)}`);
+        }
+      }
+      window.onPayPalWebSdkLoaded = onPayPalWebSdkLoaded;
+    </script>
+    <script
+      async
+      onload="onPayPalWebSdkLoaded()"
+      src="https://www.sandbox.paypal.com/web-sdk/v6/core"
+    ></script>
+  </body>
+</html>
