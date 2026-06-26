@@ -9,5 +9,6 @@ export default defineConfig({
   plugins: [react()],
   resolve: { alias: { '@': resolve(__dirname, 'src') } },
   server: { port: 5174, open: false, host: true },
+  base: '/__2__-jsv6-test/bopis-dashboard/',
   build: { outDir: 'dist', emptyOutDir: true },
 })
