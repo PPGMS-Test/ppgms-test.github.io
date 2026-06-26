@@ -21,7 +21,7 @@ export function JsonBlock({ label, data, defaultOpen = false }: Props) {
         {label}
       </button>
       {open && (
-        <pre className="mt-1 p-3 bg-slate-900 text-slate-100 rounded-md overflow-auto min-h-[4rem] max-h-64 resize-y text-[11px] leading-relaxed">
+        <pre className="mt-1 p-3 bg-slate-900 text-slate-100 rounded-md overflow-auto min-h-[4rem] h-64 resize-y text-[11px] leading-relaxed">
           {JSON.stringify(data, null, 2)}
         </pre>
       )}
