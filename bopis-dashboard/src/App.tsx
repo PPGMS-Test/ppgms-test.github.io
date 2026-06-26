@@ -16,7 +16,6 @@ type TabId = (typeof TABS)[number]['id']
 
 export default function App() {
   const [active, setActive] = useState<TabId>('standard')
-  const ActiveComponent = TABS.find((t) => t.id === active)!.component
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 py-8 px-4">
@@ -49,7 +48,11 @@ export default function App() {
           ))}
         </div>
 
-        <ActiveComponent />
+        {TABS.map(({ id, component: Component }) => (
+          <div key={id} className={id === active ? '' : 'hidden'}>
+            <Component />
+          </div>
+        ))}
 
         <p className="text-center text-xs text-muted-foreground">
           BOPIS Demo · Sandbox Only · PayPal v6 SDK
