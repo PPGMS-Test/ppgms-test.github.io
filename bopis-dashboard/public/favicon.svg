@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- Background -->
+  <rect width="32" height="32" rx="7" fill="#003087"/>
+
+  <!-- Shopping bag body -->
+  <path d="M9 14h14l-1.5 11H10.5L9 14z" fill="white"/>
+
+  <!-- Bag handle -->
+  <path d="M13 14c0-1.657 1.343-3 3-3s3 1.343 3 3"
+        fill="none" stroke="white" stroke-width="2"
+        stroke-linecap="round"/>
+
+  <!-- Checkmark -->
+  <path d="M13.5 20.5l2 2 4-4"
+        fill="none" stroke="#003087" stroke-width="2"
+        stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
