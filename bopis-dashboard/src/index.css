@@ -26,3 +26,23 @@
   * { @apply border-border; }
   body { @apply bg-background text-foreground; min-height: 100vh; }
 }
+
+@layer utilities {
+  .json-scrollbar::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  .json-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .json-scrollbar::-webkit-scrollbar-thumb {
+    background: #475569;
+    border-radius: 3px;
+  }
+  .json-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #64748b;
+  }
+  .json-scrollbar::-webkit-scrollbar-corner {
+    background: transparent;
+  }
+}

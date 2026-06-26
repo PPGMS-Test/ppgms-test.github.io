@@ -41,7 +41,7 @@ export function JsonBlock({ label, data, defaultOpen = false }: Props) {
               {copied ? <Check className="h-3.5 w-3.5 text-green-400" /> : <Copy className="h-3.5 w-3.5" />}
             </button>
           </div>
-          <pre className="p-3 bg-slate-900 text-slate-100 rounded-b-md overflow-auto min-h-[4rem] h-64 resize-y text-[11px] leading-relaxed">
+          <pre className="json-scrollbar p-3 bg-slate-900 text-slate-100 rounded-b-md overflow-auto min-h-[4rem] h-64 resize-y text-[11px] leading-relaxed">
             {json}
           </pre>
         </div>
