@@ -127,8 +127,9 @@ export async function captureOrder(orderId: string) {
 
 export async function getOrder(orderId: string) {
   try {
-    const { result, statusCode } = await ordersController.getOrder({ id: orderId })
-    return { jsonResponse: result, httpStatusCode: statusCode }
+    const { result, statusCode, headers } = await ordersController.getOrder({ id: orderId })
+    const debugId = (headers as Record<string, string>)?.['paypal-debug-id'] ?? undefined
+    return { jsonResponse: result, httpStatusCode: statusCode, debugId }
   } catch (error) {
     if (error instanceof ApiError) {
       return { jsonResponse: error.result as CustomError, httpStatusCode: error.statusCode }

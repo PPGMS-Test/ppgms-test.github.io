@@ -13,8 +13,8 @@ export async function GET(
 ) {
   const { orderId } = await params
   try {
-    const { jsonResponse, httpStatusCode } = await getOrder(orderId)
-    return corsJson(jsonResponse, httpStatusCode)
+    const { jsonResponse, httpStatusCode, debugId } = await getOrder(orderId)
+    return corsJson(jsonResponse, httpStatusCode, debugId)
   } catch {
     return corsJson({ error: 'Failed to get order' }, 500)
   }
