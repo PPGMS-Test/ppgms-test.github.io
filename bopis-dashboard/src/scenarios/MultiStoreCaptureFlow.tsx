@@ -99,6 +99,43 @@ const INIT: Steps = {
   details: { status: 'idle' },
 }
 
+// ── Step 4 结果：从 GET order 响应提取每个 PU 的 capture 行 ──
+type CaptureRow = {
+  store: string
+  product: string
+  amount: string
+  captureId: string
+  captureStatus: string
+}
+
+function parseCaptureRows(response: unknown): CaptureRow[] {
+  const order = response as {
+    purchase_units?: Array<{
+      reference_id?: string
+      description?: string
+      items?: Array<{ name: string }>
+      shipping?: { name?: { full_name?: string } }
+      payments?: {
+        captures?: Array<{
+          id: string
+          status: string
+          amount: { currency_code: string; value: string }
+        }>
+      }
+    }>
+  }
+  return (order.purchase_units ?? []).map((pu) => {
+    const cap = pu.payments?.captures?.[0]
+    return {
+      store: pu.shipping?.name?.full_name ?? pu.reference_id ?? '—',
+      product: pu.items?.[0]?.name ?? pu.description ?? '—',
+      amount: cap ? `${cap.amount.currency_code} ${cap.amount.value}` : '—',
+      captureId: cap?.id ?? '—',
+      captureStatus: cap?.status ?? '—',
+    }
+  })
+}
+
 export function MultiStoreCaptureFlow() {
   const [orderId, setOrderId]         = useState<string | null>(null)
   const [clientToken, setClientToken] = useState<string | null>(null)
@@ -234,6 +271,51 @@ export function MultiStoreCaptureFlow() {
         onExecute={handleDetails}
         disabled={steps.capture.status !== 'success'}
       />
+
+      {/* Step 4 Capture 结果汇总表格 */}
+      {steps.details.status === 'success' && (() => {
+        const rows = parseCaptureRows(steps.details.response)
+        if (!rows.length) return null
+        return (
+          <div className="rounded-lg border overflow-hidden">
+            <div className="bg-muted/50 px-4 py-2 text-xs font-medium text-muted-foreground border-b">
+              Capture 结果汇总（来自 GET Order 响应）
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="bg-muted/30">
+                  <tr>
+                    <th className="text-left px-4 py-2 font-medium text-xs text-muted-foreground">门店</th>
+                    <th className="text-left px-4 py-2 font-medium text-xs text-muted-foreground">商品</th>
+                    <th className="text-right px-4 py-2 font-medium text-xs text-muted-foreground">金额</th>
+                    <th className="text-left px-4 py-2 font-medium text-xs text-muted-foreground">Capture ID</th>
+                    <th className="text-left px-4 py-2 font-medium text-xs text-muted-foreground">状态</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {rows.map((row, i) => (
+                    <tr key={i} className="border-t">
+                      <td className="px-4 py-2 text-xs">{row.store}</td>
+                      <td className="px-4 py-2 text-xs">{row.product}</td>
+                      <td className="px-4 py-2 text-xs text-right font-mono">{row.amount}</td>
+                      <td className="px-4 py-2 text-xs font-mono text-muted-foreground truncate max-w-[180px]">{row.captureId}</td>
+                      <td className="px-4 py-2 text-xs">
+                        <span className={`inline-block px-1.5 py-0.5 rounded text-xs font-medium ${
+                          row.captureStatus === 'COMPLETED'
+                            ? 'bg-green-100 text-green-700'
+                            : 'bg-yellow-100 text-yellow-700'
+                        }`}>
+                          {row.captureStatus}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )
+      })()}
 
       {/* 动态研究结论 */}
       {showFailConclusion && (
