@@ -175,8 +175,21 @@ export async function createBopisOrderMultiCapture(): Promise<PayPalRestResponse
     purchase_units: [
       {
         reference_id: 'store-a',
-        amount: { currency_code: 'USD', value: '899.00' },
-        description: 'LG 门对门冰箱 (LG French Door Refrigerator) — Pickup at San Jose Store',
+        description: 'LG 门对门冰箱 (LG French Door Refrigerator) @ Best Buy San Jose',
+        amount: {
+          currency_code: 'USD',
+          value: '899.00',
+          breakdown: { item_total: { currency_code: 'USD', value: '899.00' } },
+        },
+        items: [
+          {
+            name: 'LG French Door Refrigerator',
+            description: 'LG 26 cu. ft. French Door Refrigerator with InstaView.',
+            unit_amount: { currency_code: 'USD', value: '899.00' },
+            quantity: '1',
+            category: 'PHYSICAL_GOODS',
+          },
+        ],
         shipping: {
           type: 'PICKUP_IN_STORE',
           name: { full_name: 'Best Buy San Jose' },
@@ -187,13 +200,25 @@ export async function createBopisOrderMultiCapture(): Promise<PayPalRestResponse
             postal_code: '95129',
             country_code: 'US',
           },
-          phone_number: { national_number: '4085551001' },
         },
       },
       {
         reference_id: 'store-b',
-        amount: { currency_code: 'USD', value: '649.00' },
-        description: 'Samsung 前置滚筒洗衣机 (Samsung Front Load Washer) — Pickup at Los Angeles Store',
+        description: 'Samsung 前置滚筒洗衣机 (Samsung Front Load Washer) @ Best Buy Los Angeles',
+        amount: {
+          currency_code: 'USD',
+          value: '649.00',
+          breakdown: { item_total: { currency_code: 'USD', value: '649.00' } },
+        },
+        items: [
+          {
+            name: 'Samsung Front Load Washer',
+            description: 'Samsung 4.5 cu. ft. High-Efficiency Front Load Washer.',
+            unit_amount: { currency_code: 'USD', value: '649.00' },
+            quantity: '1',
+            category: 'PHYSICAL_GOODS',
+          },
+        ],
         shipping: {
           type: 'PICKUP_IN_STORE',
           name: { full_name: 'Best Buy Los Angeles' },
@@ -204,13 +229,25 @@ export async function createBopisOrderMultiCapture(): Promise<PayPalRestResponse
             postal_code: '90017',
             country_code: 'US',
           },
-          phone_number: { national_number: '2135552002' },
         },
       },
       {
         reference_id: 'store-c',
-        amount: { currency_code: 'USD', value: '599.00' },
-        description: 'Samsung 烘干机 (Samsung Electric Dryer) — Pickup at Seattle Store',
+        description: 'Samsung 烘干机 (Samsung Electric Dryer) @ Best Buy Seattle',
+        amount: {
+          currency_code: 'USD',
+          value: '599.00',
+          breakdown: { item_total: { currency_code: 'USD', value: '599.00' } },
+        },
+        items: [
+          {
+            name: 'Samsung Electric Dryer',
+            description: 'Samsung 7.5 cu. ft. Electric Dryer with Steam Sanitize+.',
+            unit_amount: { currency_code: 'USD', value: '599.00' },
+            quantity: '1',
+            category: 'PHYSICAL_GOODS',
+          },
+        ],
         shipping: {
           type: 'PICKUP_IN_STORE',
           name: { full_name: 'Best Buy Seattle' },
@@ -221,13 +258,25 @@ export async function createBopisOrderMultiCapture(): Promise<PayPalRestResponse
             postal_code: '98101',
             country_code: 'US',
           },
-          phone_number: { national_number: '2065553003' },
         },
       },
       {
         reference_id: 'store-d',
-        amount: { currency_code: 'USD', value: '349.00' },
-        description: 'Bissell CrossWave 洗地机 — Pickup at Chicago Store',
+        description: 'Bissell CrossWave 洗地机 @ Best Buy Chicago',
+        amount: {
+          currency_code: 'USD',
+          value: '349.00',
+          breakdown: { item_total: { currency_code: 'USD', value: '349.00' } },
+        },
+        items: [
+          {
+            name: 'Bissell CrossWave Floor Cleaner',
+            description: 'Bissell CrossWave All-In-One Multi-Surface Wet Dry Vacuum.',
+            unit_amount: { currency_code: 'USD', value: '349.00' },
+            quantity: '1',
+            category: 'PHYSICAL_GOODS',
+          },
+        ],
         shipping: {
           type: 'PICKUP_IN_STORE',
           name: { full_name: 'Best Buy Chicago' },
@@ -238,13 +287,25 @@ export async function createBopisOrderMultiCapture(): Promise<PayPalRestResponse
             postal_code: '60611',
             country_code: 'US',
           },
-          phone_number: { national_number: '3125554004' },
         },
       },
       {
         reference_id: 'store-e',
-        amount: { currency_code: 'USD', value: '449.00' },
-        description: 'Midea 窗式空调 (Midea Window Air Conditioner) — Pickup at New York Store',
+        description: 'Midea 窗式空调 (Midea Window Air Conditioner) @ Best Buy New York',
+        amount: {
+          currency_code: 'USD',
+          value: '449.00',
+          breakdown: { item_total: { currency_code: 'USD', value: '449.00' } },
+        },
+        items: [
+          {
+            name: 'Midea Window Air Conditioner',
+            description: 'Midea 8,000 BTU Window Air Conditioner with Inverter.',
+            unit_amount: { currency_code: 'USD', value: '449.00' },
+            quantity: '1',
+            category: 'PHYSICAL_GOODS',
+          },
+        ],
         shipping: {
           type: 'PICKUP_IN_STORE',
           name: { full_name: 'Best Buy New York' },
@@ -255,13 +316,19 @@ export async function createBopisOrderMultiCapture(): Promise<PayPalRestResponse
             postal_code: '10017',
             country_code: 'US',
           },
-          phone_number: { national_number: '2125555005' },
         },
       },
     ],
     payment_source: {
       paypal: {
-        experience_context: EXPERIENCE_CONTEXT,
+        experience_context: {
+          payment_method_preference: 'IMMEDIATE_PAYMENT_REQUIRED',
+          shipping_preference: 'SET_PROVIDED_ADDRESS',
+          landing_page: 'LOGIN',
+          user_action: 'PAY_NOW',
+          return_url: 'https://ppgms-test-github-io.pages.dev/bopis/return',
+          cancel_url: 'https://ppgms-test-github-io.pages.dev/bopis/cancel',
+        },
       },
     },
   }
