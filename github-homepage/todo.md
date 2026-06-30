@@ -3,8 +3,8 @@
 - [ ] ecs playground的开发 ⏫ 
 - [x] ecs flow 是否可以获取电话号码 ⏫ ✅ 2026-06-24
 - [x] PayPal Create Order时候添加商户acct测的Error Code的说明table ⏫ ✅ 2026-06-24
-- [ ] Google Pay ECS的情况下, 如何获取phone, shipping等 ⏫ ✅ 
-
+- [x] Google Pay ECS的情况下, 如何获取phone, shipping等 ⏫ ✅ 2026-06-25
+- [x] Buy online pick up in store的研究 ⏫ ✅ 2026-06-25
 - [x] Apple Pay Vault Recurring lineItem 优化 ⏫ ✅ 2026-05-28
 - [x] 录屏软件的优化开发 🔽 ✅ 2026-06-01
 - [x] Pay Later Message被script注入的问题.  🔼 ✅ 2026-05-24
