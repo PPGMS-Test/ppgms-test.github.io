@@ -5,11 +5,12 @@
 // ============================================================
 
 import { useState } from 'react'
-import { ShoppingBag, Scissors, FlaskConical, Ban } from 'lucide-react'
+import { ShoppingBag, Scissors, FlaskConical, Ban, Store } from 'lucide-react'
 import { StandardFlow } from '@/scenarios/StandardFlow'
 import { PartialCapture } from '@/scenarios/PartialCapture'
 import { ResearchMultiAddr } from '@/scenarios/ResearchMultiAddr'
 import { VoidFlow } from '@/scenarios/VoidFlow'
+import { MultiStoreCaptureFlow } from '@/scenarios/MultiStoreCaptureFlow'
 
 // localStorage 中存储当前激活 Tab 的键名。
 // localStorage key for persisting the active tab across page refreshes.
@@ -19,10 +20,11 @@ const TAB_STORAGE_KEY = 'bopis-dashboard-active-tab'
 // 新增 tab 时只需在此数组末尾加一条记录，其余代码自动适配。
 // To add a new tab, append an entry here — everything else adapts automatically.
 const TABS = [
-  { id: 'standard',  label: 'Standard BOPIS',   icon: ShoppingBag,  component: StandardFlow      },
-  { id: 'partial',   label: 'Partial Capture',   icon: Scissors,     component: PartialCapture    },
-  { id: 'research',  label: 'Research: 多地址',   icon: FlaskConical, component: ResearchMultiAddr },
-  { id: 'void',      label: 'Void (弃单)',         icon: Ban,          component: VoidFlow          },
+  { id: 'standard',   label: 'Standard BOPIS',       icon: ShoppingBag,  component: StandardFlow          },
+  { id: 'partial',    label: 'Partial Capture',       icon: Scissors,     component: PartialCapture        },
+  { id: 'research',   label: 'Research: 多地址',       icon: FlaskConical, component: ResearchMultiAddr     },
+  { id: 'void',       label: 'Void (弃单)',             icon: Ban,          component: VoidFlow              },
+  { id: 'multistore', label: 'Multi-Store CAPTURE',   icon: Store,        component: MultiStoreCaptureFlow },
 ] as const
 
 type TabId = (typeof TABS)[number]['id']
