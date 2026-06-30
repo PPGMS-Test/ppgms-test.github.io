@@ -164,3 +164,106 @@ export async function voidAuthorization(authId: string): Promise<PayPalRestRespo
   const data = text ? JSON.parse(text) : {}
   return { data, status: res.status, debugId }
 }
+
+// ── 多门店 CAPTURE 订单（5 PU）Multi-store CAPTURE order ─────
+// intent=CAPTURE：直接扣款，无需单独 authorize。
+// 5 个 PU 各自对应不同城市门店，验证 PayPal 是否支持此组合。
+export async function createBopisOrderMultiCapture(): Promise<PayPalRestResponse> {
+  const token = await getSandboxToken()
+  const payload = {
+    intent: 'CAPTURE',
+    purchase_units: [
+      {
+        reference_id: 'store-a',
+        amount: { currency_code: 'USD', value: '899.00' },
+        description: 'LG 门对门冰箱 (LG French Door Refrigerator) — Pickup at San Jose Store',
+        shipping: {
+          type: 'PICKUP_IN_STORE',
+          name: { full_name: 'Best Buy San Jose' },
+          address: {
+            address_line_1: '1600 Saratoga Ave',
+            admin_area_2: 'San Jose',
+            admin_area_1: 'CA',
+            postal_code: '95129',
+            country_code: 'US',
+          },
+          phone_number: { national_number: '4085551001' },
+        },
+      },
+      {
+        reference_id: 'store-b',
+        amount: { currency_code: 'USD', value: '649.00' },
+        description: 'Samsung 前置滚筒洗衣机 (Samsung Front Load Washer) — Pickup at Los Angeles Store',
+        shipping: {
+          type: 'PICKUP_IN_STORE',
+          name: { full_name: 'Best Buy Los Angeles' },
+          address: {
+            address_line_1: '1015 Wilshire Blvd',
+            admin_area_2: 'Los Angeles',
+            admin_area_1: 'CA',
+            postal_code: '90017',
+            country_code: 'US',
+          },
+          phone_number: { national_number: '2135552002' },
+        },
+      },
+      {
+        reference_id: 'store-c',
+        amount: { currency_code: 'USD', value: '599.00' },
+        description: 'Samsung 烘干机 (Samsung Electric Dryer) — Pickup at Seattle Store',
+        shipping: {
+          type: 'PICKUP_IN_STORE',
+          name: { full_name: 'Best Buy Seattle' },
+          address: {
+            address_line_1: '400 Pine St',
+            admin_area_2: 'Seattle',
+            admin_area_1: 'WA',
+            postal_code: '98101',
+            country_code: 'US',
+          },
+          phone_number: { national_number: '2065553003' },
+        },
+      },
+      {
+        reference_id: 'store-d',
+        amount: { currency_code: 'USD', value: '349.00' },
+        description: 'Bissell CrossWave 洗地机 — Pickup at Chicago Store',
+        shipping: {
+          type: 'PICKUP_IN_STORE',
+          name: { full_name: 'Best Buy Chicago' },
+          address: {
+            address_line_1: '900 N Michigan Ave',
+            admin_area_2: 'Chicago',
+            admin_area_1: 'IL',
+            postal_code: '60611',
+            country_code: 'US',
+          },
+          phone_number: { national_number: '3125554004' },
+        },
+      },
+      {
+        reference_id: 'store-e',
+        amount: { currency_code: 'USD', value: '449.00' },
+        description: 'Midea 窗式空调 (Midea Window Air Conditioner) — Pickup at New York Store',
+        shipping: {
+          type: 'PICKUP_IN_STORE',
+          name: { full_name: 'Best Buy New York' },
+          address: {
+            address_line_1: '529 5th Ave',
+            admin_area_2: 'New York',
+            admin_area_1: 'NY',
+            postal_code: '10017',
+            country_code: 'US',
+          },
+          phone_number: { national_number: '2125555005' },
+        },
+      },
+    ],
+    payment_source: {
+      paypal: {
+        experience_context: EXPERIENCE_CONTEXT,
+      },
+    },
+  }
+  return postOrder(token, payload)
+}
