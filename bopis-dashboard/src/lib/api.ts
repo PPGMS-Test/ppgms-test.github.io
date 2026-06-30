@@ -179,6 +179,35 @@ export async function getOrder(orderId: string) {
   return req(`/api/checkout/orders/${orderId}`, { method: 'GET' })
 }
 
+// ── 多门店 CAPTURE 订单创建 Multi-store CAPTURE order ────────
+/**
+ * 创建 5 门店 BOPIS 订单（5 purchase_unit，intent=CAPTURE）。
+ * Creates a 5-store BOPIS order with intent=CAPTURE.
+ * 数据全部硬编码在后端，无需传参。
+ * All PU data is hardcoded in the backend — no parameters needed.
+ *
+ * 后端路由：paypal-backend-api/.../bopis/orders/create-multi-capture/route.ts
+ */
+export async function createBopisOrderMultiCapture() {
+  return req('/api/checkout/bopis/orders/create-multi-capture', { method: 'POST' })
+}
+
+// ── 捕获整个订单 Capture entire order ───────────────────────
+/**
+ * 捕获 intent=CAPTURE 订单中的所有 purchase_unit（一次性扣款）。
+ * Captures all purchase units in a CAPTURE-intent order in a single call.
+ *
+ * 与 captureAuthorization 的区别：
+ *   - captureAuthorization: AUTHORIZE flow 专用，针对单个 authorizationId
+ *   - captureOrder: CAPTURE flow 专用，针对整个 orderId
+ *
+ * 对应 PayPal API：POST /v2/checkout/orders/{orderId}/capture
+ * 后端路由：paypal-backend-api/.../checkout/orders/[orderId]/capture/route.ts
+ */
+export async function captureOrder(orderId: string) {
+  return req(`/api/checkout/orders/${orderId}/capture`, { method: 'POST' })
+}
+
 // ── 获取 Sandbox Client Token ────────────────────────────────
 /**
  * 获取浏览器安全的 Client Token，用于初始化 PayPal Web SDK v6。
