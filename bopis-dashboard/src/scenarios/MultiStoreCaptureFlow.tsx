@@ -109,27 +109,29 @@ type CaptureRow = {
 }
 
 function parseCaptureRows(response: unknown): CaptureRow[] {
+  // GET order 走 @paypal/paypal-server-sdk，序列化结果为驼峰命名
+  // GET order uses @paypal/paypal-server-sdk which serializes to camelCase
   const order = response as {
-    purchase_units?: Array<{
-      reference_id?: string
+    purchaseUnits?: Array<{
+      referenceId?: string
       description?: string
       items?: Array<{ name: string }>
-      shipping?: { name?: { full_name?: string } }
+      shipping?: { name?: { fullName?: string } }
       payments?: {
         captures?: Array<{
           id: string
           status: string
-          amount: { currency_code: string; value: string }
+          amount: { currencyCode: string; value: string }
         }>
       }
     }>
   }
-  return (order.purchase_units ?? []).map((pu) => {
+  return (order.purchaseUnits ?? []).map((pu) => {
     const cap = pu.payments?.captures?.[0]
     return {
-      store: pu.shipping?.name?.full_name ?? pu.reference_id ?? '—',
+      store: pu.shipping?.name?.fullName ?? pu.referenceId ?? '—',
       product: pu.items?.[0]?.name ?? pu.description ?? '—',
-      amount: cap ? `${cap.amount.currency_code} ${cap.amount.value}` : '—',
+      amount: cap ? `${cap.amount.currencyCode} ${cap.amount.value}` : '—',
       captureId: cap?.id ?? '—',
       captureStatus: cap?.status ?? '—',
     }
