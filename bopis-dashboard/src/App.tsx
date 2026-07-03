@@ -5,12 +5,13 @@
 // ============================================================
 
 import { useState } from 'react'
-import { ShoppingBag, Scissors, FlaskConical, Ban, Store } from 'lucide-react'
+import { ShoppingBag, Scissors, FlaskConical, Ban, Store, Layers } from 'lucide-react'
 import { StandardFlow } from '@/scenarios/StandardFlow'
 import { PartialCapture } from '@/scenarios/PartialCapture'
 import { ResearchMultiAddr } from '@/scenarios/ResearchMultiAddr'
 import { VoidFlow } from '@/scenarios/VoidFlow'
 import { MultiStoreCaptureFlow } from '@/scenarios/MultiStoreCaptureFlow'
+import { AS2Flow } from '@/scenarios/AS2Flow'
 
 // localStorage 中存储当前激活 Tab 的键名。
 // localStorage key for persisting the active tab across page refreshes.
@@ -25,6 +26,7 @@ const TABS = [
   { id: 'research',   label: 'Research: 多地址',       icon: FlaskConical, component: ResearchMultiAddr     },
   { id: 'void',       label: 'Void (弃单)',             icon: Ban,          component: VoidFlow              },
   { id: 'multistore', label: 'Multi-Store CAPTURE',   icon: Store,        component: MultiStoreCaptureFlow },
+  { id: 'as2',        label: 'AS2 (多授权)',            icon: Layers,       component: AS2Flow              },
 ] as const
 
 type TabId = (typeof TABS)[number]['id']
