@@ -1,19 +1,16 @@
 // ============================================================
-// scenarios/AS2Flow.tsx — AS2 多授权实验 Tab
+// scenarios/AS2Flow.tsx — Reauthorize vs AS2 对比 Tab
 //
-// AS2 Model (Order-Auth-Capture) 定义性特征：一个 Order 下
-// 支持多个独立的 Authorization，每个 Authorization 可以单独
-// Capture——用于分批发货、B2B 多阶段结算等场景。
-//
-// 两条实验路径（A/B 切换，各自保留独立 step 状态）：
-//
-// Path A — reauthorize（公开 REST，无需特殊账号）
-//   reauthorize 是 honor-period 刷新机制，产生新 auth id，
-//   但并非真正的并行多授权。可能报 too-early 错误。
+// Path A — Reauthorize（honor-period 刷新，标准 AS1 流程）
+//   intent=AUTHORIZE 订单 → authorize → reauthorize（刷新到期时间）
+//   → 两次部分 capture。
+//   reauthorize 只允许在原始 auth 创建后的 Day 4–Day 29 之间
+//   调用一次，早于 Day 4 会返回 REAUTHORIZATION_TOO_SOON。
 //
 // Path B — intent=ORDER（真 AS2，需账号已开启 gated 能力）
-//   若账号未开启，Step 1（intent=ORDER）或 Step 4（第二次
-//   authorize）会报错——原始响应即为实验结论。
+//   同一 order 下多次独立 authorize + 各自 capture，用于分批
+//   发货、B2B 多阶段结算等场景。若账号未开启 AS2，Step 1
+//   （intent=ORDER）或 Step 4（第二次 authorize）会报错。
 // ============================================================
 
 import { useState } from 'react'
@@ -326,10 +323,12 @@ export function AS2Flow() {
       {/* ── Path A ────────────────────────────────────────── */}
       <div className={path === 'A' ? 'space-y-4' : 'hidden'}>
         <div className="rounded-lg border border-blue-200 bg-blue-50 p-3 text-xs text-blue-800">
-          <strong>Path A</strong>：公开 REST，无需特殊账号。
+          <strong>Path A · Reauthorize 流程</strong>：标准 AS1（intent=AUTHORIZE）+ honor-period 刷新。
+          Step 4 的
           <code className="mx-1 px-1 bg-blue-100 rounded">reauthorize</code>
-          是 honor-period 刷新机制——产生新 auth id，但并非真正的并行多授权。
-          实验点在 Step 4，请看原始响应。
+          需等 auth 创建满 4 天后才能调用，早于此会返回
+          <code className="mx-1 px-1 bg-blue-100 rounded">REAUTHORIZATION_TOO_SOON</code>。
+          Step 5/6 在 reauthorize 成功后执行（Day 4–29 之间测试）。
         </div>
 
         <StepCard
