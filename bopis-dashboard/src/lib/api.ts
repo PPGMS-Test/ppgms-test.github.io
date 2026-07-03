@@ -136,13 +136,19 @@ export async function authorizeOrder(orderId: string) {
  *   - Omit/empty: captures the full authorized amount
  *   - Provide amount string: partial capture; remaining funds stay frozen until captured or voided
  *
+ * finalCapture 参数：标记为最终 capture（释放剩余冻结额）。
+ *   - finalCapture: mark this as the final capture (releases any remaining hold)
+ *
  * 对应 PayPal API：POST /v2/payments/authorizations/{authorizationId}/capture
  */
-export async function captureAuthorization(authId: string, amount?: string) {
+export async function captureAuthorization(authId: string, amount?: string, finalCapture?: boolean) {
+  const bodyObj: Record<string, unknown> = {}
+  if (amount) bodyObj.amount = amount
+  if (finalCapture !== undefined) bodyObj.final_capture = finalCapture
   return req(`/api/payments/authorizations/${authId}/capture`, {
     method: 'POST',
     // amount 有值时带入 body；没有时传空对象（body 不能为 null，否则 Content-Length 问题）
-    body: JSON.stringify(amount ? { amount } : {}),
+    body: JSON.stringify(Object.keys(bodyObj).length ? bodyObj : {}),
   })
 }
 
@@ -206,6 +212,65 @@ export async function createBopisOrderMultiCapture() {
  */
 export async function captureOrder(orderId: string) {
   return req(`/api/checkout/orders/${orderId}/capture`, { method: 'POST' })
+}
+
+// ── 重新授权 Reauthorize authorization ────────────────────────
+/**
+ * 重新授权冻结资金，用于扩展已过期或即将过期的授权。
+ * Reauthorizes a previously authorized payment, extending the hold period.
+ *
+ * amount 参数：
+ *   - 不传：保持原授权金额
+ *   - 传入新金额：更新授权额度
+ *   - Omit: keeps the original amount
+ *   - Provide amount: updates the authorization amount
+ *
+ * 对应 PayPal API：POST /v2/payments/authorizations/{authorizationId}/reauthorize
+ */
+export async function reauthorizeAuthorization(authId: string, amount?: string) {
+  return req(`/api/payments/authorizations/${authId}/reauthorize`, {
+    method: 'POST',
+    body: JSON.stringify(amount ? { amount } : {}),
+  })
+}
+
+// ── 创建 AS2 BOPIS 订单 Create AS2 BOPIS order ───────────────
+/**
+ * 创建 AS2 认证的 BOPIS 订单（单 purchase_unit，intent=AUTHORIZE）。
+ * Creates an AS2-authenticated BOPIS order with intent=AUTHORIZE.
+ *
+ * amount 参数：订单金额，默认 '200.00'。
+ *   - amount: order amount, defaults to '200.00'
+ *
+ * 后端路由：paypal-backend-api/.../bopis/orders/create-as2/route.ts
+ * 对应 PayPal API：POST /v2/checkout/orders
+ */
+export async function createBopisOrderAS2(amount = '200.00') {
+  return req('/api/checkout/bopis/orders/create-as2', {
+    method: 'POST',
+    body: JSON.stringify({ amount }),
+  })
+}
+
+// ── 指定金额授权 Authorize order with custom amount ──────────
+/**
+ * 对已创建订单进行指定金额的授权。
+ * Authorizes an existing order with a specified amount.
+ *
+ * amount 参数：
+ *   - 不传：使用订单原金额
+ *   - 传入具体金额：进行部分授权
+ *   - Omit: authorizes the full order amount
+ *   - Provide amount: authorizes only that amount (partial authorization)
+ *
+ * 对应 PayPal API：POST /v2/checkout/orders/{orderId}/authorize
+ * 后端路由：paypal-backend-api/.../checkout/orders/[orderId]/authorize-amount/route.ts
+ */
+export async function authorizeOrderAmount(orderId: string, amount?: string) {
+  return req(`/api/checkout/orders/${orderId}/authorize-amount`, {
+    method: 'POST',
+    body: JSON.stringify(amount ? { amount } : {}),
+  })
 }
 
 // ── 获取 Sandbox Client Token ────────────────────────────────
