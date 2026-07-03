@@ -365,8 +365,8 @@ export function AS2Flow() {
         <StepCard
           number={4}
           title="Reauthorize auth#1 → auth#2"
-          badge={{ label: '★ 实验点', variant: 'amber' }}
-          description="POST /v2/payments/authorizations/{auth1}/reauthorize — 刷新 honor period，产生新 auth id（auth#2）。若报错（too-early / 不允许），原始响应即为实验结论。"
+          badge={{ label: 'Day 4–29', variant: 'slate' }}
+          description="正常情况下会返回 REAUTHORIZATION_TOO_SOON：reauthorization is only allowed once from Day 4 to Day 29 since the date of the original authorization。需等 auth#1 创建满 4 天后再调用。"
           requestUrl={`POST https://api-m.sandbox.paypal.com/v2/payments/authorizations/${aAuth1Id ?? '{auth1Id}'}/reauthorize`}
           requestBody={{ amount: { currency_code: 'USD', value: '300.00' } }}
           result={stepsA.reauthorize}
