@@ -69,10 +69,20 @@ const PATH_A_CREATE_PAYLOAD = {
       name: { full_name: 'AS2 Test Store (Path A)' },
       address: { address_line_1: '123 Main Street', admin_area_2: 'San Jose',
                  admin_area_1: 'CA', postal_code: '95131', country_code: 'US' },
+      phone_number: { national_number: '4085551234' },
     },
     custom_id: 'PICKUP-AS2-A-001',
+    description: 'Pickup at AS2 Test Store (Path A)',
   }],
-  payment_source: { paypal: { experience_context: { shipping_preference: 'SET_PROVIDED_ADDRESS' } } },
+  payment_source: {
+    paypal: {
+      experience_context: {
+        shipping_preference: 'SET_PROVIDED_ADDRESS',
+        return_url: 'https://ppgms-test-github-io.pages.dev/bopis/return',
+        cancel_url: 'https://ppgms-test-github-io.pages.dev/bopis/cancel',
+      },
+    },
+  },
 }
 
 const PATH_B_CREATE_PAYLOAD = {
