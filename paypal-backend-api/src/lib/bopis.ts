@@ -336,3 +336,23 @@ export async function createBopisOrderMultiCapture(): Promise<PayPalRestResponse
   }
   return postOrder(token, payload)
 }
+
+export async function reauthorizeAuthorization(authId: string, amount?: string): Promise<PayPalRestResponse> {
+  const token = await getSandboxToken()
+  const body = amount ? { amount: { currency_code: 'USD', value: amount } } : {}
+  const res = await fetch(
+    `${BASE}/v2/payments/authorizations/${encodeURIComponent(authId)}/reauthorize`,
+    {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+        'PayPal-Request-Id': `${authId}-reauth-${Date.now()}`,
+      },
+      body: JSON.stringify(body),
+    },
+  )
+  const data = await res.json().catch(() => ({}))
+  const debugId = res.headers.get('paypal-debug-id') ?? undefined
+  return { data, status: res.status, debugId }
+}
