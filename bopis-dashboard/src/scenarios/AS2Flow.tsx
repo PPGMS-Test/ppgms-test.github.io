@@ -109,7 +109,15 @@ const PATH_B_CREATE_PAYLOAD = {
 }
 
 export function AS2Flow() {
-  const [path, setPath] = useState<'A' | 'B'>('A')
+  const [path, setPath] = useState<'A' | 'B'>(() => {
+    const saved = localStorage.getItem('bopis-as2-active-path')
+    return saved === 'B' ? 'B' : 'A'
+  })
+
+  const switchPath = (p: 'A' | 'B') => {
+    setPath(p)
+    localStorage.setItem('bopis-as2-active-path', p)
+  }
 
   // ── Path A 状态 ──────────────────────────────────────────────
   const [aOrderId,    setAOrderId]    = useState<string | null>(null)
@@ -318,7 +326,7 @@ export function AS2Flow() {
           {(['A', 'B'] as const).map((p) => (
             <button
               key={p}
-              onClick={() => setPath(p)}
+              onClick={() => switchPath(p)}
               className={`px-4 py-1.5 text-sm font-medium rounded-md transition-colors ${
                 path === p
                   ? 'bg-background shadow-sm text-foreground'
