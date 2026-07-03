@@ -66,13 +66,13 @@ const PATH_A_CREATE_PAYLOAD = {
     amount: { currency_code: 'USD', value: '300.00' },
     shipping: {
       type: 'PICKUP_IN_STORE',
-      name: { full_name: 'AS2 Test Store (Path A)' },
+      name: { full_name: 'Reauth Test Store' },
       address: { address_line_1: '123 Main Street', admin_area_2: 'San Jose',
                  admin_area_1: 'CA', postal_code: '95131', country_code: 'US' },
       phone_number: { national_number: '4085551234' },
     },
-    custom_id: 'PICKUP-AS2-A-001',
-    description: 'Pickup at AS2 Test Store (Path A)',
+    custom_id: 'PICKUP-REAUTH-001',
+    description: 'Pickup at Reauth Test Store',
   }],
   payment_source: {
     paypal: {
@@ -129,10 +129,10 @@ export function AS2Flow() {
     try {
       const { data, status, debugId } = await createBopisOrder({
         amount: '300.00',
-        storeName: 'AS2 Test Store (Path A)',
+        storeName: 'Reauth Test Store',
         storeAddress: { address_line_1: '123 Main Street', admin_area_2: 'San Jose',
                         admin_area_1: 'CA', postal_code: '95131', country_code: 'US' },
-        pickupCode: 'AS2-A-001',
+        pickupCode: 'REAUTH-001',
       })
       if (status >= 200 && status < 300) {
         setAOrderId((data as { id: string }).id)
