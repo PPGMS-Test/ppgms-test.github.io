@@ -388,3 +388,22 @@ export async function createBopisOrderAS2(amount: string): Promise<PayPalRestRes
   }
   return postOrder(token, payload)
 }
+
+export async function authorizeOrderAmount(orderId: string, amount?: string): Promise<PayPalRestResponse> {
+  const token = await getSandboxToken()
+  const body = amount ? { amount: { currency_code: 'USD', value: amount } } : {}
+  const res = await fetch(
+    `${BASE}/v2/checkout/orders/${encodeURIComponent(orderId)}/authorize`,
+    {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(body),
+    },
+  )
+  const data = await res.json().catch(() => ({}))
+  const debugId = res.headers.get('paypal-debug-id') ?? undefined
+  return { data, status: res.status, debugId }
+}
