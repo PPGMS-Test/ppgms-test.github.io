@@ -360,7 +360,8 @@ export async function reauthorizeAuthorization(authId: string, amount?: string):
 export async function createBopisOrderAS2(amount: string): Promise<PayPalRestResponse> {
   const token = await getSandboxToken()
   const payload = {
-    intent: 'ORDER',
+    intent: 'AUTHORIZE',
+    processing_instruction: 'ORDER_SAVED_ON_SUCCESS',
     purchase_units: [
       {
         amount: { currency_code: 'USD', value: amount },

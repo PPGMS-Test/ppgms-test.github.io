@@ -7,10 +7,10 @@
 //   reauthorize 只允许在原始 auth 创建后的 Day 4–Day 29 之间
 //   调用一次，早于 Day 4 会返回 REAUTHORIZATION_TOO_SOON。
 //
-// Path B — intent=ORDER（真 AS2，需账号已开启 gated 能力）
+// Path B — AS2（intent=AUTHORIZE + processing_instruction=ORDER_SAVED_ON_SUCCESS）
 //   同一 order 下多次独立 authorize + 各自 capture，用于分批
-//   发货、B2B 多阶段结算等场景。若账号未开启 AS2，Step 1
-//   （intent=ORDER）或 Step 4（第二次 authorize）会报错。
+//   发货、B2B 多阶段结算等场景。若账号未开启 AS2，Step 1 或
+//   Step 4（第二次 authorize）会报错。
 // ============================================================
 
 import { useState } from 'react'
@@ -83,7 +83,8 @@ const PATH_A_CREATE_PAYLOAD = {
 }
 
 const PATH_B_CREATE_PAYLOAD = {
-  intent: 'ORDER',
+  intent: 'AUTHORIZE',
+  processing_instruction: 'ORDER_SAVED_ON_SUCCESS',
   purchase_units: [{
     amount: { currency_code: 'USD', value: '200.00' },
     shipping: {
@@ -91,10 +92,20 @@ const PATH_B_CREATE_PAYLOAD = {
       name: { full_name: 'AS2 Test Store (Path B)' },
       address: { address_line_1: '123 Main Street', admin_area_2: 'San Jose',
                  admin_area_1: 'CA', postal_code: '95131', country_code: 'US' },
+      phone_number: { national_number: '4085551234' },
     },
     custom_id: 'AS2-TEST-001',
+    description: 'AS2 Multi-Auth Test Order (Path B)',
   }],
-  payment_source: { paypal: { experience_context: { shipping_preference: 'SET_PROVIDED_ADDRESS' } } },
+  payment_source: {
+    paypal: {
+      experience_context: {
+        shipping_preference: 'SET_PROVIDED_ADDRESS',
+        return_url: 'https://ppgms-test-github-io.pages.dev/bopis/return',
+        cancel_url: 'https://ppgms-test-github-io.pages.dev/bopis/cancel',
+      },
+    },
+  },
 }
 
 export function AS2Flow() {
@@ -289,7 +300,7 @@ export function AS2Flow() {
   // ── Path B 动态实验结论 ───────────────────────────────────────
   const bConclusion = (() => {
     if (stepsB.create.status === 'error')
-      return { ok: false, msg: '❌ intent=ORDER 被 PayPal 拒绝（账号未开启 AS2），详见 Step 1 响应' }
+      return { ok: false, msg: '❌ ORDER_SAVED_ON_SUCCESS 被 PayPal 拒绝（账号未开启 AS2），详见 Step 1 响应' }
     if (stepsB.auth2.status === 'error')
       return { ok: false, msg: '❌ 第二次 authorize 被拒（账号不支持并行多授权），详见 Step 4 响应' }
     if (stepsB.auth2.status === 'success')
@@ -314,7 +325,7 @@ export function AS2Flow() {
                   : 'text-muted-foreground hover:text-foreground'
               }`}
             >
-              {p === 'A' ? 'Path A · reauthorize' : 'Path B · intent=ORDER'}
+              {p === 'A' ? 'Path A · reauthorize' : 'Path B · AS2 (ORDER_SAVED)'}
             </button>
           ))}
         </div>
@@ -421,16 +432,18 @@ export function AS2Flow() {
       {/* ── Path B ────────────────────────────────────────── */}
       <div className={path === 'B' ? 'space-y-4' : 'hidden'}>
         <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800">
-          <strong>Path B</strong>：真 AS2，需商户账号已开启 AS2 / Millennium 能力。
-          若账号未开启，Step 1 或 Step 4 会报错——
-          <strong className="ml-0.5">原始响应即为实验结论</strong>。
+          <strong>Path B · AS2</strong>：
+          <code className="mx-1 px-1 bg-amber-100 rounded">intent=AUTHORIZE</code>
+          +
+          <code className="mx-1 px-1 bg-amber-100 rounded">processing_instruction=ORDER_SAVED_ON_SUCCESS</code>
+          。若账号未开启 AS2，Step 1 或 Step 4（第二次 authorize）会报错。
         </div>
 
         <StepCard
           number={1}
-          title="Create Order (intent=ORDER, $200)"
+          title="Create Order (AS2: AUTHORIZE + ORDER_SAVED_ON_SUCCESS, $200)"
           badge={{ label: '★ 实验点', variant: 'amber' }}
-          description="POST /v2/checkout/orders — intent=ORDER（AS2 gated 模式）。若账号未开启 AS2，PayPal 此处返回 422 / INVALID。"
+          description="POST /v2/checkout/orders — intent=AUTHORIZE + processing_instruction=ORDER_SAVED_ON_SUCCESS。若账号未开启 AS2，PayPal 此处报错。"
           requestBody={PATH_B_CREATE_PAYLOAD}
           result={stepsB.create}
           onExecute={handleBCreate}
