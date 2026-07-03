@@ -356,3 +356,35 @@ export async function reauthorizeAuthorization(authId: string, amount?: string):
   const debugId = res.headers.get('paypal-debug-id') ?? undefined
   return { data, status: res.status, debugId }
 }
+
+export async function createBopisOrderAS2(amount: string): Promise<PayPalRestResponse> {
+  const token = await getSandboxToken()
+  const payload = {
+    intent: 'ORDER',
+    purchase_units: [
+      {
+        amount: { currency_code: 'USD', value: amount },
+        shipping: {
+          type: 'PICKUP_IN_STORE',
+          name: { full_name: 'AS2 Test Store (Path B)' },
+          address: {
+            address_line_1: '123 Main Street',
+            admin_area_2: 'San Jose',
+            admin_area_1: 'CA',
+            postal_code: '95131',
+            country_code: 'US',
+          },
+          phone_number: { national_number: '4085551234' },
+        },
+        custom_id: 'AS2-TEST-001',
+        description: 'AS2 Multi-Auth Test Order (Path B)',
+      },
+    ],
+    payment_source: {
+      paypal: {
+        experience_context: EXPERIENCE_CONTEXT,
+      },
+    },
+  }
+  return postOrder(token, payload)
+}
