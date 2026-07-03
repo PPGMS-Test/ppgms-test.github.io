@@ -127,9 +127,11 @@ export async function authorizeOrder(orderId: string): Promise<PayPalRestRespons
   return { data, status: res.status, debugId }
 }
 
-export async function captureAuthorization(authId: string, amount?: string): Promise<PayPalRestResponse> {
+export async function captureAuthorization(authId: string, amount?: string, finalCapture?: boolean): Promise<PayPalRestResponse> {
   const token = await getSandboxToken()
-  const body = amount ? { amount: { currency_code: 'USD', value: amount } } : {}
+  const body: Record<string, unknown> = {}
+  if (amount) body.amount = { currency_code: 'USD', value: amount }
+  if (finalCapture !== undefined) body.final_capture = finalCapture
   const res = await fetch(
     `${BASE}/v2/payments/authorizations/${encodeURIComponent(authId)}/capture`,
     {

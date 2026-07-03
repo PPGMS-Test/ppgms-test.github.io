@@ -10,8 +10,8 @@ export async function POST(
 ) {
   const { authId } = await params
   try {
-    const body = await req.json().catch(() => ({})) as { amount?: string }
-    const { data, status, debugId } = await captureAuthorization(authId, body.amount)
+    const body = await req.json().catch(() => ({})) as { amount?: string; final_capture?: boolean }
+    const { data, status, debugId } = await captureAuthorization(authId, body.amount, body.final_capture)
     return corsJson(data, status, debugId)
   } catch {
     return corsJson({ error: 'Failed to capture authorization' }, 500)
