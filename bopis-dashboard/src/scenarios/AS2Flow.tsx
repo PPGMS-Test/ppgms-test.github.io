@@ -7,10 +7,9 @@
 //   reauthorize 只允许在原始 auth 创建后的 Day 4–Day 29 之间
 //   调用一次，早于 Day 4 会返回 REAUTHORIZATION_TOO_SOON。
 //
-// Path B — AS2（intent=AUTHORIZE + processing_instruction=ORDER_SAVED_ON_SUCCESS）
-//   同一 order 下多次独立 authorize + 各自 capture，用于分批
-//   发货、B2B 多阶段结算等场景。若账号未开启 AS2，Step 1 或
-//   Step 4（第二次 authorize）会报错。
+// Path B — AS2（intent=AUTHORIZE + processing_instruction=ORDER_SAVED_EXPLICITLY）
+//   完整流程：Create → Approve → Save（/save）→ Authorize × N → Capture × N。
+//   若账号未开启 AS2，Step 3（/save）或 Step 5（第二次 authorize）会报错。
 // ============================================================
 
 import { useState } from 'react'
@@ -27,11 +26,12 @@ import {
   reauthorizeAuthorization,
   createBopisOrderAS2,
   authorizeOrderAmount,
+  saveOrder,
 } from '@/lib/api'
 
 // ── 步骤 ID 类型 ─────────────────────────────────────────────
 type PathAStepId = 'create' | 'approve' | 'authorize' | 'reauthorize' | 'capture1' | 'capture2' | 'details'
-type PathBStepId = 'create' | 'approve' | 'auth1' | 'auth2' | 'capture1' | 'capture2' | 'details'
+type PathBStepId = 'create' | 'approve' | 'save' | 'auth1' | 'auth2' | 'capture1' | 'capture2' | 'details'
 type PathASteps  = Record<PathAStepId, StepResult>
 type PathBSteps  = Record<PathBStepId, StepResult>
 
@@ -48,6 +48,7 @@ const INIT_A: PathASteps = {
 const INIT_B: PathBSteps = {
   create:   { status: 'idle' },
   approve:  { status: 'idle' },
+  save:     { status: 'idle' },
   auth1:    { status: 'idle' },
   auth2:    { status: 'idle' },
   capture1: { status: 'idle' },
@@ -84,7 +85,7 @@ const PATH_A_CREATE_PAYLOAD = {
 
 const PATH_B_CREATE_PAYLOAD = {
   intent: 'AUTHORIZE',
-  processing_instruction: 'ORDER_SAVED_ON_SUCCESS',
+  processing_instruction: 'ORDER_SAVED_EXPLICITLY',
   purchase_units: [{
     amount: { currency_code: 'USD', value: '200.00' },
     shipping: {
@@ -242,6 +243,19 @@ export function AS2Flow() {
     } catch (e) { setB('create', { status: 'error', error: String(e) }) }
   }
 
+  const handleBSave = async () => {
+    if (!bOrderId) return
+    setB('save', { status: 'loading' })
+    try {
+      const { data, status, debugId } = await saveOrder(bOrderId)
+      if (status >= 200 && status < 300) {
+        setB('save', { status: 'success', response: data, debugId })
+      } else {
+        setB('save', { status: 'error', response: data, error: `HTTP ${status}`, debugId })
+      }
+    } catch (e) { setB('save', { status: 'error', error: String(e) }) }
+  }
+
   const handleBAuth1 = async () => {
     if (!bOrderId) return
     setB('auth1', { status: 'loading' })
@@ -308,9 +322,11 @@ export function AS2Flow() {
   // ── Path B 动态实验结论 ───────────────────────────────────────
   const bConclusion = (() => {
     if (stepsB.create.status === 'error')
-      return { ok: false, msg: '❌ ORDER_SAVED_ON_SUCCESS 被 PayPal 拒绝（账号未开启 AS2），详见 Step 1 响应' }
+      return { ok: false, msg: '❌ ORDER_SAVED_EXPLICITLY 被 PayPal 拒绝（账号未开启 AS2），详见 Step 1 响应' }
+    if (stepsB.save.status === 'error')
+      return { ok: false, msg: '❌ /save 调用失败（可能为 SAVE_ORDER_NOT_SUPPORTED），账号未开启 AS2，详见 Step 3 响应' }
     if (stepsB.auth2.status === 'error')
-      return { ok: false, msg: '❌ 第二次 authorize 被拒（账号不支持并行多授权），详见 Step 4 响应' }
+      return { ok: false, msg: '❌ 第二次 authorize 被拒（账号不支持并行多授权），详见 Step 5 响应' }
     if (stepsB.auth2.status === 'success')
       return { ok: true,  msg: '✅ 账号支持 AS2：同一 order 下成功创建了多个独立 authorization' }
     return null
@@ -443,15 +459,14 @@ export function AS2Flow() {
           <strong>Path B · AS2</strong>：
           <code className="mx-1 px-1 bg-amber-100 rounded">intent=AUTHORIZE</code>
           +
-          <code className="mx-1 px-1 bg-amber-100 rounded">processing_instruction=ORDER_SAVED_ON_SUCCESS</code>
-          。若账号未开启 AS2，Step 1 或 Step 4（第二次 authorize）会报错。
+          <code className="mx-1 px-1 bg-amber-100 rounded">processing_instruction=ORDER_SAVED_EXPLICITLY</code>
+          。完整流程：Create → Approve → Save → Authorize × N → Capture × N。若账号未开启 AS2，Step 3（/save）或 Step 5（第二次 authorize）会报错。
         </div>
 
         <StepCard
           number={1}
-          title="Create Order (AS2: AUTHORIZE + ORDER_SAVED_ON_SUCCESS, $200)"
-          badge={{ label: '★ 实验点', variant: 'amber' }}
-          description="POST /v2/checkout/orders — intent=AUTHORIZE + processing_instruction=ORDER_SAVED_ON_SUCCESS。若账号未开启 AS2，PayPal 此处报错。"
+          title="Create Order (AS2: AUTHORIZE + ORDER_SAVED_EXPLICITLY, $200)"
+          description="POST /v2/checkout/orders — intent=AUTHORIZE + processing_instruction=ORDER_SAVED_EXPLICITLY。买家批准后需额外调用 /save 显式锁定 AS2 模式。"
           requestBody={PATH_B_CREATE_PAYLOAD}
           result={stepsB.create}
           onExecute={handleBCreate}
@@ -480,17 +495,28 @@ export function AS2Flow() {
 
         <StepCard
           number={3}
+          title="Save Order（进入 AS2 模式）"
+          badge={{ label: '★ 实验点', variant: 'amber' }}
+          description="POST /v2/checkout/orders/{id}/save — 显式将订单锁定为 AS2 模式，后续才能多次 authorize。若账号未开启 AS2，此处返回 SAVE_ORDER_NOT_SUPPORTED。"
+          requestUrl={`POST https://api-m.sandbox.paypal.com/v2/checkout/orders/${bOrderId ?? '{orderId}'}/save`}
+          result={stepsB.save}
+          onExecute={handleBSave}
+          disabled={stepsB.approve.status !== 'success'}
+        />
+
+        <StepCard
+          number={4}
           title="Authorize #1（$100）"
           description="第一次部分授权，金额 $100 → auth#1。"
           requestUrl={`POST https://api-m.sandbox.paypal.com/v2/checkout/orders/${bOrderId ?? '{orderId}'}/authorize`}
           requestBody={{ amount: { currency_code: 'USD', value: '100.00' } }}
           result={stepsB.auth1}
           onExecute={handleBAuth1}
-          disabled={stepsB.approve.status !== 'success'}
+          disabled={stepsB.save.status !== 'success'}
         />
 
         <StepCard
-          number={4}
+          number={5}
           title="Authorize #2（$100）"
           badge={{ label: '★ 实验点', variant: 'amber' }}
           description="同一 order 上的第二次 authorize（$100）→ auth#2。这是 AS2 并行多授权的核心步骤——非 AS2 账号此处报错。"
@@ -502,7 +528,7 @@ export function AS2Flow() {
         />
 
         <StepCard
-          number={5}
+          number={6}
           title="Capture auth#1（全额 $100）"
           badge={{ label: 'Full Capture', variant: 'green' }}
           description="捕获第一个授权全额 $100。"
@@ -513,7 +539,7 @@ export function AS2Flow() {
         />
 
         <StepCard
-          number={6}
+          number={7}
           title="Capture auth#2（全额 $100）"
           badge={{ label: 'Full Capture', variant: 'green' }}
           description="捕获第二个授权全额 $100——AS2 真正的并行多捕获。"
@@ -524,7 +550,7 @@ export function AS2Flow() {
         />
 
         <StepCard
-          number={7}
+          number={8}
           title="View Order Details"
           description="查看完整订单状态，观察 purchase_units[].payments.authorizations 是否含多条。"
           requestUrl={`GET https://api-m.sandbox.paypal.com/v2/checkout/orders/${bOrderId ?? '{orderId}'}`}

@@ -252,6 +252,20 @@ export async function createBopisOrderAS2(amount = '200.00') {
   })
 }
 
+// ── 保存 AS2 订单 Save AS2 order ─────────────────────────────
+/**
+ * 显式保存订单进入 AS2 模式（配合 processing_instruction=ORDER_SAVED_EXPLICITLY）。
+ * Explicitly saves the order into AS2 mode.
+ *
+ * 必须在买家批准后、第一次 authorize 之前调用。
+ * Must be called after buyer approval but before the first authorize.
+ *
+ * 对应 PayPal API：POST /v2/checkout/orders/{orderId}/save
+ */
+export async function saveOrder(orderId: string) {
+  return req(`/api/checkout/orders/${orderId}/save`, { method: 'POST' })
+}
+
 // ── 指定金额授权 Authorize order with custom amount ──────────
 /**
  * 对已创建订单进行指定金额的授权。

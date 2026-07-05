@@ -24,9 +24,9 @@ const TABS = [
   { id: 'standard',   label: 'Standard BOPIS',       icon: ShoppingBag,  component: StandardFlow          },
   { id: 'partial',    label: 'Partial Capture',       icon: Scissors,     component: PartialCapture        },
   { id: 'research',   label: 'Research: 多地址',       icon: FlaskConical, component: ResearchMultiAddr     },
-  { id: 'void',       label: 'Void (弃单)',             icon: Ban,          component: VoidFlow              },
+  { id: 'void',       label: 'Void(弃单)',             icon: Ban,          component: VoidFlow              },
   { id: 'multistore', label: 'Multi-Store CAPTURE',   icon: Store,        component: MultiStoreCaptureFlow },
-  { id: 'as2',        label: 'AS2 (多授权)',            icon: Layers,       component: AS2Flow              },
+  { id: 'as2',        label: '多授权(AS2)',            icon: Layers,       component: AS2Flow              },
 ] as const
 
 type TabId = (typeof TABS)[number]['id']
