@@ -332,6 +332,33 @@ export function AS2Flow() {
     return null
   })()
 
+  // ── Path B · 从 Step 8 的 order detail 解析汇总表 ──────────────
+  // 后端 GET order 走 PayPal SDK，返回 camelCase（purchaseUnits/currencyCode…）；
+  // 同时兼容 snake_case 以防后端换实现。
+  const bOrderSummary = (() => {
+    const d = stepsB.details.response as Record<string, any> | undefined
+    if (!d) return null
+    const pu = (d.purchaseUnits ?? d.purchase_units ?? [])[0]
+    const payments = pu?.payments ?? {}
+    const norm = (x: any, kind: 'Authorization' | 'Capture', i: number) => ({
+      kind,
+      label: `${kind} #${i + 1}`,
+      id: x?.id ?? '—',
+      amount: x?.amount?.value ?? '—',
+      currency: x?.amount?.currencyCode ?? x?.amount?.currency_code ?? '',
+      status: x?.status ?? '—',
+    })
+    const auths = (payments.authorizations ?? []).map((a: any, i: number) => norm(a, 'Authorization', i))
+    const caps  = (payments.captures ?? []).map((c: any, i: number) => norm(c, 'Capture', i))
+    return {
+      id: d.id ?? '—',
+      status: d.status ?? '—',
+      intent: d.intent ?? '—',
+      processingInstruction: d.processingInstruction ?? d.processing_instruction ?? '—',
+      rows: [...auths, ...caps],
+    }
+  })()
+
   return (
     <div className="space-y-4">
 
@@ -544,7 +571,7 @@ export function AS2Flow() {
               <ol className="list-decimal list-inside space-y-0.5 pl-1">
                 <li>进入路径 <code className="px-1 bg-blue-100 rounded break-all">Admin → Products Info → Authorization &amp; Settlement</code></li>
                 <li>找到 <strong>Maximum Number of Child Auths</strong> 下拉框（默认 1）</li>
-                <li>改成需要的数字（有效范围 <strong>1–99</strong>，例如 5 / 10 / 14）</li>
+                <li>改成需要的数字（下拉可选范围 <strong>1–14</strong>，例如 5 / 10 / 14）</li>
                 <li>点击 <strong>Update Settings</strong> 保存</li>
               </ol>
             </div>
@@ -579,12 +606,53 @@ export function AS2Flow() {
         <StepCard
           number={8}
           title="View Order Details"
-          description="查看完整订单状态，观察 purchase_units[].payments.authorizations 是否含多条。"
+          description="查看完整订单状态，观察 purchase_units[].payments.authorizations 是否含多条。执行后下方汇总表会把该 order 的所有 authorization / capture 列出，直观展示 AS2 的一单多授权多捕获结构。"
           requestUrl={`GET https://api-m.sandbox.paypal.com/v2/checkout/orders/${bOrderId ?? '{orderId}'}`}
           result={stepsB.details}
           onExecute={handleBDetails}
           disabled={stepsB.capture2.status !== 'success'}
-        />
+        >
+          {bOrderSummary && (
+            <div className="space-y-2 rounded-md border bg-muted/40 p-3">
+              <div className="text-xs text-muted-foreground">
+                Order <code className="px-1 bg-muted rounded font-mono">{bOrderSummary.id}</code>
+                {' · '}status <strong className="text-foreground">{bOrderSummary.status}</strong>
+                {' · '}intent {bOrderSummary.intent}
+                {' · '}<code className="px-1 bg-muted rounded font-mono">{bOrderSummary.processingInstruction}</code>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs border-collapse">
+                  <thead>
+                    <tr className="border-b text-left text-muted-foreground">
+                      <th className="py-1.5 pr-3 font-medium">类型</th>
+                      <th className="py-1.5 pr-3 font-medium">ID</th>
+                      <th className="py-1.5 pr-3 font-medium">金额</th>
+                      <th className="py-1.5 pr-3 font-medium">状态</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {bOrderSummary.rows.map((r) => (
+                      <tr key={r.kind + r.id} className="border-b last:border-0">
+                        <td className="py-1.5 pr-3 whitespace-nowrap">
+                          <span className={`border rounded px-1.5 py-0.5 font-medium ${
+                            r.kind === 'Authorization'
+                              ? 'bg-blue-100 text-blue-700 border-blue-200'
+                              : 'bg-green-100 text-green-700 border-green-200'
+                          }`}>
+                            {r.label}
+                          </span>
+                        </td>
+                        <td className="py-1.5 pr-3 font-mono break-all">{r.id}</td>
+                        <td className="py-1.5 pr-3 whitespace-nowrap">{r.currency} {r.amount}</td>
+                        <td className="py-1.5 pr-3">{r.status}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+        </StepCard>
 
         {/* 动态实验结论 */}
         {bConclusion && (
