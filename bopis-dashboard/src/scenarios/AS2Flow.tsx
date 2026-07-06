@@ -326,7 +326,7 @@ export function AS2Flow() {
     if (stepsB.save.status === 'error')
       return { ok: false, msg: '❌ /save 调用失败（可能为 SAVE_ORDER_NOT_SUPPORTED），账号未开启 AS2，详见 Step 3 响应' }
     if (stepsB.auth2.status === 'error')
-      return { ok: false, msg: '❌ 第二次 authorize 被拒（账号不支持并行多授权），详见 Step 5 响应' }
+      return { ok: false, msg: '❌ 第二次 authorize 被拒（多为 MAX_AUTHORIZATION_COUNT_EXCEEDED——Max Child Auths 上限太低）。参考 Step 5 tips 在 Admin Tool 调大后重试' }
     if (stepsB.auth2.status === 'success')
       return { ok: true,  msg: '✅ 账号支持 AS2：同一 order 下成功创建了多个独立 authorization' }
     return null
@@ -349,7 +349,7 @@ export function AS2Flow() {
                   : 'text-muted-foreground hover:text-foreground'
               }`}
             >
-              {p === 'A' ? 'Path A · reauthorize' : 'Path B · AS2 (ORDER_SAVED)'}
+              {p === 'A' ? 'Path A · reauthorize' : 'Path B · AS2 (multi-auth)'}
             </button>
           ))}
         </div>
@@ -455,18 +455,26 @@ export function AS2Flow() {
 
       {/* ── Path B ────────────────────────────────────────── */}
       <div className={path === 'B' ? 'space-y-4' : 'hidden'}>
-        <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800">
-          <strong>Path B · AS2</strong>：
-          <code className="mx-1 px-1 bg-amber-100 rounded">intent=AUTHORIZE</code>
-          +
-          <code className="mx-1 px-1 bg-amber-100 rounded">processing_instruction=ORDER_SAVED_EXPLICITLY</code>
-          。完整流程：Create → Approve → Save → Authorize × N → Capture × N。若账号未开启 AS2，Step 3（/save）或 Step 5（第二次 authorize）会报错。
+        <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-xs text-emerald-800 space-y-1.5">
+          <div>
+            <strong>Path B · AS2（已跑通 ✅）</strong>：
+            <code className="mx-1 px-1 bg-emerald-100 rounded">intent=AUTHORIZE</code>
+            +
+            <code className="mx-1 px-1 bg-emerald-100 rounded">processing_instruction=ORDER_SAVED_EXPLICITLY</code>
+            。完整流程：Create → Approve → <strong>Save</strong> → Authorize × N → Capture × N。
+          </div>
+          <div>
+            AS2（Order-Auth-Capture）允许同一个 order 下产生<strong>多个相互独立的 authorization</strong>，每个各自 capture——这是 AS1 做不到的（AS1 一个 order 只能有一个 authorization）。适合分批发货、B2B 多阶段结算等场景。
+          </div>
+          <div className="text-emerald-700">
+            <strong>踩坑记录</strong>：① <code className="px-1 bg-emerald-100 rounded">ORDER_SAVED_ON_SUCCESS</code> 不是合法值，必须用 <code className="px-1 bg-emerald-100 rounded">ORDER_SAVED_EXPLICITLY</code>；② <code className="px-1 bg-emerald-100 rounded">/save</code> 成功 ≠ 能多授权，还要在 Admin Tool 把 <strong>Maximum Number of Child Auths</strong> 从默认 1 调大（详见 Step 5）。
+          </div>
         </div>
 
         <StepCard
           number={1}
           title="Create Order (AS2: AUTHORIZE + ORDER_SAVED_EXPLICITLY, $200)"
-          description="POST /v2/checkout/orders — intent=AUTHORIZE + processing_instruction=ORDER_SAVED_EXPLICITLY。买家批准后需额外调用 /save 显式锁定 AS2 模式。"
+          description="POST /v2/checkout/orders — intent=AUTHORIZE + processing_instruction=ORDER_SAVED_EXPLICITLY。processing_instruction 合法值只有 ORDER_SAVED_EXPLICITLY 和 ORDER_SAVED_ON_AUTHORIZE 两个；ORDER_SAVED_ON_SUCCESS 会被 PayPal 拒（INVALID_PARAMETER_VALUE）。本流程用 EXPLICITLY：买家批准后需额外调用 /save 显式锁定 AS2 模式。"
           requestBody={PATH_B_CREATE_PAYLOAD}
           result={stepsB.create}
           onExecute={handleBCreate}
@@ -496,8 +504,8 @@ export function AS2Flow() {
         <StepCard
           number={3}
           title="Save Order（进入 AS2 模式）"
-          badge={{ label: '★ 实验点', variant: 'amber' }}
-          description="POST /v2/checkout/orders/{id}/save — 显式将订单锁定为 AS2 模式，后续才能多次 authorize。若账号未开启 AS2，此处返回 SAVE_ORDER_NOT_SUPPORTED。"
+          badge={{ label: 'AS2 关键步', variant: 'blue' }}
+          description="POST /v2/checkout/orders/{id}/save — 显式将订单锁定为 AS2 模式，后续才能多次 authorize。返回 status=SAVED 即代表账号具备 AS2 能力；若账号未开启 AS2，此处返回 SAVE_ORDER_NOT_SUPPORTED。注意：save 成功只说明能进 AS2 模式，并不保证能多授权（还受 Step 5 的 Max Child Auths 限制）。"
           requestUrl={`POST https://api-m.sandbox.paypal.com/v2/checkout/orders/${bOrderId ?? '{orderId}'}/save`}
           result={stepsB.save}
           onExecute={handleBSave}
@@ -518,14 +526,33 @@ export function AS2Flow() {
         <StepCard
           number={5}
           title="Authorize #2（$100）"
-          badge={{ label: '★ 实验点', variant: 'amber' }}
-          description="同一 order 上的第二次 authorize（$100）→ auth#2。这是 AS2 并行多授权的核心步骤——非 AS2 账号此处报错。"
+          badge={{ label: 'AS2 多授权核心', variant: 'blue' }}
+          description="同一 order 上的第二次 authorize（$100）→ auth#2。这是 AS2 并行多授权的核心步骤：成功后同一 order 下会有两个相互独立的 authorization。若此处返回 HTTP 422 MAX_AUTHORIZATION_COUNT_EXCEEDED，说明账号的 Max Child Auths 上限太低（默认 1），需按下方 tips 在 Admin Tool 调大。"
           requestUrl={`POST https://api-m.sandbox.paypal.com/v2/checkout/orders/${bOrderId ?? '{orderId}'}/authorize`}
           requestBody={{ amount: { currency_code: 'USD', value: '100.00' } }}
           result={stepsB.auth2}
           onExecute={handleBAuth2}
           disabled={stepsB.auth1.status !== 'success'}
-        />
+        >
+          <div className="rounded-md border border-blue-200 bg-blue-50 p-3 text-xs text-blue-900 space-y-2">
+            <div className="font-semibold">💡 Tip · 如何调大单 order 可授权次数（Max Child Auths）</div>
+            <div>
+              <code className="px-1 bg-blue-100 rounded">/save</code> 成功只代表能进 AS2 模式，并<strong>不保证</strong>能创建多个 authorization。单个 AS2 order 能有几个 authorization，由商户账号级配置 <strong>Maximum Number of Child Auths</strong> 决定，<strong>默认值是 1</strong>——所以未调大之前，第二次 authorize 必然报 <code className="px-1 bg-blue-100 rounded">MAX_AUTHORIZATION_COUNT_EXCEEDED</code>（HTTP 422）。
+            </div>
+            <div className="space-y-1">
+              <div className="font-medium">在 Admin Tool（Sandbox）里调整：</div>
+              <ol className="list-decimal list-inside space-y-0.5 pl-1">
+                <li>进入路径 <code className="px-1 bg-blue-100 rounded break-all">Admin → Products Info → Authorization &amp; Settlement</code></li>
+                <li>找到 <strong>Maximum Number of Child Auths</strong> 下拉框（默认 1）</li>
+                <li>改成需要的数字（有效范围 <strong>1–99</strong>，例如 5 / 10 / 14）</li>
+                <li>点击 <strong>Update Settings</strong> 保存</li>
+              </ol>
+            </div>
+            <div className="text-blue-700">
+              备注：此项仅对 AS2（Order-Auth-Capture）生效，控制单个 AS2 order 下可创建的 child authorization 数量；与 <em>Enhanced Auth-Settle</em> 开关<strong>相互独立</strong>，无需为了多授权去开 EAS。
+            </div>
+          </div>
+        </StepCard>
 
         <StepCard
           number={6}
