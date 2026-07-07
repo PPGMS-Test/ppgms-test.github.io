@@ -332,32 +332,49 @@ export function AS2Flow() {
     return null
   })()
 
-  // ── Path B · 从 Step 8 的 order detail 解析汇总表 ──────────────
-  // 后端 GET order 走 PayPal SDK，返回 camelCase（purchaseUnits/currencyCode…）；
-  // 同时兼容 snake_case 以防后端换实现。
-  const bOrderSummary = (() => {
-    const d = stepsB.details.response as Record<string, any> | undefined
-    if (!d) return null
-    const pu = (d.purchaseUnits ?? d.purchase_units ?? [])[0]
-    const payments = pu?.payments ?? {}
-    const norm = (x: any, kind: 'Authorization' | 'Capture', i: number) => ({
-      kind,
-      label: `${kind} #${i + 1}`,
-      id: x?.id ?? '—',
-      amount: x?.amount?.value ?? '—',
-      currency: x?.amount?.currencyCode ?? x?.amount?.currency_code ?? '',
-      status: x?.status ?? '—',
-    })
-    const auths = (payments.authorizations ?? []).map((a: any, i: number) => norm(a, 'Authorization', i))
-    const caps  = (payments.captures ?? []).map((c: any, i: number) => norm(c, 'Capture', i))
-    return {
-      id: d.id ?? '—',
-      status: d.status ?? '—',
-      intent: d.intent ?? '—',
-      processingInstruction: d.processingInstruction ?? d.processing_instruction ?? '—',
-      rows: [...auths, ...caps],
+  // ── Step 8 结果：从 GET order 响应提取 AS2 order 的每笔 authorization / capture ──
+  // 与 MultiStoreCaptureFlow.parseCaptureRows 保持同一套列（门店/商品/金额/ID/状态），
+  // 额外加一列"类型"区分 Authorization / Capture（AS2 单 PU 下有多条记录，
+  // 而 Multi-Store 是单 PU 单条记录，不需要这一列）。
+  // 后端 GET order 走 @paypal/paypal-server-sdk，序列化为驼峰命名（purchaseUnits）。
+  type As2Row = {
+    type: 'Authorization' | 'Capture'
+    store: string
+    product: string
+    amount: string
+    id: string
+    status: string
+  }
+
+  function parseAs2Rows(response: unknown): As2Row[] {
+    const order = response as {
+      purchaseUnits?: Array<{
+        referenceId?: string
+        description?: string
+        items?: Array<{ name: string }>
+        shipping?: { name?: { fullName?: string } }
+        payments?: {
+          authorizations?: Array<{ id: string; status: string; amount: { currencyCode: string; value: string } }>
+          captures?: Array<{ id: string; status: string; amount: { currencyCode: string; value: string } }>
+        }
+      }>
     }
-  })()
+    const pu = (order.purchaseUnits ?? [])[0]
+    if (!pu) return []
+    const store = pu.shipping?.name?.fullName ?? pu.referenceId ?? '—'
+    const product = pu.items?.[0]?.name ?? pu.description ?? '—'
+    const toRow = (type: As2Row['type']) => (x: { id: string; status: string; amount: { currencyCode: string; value: string } }): As2Row => ({
+      type,
+      store,
+      product,
+      amount: `${x.amount.currencyCode} ${x.amount.value}`,
+      id: x.id,
+      status: x.status,
+    })
+    const auths = (pu.payments?.authorizations ?? []).map(toRow('Authorization'))
+    const caps  = (pu.payments?.captures ?? []).map(toRow('Capture'))
+    return [...auths, ...caps]
+  }
 
   return (
     <div className="space-y-4">
@@ -606,53 +623,67 @@ export function AS2Flow() {
         <StepCard
           number={8}
           title="View Order Details"
-          description="查看完整订单状态，观察 purchase_units[].payments.authorizations 是否含多条。执行后下方汇总表会把该 order 的所有 authorization / capture 列出，直观展示 AS2 的一单多授权多捕获结构。"
+          description="查看完整订单状态，观察 purchase_units[].payments.authorizations 是否含多条。"
           requestUrl={`GET https://api-m.sandbox.paypal.com/v2/checkout/orders/${bOrderId ?? '{orderId}'}`}
           result={stepsB.details}
           onExecute={handleBDetails}
           disabled={stepsB.capture2.status !== 'success'}
-        >
-          {bOrderSummary && (
-            <div className="space-y-2 rounded-md border bg-muted/40 p-3">
-              <div className="text-xs text-muted-foreground">
-                Order <code className="px-1 bg-muted rounded font-mono">{bOrderSummary.id}</code>
-                {' · '}status <strong className="text-foreground">{bOrderSummary.status}</strong>
-                {' · '}intent {bOrderSummary.intent}
-                {' · '}<code className="px-1 bg-muted rounded font-mono">{bOrderSummary.processingInstruction}</code>
+        />
+
+        {/* Step 8 Authorization / Capture 结果汇总表格 */}
+        {stepsB.details.status === 'success' && (() => {
+          const rows = parseAs2Rows(stepsB.details.response)
+          if (!rows.length) return null
+          return (
+            <div className="rounded-lg border overflow-hidden">
+              <div className="bg-muted/50 px-4 py-2 text-xs font-medium text-muted-foreground border-b">
+                Authorization / Capture 结果汇总（来自 GET Order 响应）
               </div>
               <div className="overflow-x-auto">
-                <table className="w-full text-xs border-collapse">
-                  <thead>
-                    <tr className="border-b text-left text-muted-foreground">
-                      <th className="py-1.5 pr-3 font-medium">类型</th>
-                      <th className="py-1.5 pr-3 font-medium">ID</th>
-                      <th className="py-1.5 pr-3 font-medium">金额</th>
-                      <th className="py-1.5 pr-3 font-medium">状态</th>
+                <table className="w-full text-sm">
+                  <thead className="bg-muted/30">
+                    <tr>
+                      <th className="text-left px-4 py-2 font-medium text-xs text-muted-foreground">类型</th>
+                      <th className="text-left px-4 py-2 font-medium text-xs text-muted-foreground">门店</th>
+                      <th className="text-left px-4 py-2 font-medium text-xs text-muted-foreground">商品</th>
+                      <th className="text-right px-4 py-2 font-medium text-xs text-muted-foreground">金额</th>
+                      <th className="text-left px-4 py-2 font-medium text-xs text-muted-foreground">ID</th>
+                      <th className="text-left px-4 py-2 font-medium text-xs text-muted-foreground">状态</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {bOrderSummary.rows.map((r) => (
-                      <tr key={r.kind + r.id} className="border-b last:border-0">
-                        <td className="py-1.5 pr-3 whitespace-nowrap">
-                          <span className={`border rounded px-1.5 py-0.5 font-medium ${
-                            r.kind === 'Authorization'
-                              ? 'bg-blue-100 text-blue-700 border-blue-200'
-                              : 'bg-green-100 text-green-700 border-green-200'
+                    {rows.map((row, i) => (
+                      <tr key={i} className="border-t">
+                        <td className="px-4 py-2 text-xs">
+                          <span className={`inline-block px-1.5 py-0.5 rounded text-xs font-medium ${
+                            row.type === 'Authorization'
+                              ? 'bg-blue-100 text-blue-700'
+                              : 'bg-green-100 text-green-700'
                           }`}>
-                            {r.label}
+                            {row.type}
                           </span>
                         </td>
-                        <td className="py-1.5 pr-3 font-mono break-all">{r.id}</td>
-                        <td className="py-1.5 pr-3 whitespace-nowrap">{r.currency} {r.amount}</td>
-                        <td className="py-1.5 pr-3">{r.status}</td>
+                        <td className="px-4 py-2 text-xs">{row.store}</td>
+                        <td className="px-4 py-2 text-xs">{row.product}</td>
+                        <td className="px-4 py-2 text-xs text-right font-mono">{row.amount}</td>
+                        <td className="px-4 py-2 text-xs font-mono text-muted-foreground truncate max-w-[180px]">{row.id}</td>
+                        <td className="px-4 py-2 text-xs">
+                          <span className={`inline-block px-1.5 py-0.5 rounded text-xs font-medium ${
+                            row.status === 'COMPLETED'
+                              ? 'bg-green-100 text-green-700'
+                              : 'bg-yellow-100 text-yellow-700'
+                          }`}>
+                            {row.status}
+                          </span>
+                        </td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
               </div>
             </div>
-          )}
-        </StepCard>
+          )
+        })()}
 
         {/* 动态实验结论 */}
         {bConclusion && (
