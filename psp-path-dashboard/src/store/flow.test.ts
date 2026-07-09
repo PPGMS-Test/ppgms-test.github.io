@@ -27,3 +27,24 @@ describe('flow store', () => {
     expect(useFlowStore.getState().orderId).toBe('')
   })
 })
+
+describe('flow store v2 扩展', () => {
+  it('config 新增 payerId 默认值与 authAssertionEnabled=false', () => {
+    const s = useFlowStore.getState()
+    expect(s.config.payerId).toBe('WYFHZPJBHKKYU')
+    expect(s.config.authAssertionEnabled).toBe(false)
+  })
+  it('setRequestBody / setBodyEditing 读写', () => {
+    useFlowStore.getState().setRequestBody('createOrder', '{"a":1}')
+    useFlowStore.getState().setBodyEditing('createOrder', true)
+    expect(useFlowStore.getState().requestBodies.createOrder).toBe('{"a":1}')
+    expect(useFlowStore.getState().bodyEditing.createOrder).toBe(true)
+  })
+  it('reset 清空 requestBodies/bodyEditing 与新 config', () => {
+    useFlowStore.getState().setRequestBody('refund', '{}')
+    useFlowStore.getState().updateConfig({ authAssertionEnabled: true })
+    useFlowStore.getState().reset()
+    expect(useFlowStore.getState().requestBodies.refund).toBeUndefined()
+    expect(useFlowStore.getState().config.authAssertionEnabled).toBe(false)
+  })
+})
