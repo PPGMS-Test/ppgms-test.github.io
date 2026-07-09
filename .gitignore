@@ -6,6 +6,11 @@ github-homepage/dist
 paypal-backend-api/node_modules
 paypal-backend-api/.next
 paypal-backend-api/.env
+
+# psp-path-dashboard
+psp-path-dashboard/node_modules
+psp-path-dashboard/dist
+
 node_modules
 
 # paypal-mobile Android test app
