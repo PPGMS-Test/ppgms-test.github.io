@@ -143,6 +143,23 @@ export function StepDetail() {
     : 'Bearer <先执行 Auth 获取>'
 
   const onSend = async () => {
+    if (STEP_HAS_BODY[activeStep]) {
+      if (!requestBody || !requestBody.trim()) {
+        setStepResult(
+          activeStep,
+          'error',
+          { error: 'Request body 尚未生成（disburse 需先完成 Capture 拿到 capture id，可点「重新生成」）' },
+          'request body 未就绪',
+        )
+        return
+      }
+      try {
+        JSON.parse(requestBody)
+      } catch (e) {
+        setStepResult(activeStep, 'error', { error: 'Request body 不是合法 JSON：' + String(e) }, 'invalid JSON')
+        return
+      }
+    }
     setStepResult(activeStep, 'running')
     try {
       const r = await runStep(activeStep)
