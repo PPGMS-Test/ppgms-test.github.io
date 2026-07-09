@@ -105,12 +105,12 @@ export function createPartnerReferral(token: string, trackingId: string, returnU
 }
 
 export function createPspOrder(token: string, input: PspOrderInput) {
-  const extra = input.bnCode ? { 'PayPal-Partner-Attribution-Id': input.bnCode } : {}
+  const extra: Record<string, string> = input.bnCode ? { 'PayPal-Partner-Attribution-Id': input.bnCode } : {}
   return pspFetch(token, '/v2/checkout/orders', 'POST', buildPspOrderBody(input), extra)
 }
 
 export function capturePspOrder(token: string, orderId: string, bnCode?: string) {
-  const extra = bnCode ? { 'PayPal-Partner-Attribution-Id': bnCode } : {}
+  const extra: Record<string, string> = bnCode ? { 'PayPal-Partner-Attribution-Id': bnCode } : {}
   return pspFetch(token, `/v2/checkout/orders/${encodeURIComponent(orderId)}/capture`, 'POST', undefined, extra)
 }
 
