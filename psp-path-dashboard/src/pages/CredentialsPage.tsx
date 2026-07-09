@@ -22,7 +22,8 @@ export function CredentialsPage() {
         <KeyRound size={20} /> BYOK 凭证管理
       </h1>
       <p className="text-sm text-muted">
-        填入你的 PSP <b>sandbox</b> client id / secret 与 BN code。仅存于当前标签页 sessionStorage，不写入代码、不上传。
+        已预填默认 <b>HKPSP</b> sandbox 账号，可直接用或改成自己的 PSP <b>sandbox</b> client id / secret 与 BN code。
+        修改后的值存于当前标签页 sessionStorage；默认值来自 <code>config/default-credentials.ts</code>（仅限 sandbox）。
       </p>
 
       <Card className="flex flex-col gap-4">

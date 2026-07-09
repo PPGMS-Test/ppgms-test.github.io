@@ -1,5 +1,6 @@
 // 演练台流程状态：串联各步产出 + 每步状态/响应 + 可编辑请求配置。
 import { create } from 'zustand'
+import { DEFAULT_PAYEE_EMAIL } from '@/config/default-credentials'
 
 export type StepId = 'auth' | 'onboarding' | 'createOrder' | 'capture' | 'disburse' | 'refund'
 export type StepStatus = 'idle' | 'running' | 'success' | 'error'
@@ -49,7 +50,7 @@ const INITIAL = {
   config: {
     amount: '160.00',
     currency: 'GBP',
-    payeeEmail: '',
+    payeeEmail: DEFAULT_PAYEE_EMAIL,
     trackingId: 'psp-playground-merchant-1',
     returnUrl: 'https://example.com/return',
   } as FlowConfig,

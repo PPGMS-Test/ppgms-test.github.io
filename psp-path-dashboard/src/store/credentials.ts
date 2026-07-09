@@ -1,7 +1,9 @@
-// BYOK 凭证 store。存 sessionStorage（关标签即清），不落磁盘、不进代码。
+// BYOK 凭证 store。用户填的值存 sessionStorage（关标签即清）。
+// 初始值来自 config/default-credentials（默认 HKPSP sandbox 账号，预填方便直接跑）。
 // bnCode 为 PayPal-Partner-Attribution-Id（BN code），PSP Path 用它做结算路由。
 import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
+import { DEFAULT_CREDENTIALS } from '@/config/default-credentials'
 
 interface CredentialsState {
   clientId: string
@@ -15,7 +17,11 @@ interface CredentialsState {
   basicAuth: () => string
 }
 
-const INITIAL = { clientId: '', clientSecret: '', bnCode: '' }
+const INITIAL = {
+  clientId: DEFAULT_CREDENTIALS.clientId,
+  clientSecret: DEFAULT_CREDENTIALS.clientSecret,
+  bnCode: DEFAULT_CREDENTIALS.bnCode,
+}
 
 export const useCredentialsStore = create<CredentialsState>()(
   persist(
