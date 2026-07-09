@@ -1,5 +1,5 @@
-// 调 paypal-backend-api 的 PSP 路由。第 1 步用 Basic auth 换 access_token；
-// 后续步骤带 Bearer access_token。代理地址由 VITE_PROXY_BASE 决定，默认本地后端端口 30041。
+// Step 1 Auth 用 BYOK Basic auth 换 access_token（走保留的 byok/psp/access-token）。
+// 其余步骤前端拼完整 body + headers，走通用转发路由 /api/common（x-target-path 指定 PayPal path）。
 import { useCredentialsStore } from '@/store/credentials'
 
 const PROXY_BASE = import.meta.env.VITE_PROXY_BASE ?? 'http://localhost:30041'
@@ -10,52 +10,43 @@ export interface ApiResult<T = unknown> {
   data: T
 }
 
-async function postJson<T>(path: string, headers: Record<string, string>, body?: unknown): Promise<ApiResult<T>> {
-  const res = await fetch(`${PROXY_BASE}${path}`, {
+/** Step 1：BYOK Basic auth → access_token */
+export async function fetchAccessToken(): Promise<ApiResult<{ accessToken?: string; error?: string }>> {
+  const auth = useCredentialsStore.getState().basicAuth()
+  const res = await fetch(`${PROXY_BASE}/api/byok/psp/access-token`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...headers },
-    ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
+    headers: { 'Content-Type': 'application/json', Authorization: `Basic ${auth}` },
   })
-  const data = (await res.json().catch(() => ({}))) as T
+  const data = (await res.json().catch(() => ({}))) as { accessToken?: string; error?: string }
   return { ok: res.ok, status: res.status, data }
 }
 
-/** 第 1 步：BYOK Basic auth → access_token */
-export function fetchAccessToken() {
-  const auth = useCredentialsStore.getState().basicAuth()
-  return postJson<{ accessToken?: string; error?: string }>('/api/byok/psp/access-token', {
-    Authorization: `Basic ${auth}`,
+export interface CommonOpts {
+  method?: string
+  /** 原始 JSON body 字符串（所见即所发）；无 body 的步骤（如 capture）省略 */
+  rawBody?: string
+  token: string
+  bnCode?: string
+  authAssertion?: string
+}
+
+/** 通用转发：把完整请求发给 /api/common，由它转给 PayPal */
+export async function callCommon(targetPath: string, opts: CommonOpts): Promise<ApiResult> {
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    'x-target-path': targetPath,
+    'x-target-method': opts.method ?? 'POST',
+    Authorization: `Bearer ${opts.token}`,
+    Prefer: 'return=representation',
+  }
+  if (opts.bnCode) headers['PayPal-Partner-Attribution-Id'] = opts.bnCode
+  if (opts.authAssertion) headers['PayPal-Auth-Assertion'] = opts.authAssertion
+
+  const res = await fetch(`${PROXY_BASE}/api/common`, {
+    method: 'POST',
+    headers,
+    ...(opts.rawBody !== undefined ? { body: opts.rawBody } : {}),
   })
-}
-
-function bearer(token: string) {
-  return { Authorization: `Bearer ${token}` }
-}
-
-export function createPartnerReferral(token: string, trackingId: string, returnUrl: string) {
-  return postJson('/api/byok/psp/partner-referrals', bearer(token), { trackingId, returnUrl })
-}
-
-export function createOrder(
-  token: string,
-  input: { amount: string; currency: string; payeeEmail: string; referenceId: string },
-) {
-  const bnCode = useCredentialsStore.getState().bnCode
-  return postJson('/api/byok/psp/orders', bearer(token), { ...input, bnCode })
-}
-
-export function captureOrder(token: string, orderId: string) {
-  const bnCode = useCredentialsStore.getState().bnCode
-  return postJson(`/api/byok/psp/orders/${encodeURIComponent(orderId)}/capture`, {
-    ...bearer(token),
-    'x-paypal-bn-code': bnCode,
-  })
-}
-
-export function disburse(token: string, captureId: string) {
-  return postJson('/api/byok/psp/referenced-payouts-items', bearer(token), { captureId })
-}
-
-export function refund(token: string, captureId: string) {
-  return postJson(`/api/byok/psp/captures/${encodeURIComponent(captureId)}/refund`, bearer(token))
+  const data = await res.json().catch(() => ({}))
+  return { ok: res.ok, status: res.status, data }
 }
