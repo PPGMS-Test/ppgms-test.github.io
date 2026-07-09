@@ -24,6 +24,11 @@ export async function POST(req: Request) {
     return corsJson({ error: 'Request body must be valid JSON' }, 400)
   }
   if (!captureId) return corsJson({ error: 'captureId is required' }, 400)
-  const { data, status } = await createReferencedPayout(token, captureId)
-  return corsJson(data, status)
+  try {
+    const { data, status } = await createReferencedPayout(token, captureId)
+    return corsJson(data, status)
+  } catch (error) {
+    if (error instanceof PayPalAuthError) return corsJson({ error: error.message }, 401)
+    return corsJson({ error: 'Failed to disburse funds' }, 500)
+  }
 }

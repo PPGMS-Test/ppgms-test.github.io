@@ -17,6 +17,11 @@ export async function POST(req: Request, { params }: { params: Promise<{ capture
     throw error
   }
   const { captureId } = await params
-  const { data, status } = await refundCapture(token, captureId)
-  return corsJson(data, status)
+  try {
+    const { data, status } = await refundCapture(token, captureId)
+    return corsJson(data, status)
+  } catch (error) {
+    if (error instanceof PayPalAuthError) return corsJson({ error: error.message }, 401)
+    return corsJson({ error: 'Failed to refund capture' }, 500)
+  }
 }

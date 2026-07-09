@@ -18,6 +18,11 @@ export async function POST(req: Request, { params }: { params: Promise<{ orderId
   }
   const { orderId } = await params
   const bnCode = req.headers.get('x-paypal-bn-code') ?? undefined
-  const { data, status } = await capturePspOrder(token, orderId, bnCode)
-  return corsJson(data, status)
+  try {
+    const { data, status } = await capturePspOrder(token, orderId, bnCode)
+    return corsJson(data, status)
+  } catch (error) {
+    if (error instanceof PayPalAuthError) return corsJson({ error: error.message }, 401)
+    return corsJson({ error: 'Failed to capture order' }, 500)
+  }
 }

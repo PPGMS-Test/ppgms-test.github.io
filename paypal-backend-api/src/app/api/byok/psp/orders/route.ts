@@ -25,6 +25,11 @@ export async function POST(req: Request) {
   if (!input.amount || !input.currency || !input.payeeEmail || !input.referenceId) {
     return corsJson({ error: 'amount, currency, payeeEmail, referenceId are required' }, 400)
   }
-  const { data, status } = await createPspOrder(token, input)
-  return corsJson(data, status)
+  try {
+    const { data, status } = await createPspOrder(token, input)
+    return corsJson(data, status)
+  } catch (error) {
+    if (error instanceof PayPalAuthError) return corsJson({ error: error.message }, 401)
+    return corsJson({ error: 'Failed to create order' }, 500)
+  }
 }
