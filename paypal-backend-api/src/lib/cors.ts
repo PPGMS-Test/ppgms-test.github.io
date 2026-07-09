@@ -2,8 +2,9 @@ import { NextResponse } from 'next/server'
 
 export const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'GET,POST,OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type, Authorization, x-paypal-bn-code',
+  'Access-Control-Allow-Methods': 'GET,POST,PATCH,OPTIONS',
+  'Access-Control-Allow-Headers':
+    'Content-Type, Authorization, x-paypal-bn-code, x-target-path, x-target-method, Prefer, PayPal-Partner-Attribution-Id, PayPal-Auth-Assertion, PayPal-Request-Id',
   'Access-Control-Expose-Headers': 'X-PayPal-Debug-Id',
 }
 
