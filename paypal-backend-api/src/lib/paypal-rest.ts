@@ -45,7 +45,7 @@ export function parseBasicAuth(req: Request): { clientId: string; clientSecret: 
   return { clientId, clientSecret }
 }
 
-async function getAccessToken(clientId: string, clientSecret: string): Promise<string> {
+export async function getAccessToken(clientId: string, clientSecret: string): Promise<string> {
   const auth = btoa(`${clientId}:${clientSecret}`)
   const res = await fetch(`${PAYPAL_SANDBOX_BASE}/v1/oauth2/token`, {
     method: 'POST',
