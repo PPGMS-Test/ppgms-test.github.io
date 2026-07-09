@@ -3,6 +3,7 @@ packages:
   - paypal-backend-api
   - applepay-dashboard
   - bopis-dashboard
+  - psp-path-dashboard
 allowBuilds:
   '@scarf/scarf': true
   '@tree-sitter-grammars/tree-sitter-yaml': true
