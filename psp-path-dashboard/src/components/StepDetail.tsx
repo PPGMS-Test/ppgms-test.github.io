@@ -1,58 +1,92 @@
-import { Send } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { Send, Pencil, RotateCcw, Eye, EyeOff } from 'lucide-react'
 import { STEPS } from '@/lib/steps'
-import { useFlowStore, type StepId } from '@/store/flow'
+import { useFlowStore, type StepId, type FlowConfig } from '@/store/flow'
 import { useCredentialsStore } from '@/store/credentials'
 import * as api from '@/lib/api'
+import {
+  buildPartnerReferralBody,
+  buildOrderBody,
+  buildReferencedPayoutBody,
+  buildRefundBody,
+} from '@/lib/psp-requests'
+import { generateAuthAssertion } from '@/lib/auth-assertion'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
 
-// 每步的中文讲解（干什么/钱在哪/谁担风险）
-const EXPLAIN: Record<StepId, string> = {
-  auth: '用 BYOK 凭证换取 OAuth access_token。之后每一步都带着它调用，等价于 Postman 里的第 1 步 Auth。',
-  onboarding: '通过 Partner Referral 让商户授权 PSP 代其收款/退款/延迟放款。产出一个商户点击授权的链接。',
-  createOrder: '以 CAPTURE intent 建单，payee 指向被授权商户，带 BN code 头。此刻还没扣钱。',
-  capture: '捕获订单，买家的钱进入商户 General Ledger（商户余额仍为 $0，等待划给 PSP）。',
-  disburse: '用 capture id 触发 referenced-payouts，把钱从商户 GL 划到 PSP 的 PSA（Type 5 账户），日终 sweep 到 PSP 银行账户。',
-  refund: '发起退款。PSP Path 下退款由 PSP 承担，且 2.0 保证退款从 PSA 出而非错误扣商户余额。',
+// 哪些步骤有 request body（capture 无 body；auth 走独立路由）。
+const STEP_HAS_BODY: Record<StepId, boolean> = {
+  auth: false,
+  onboarding: true,
+  createOrder: true,
+  capture: false,
+  disburse: true,
+  refund: true,
 }
 
-async function runStep(id: StepId): Promise<{ status: number; data: unknown; ok: boolean }> {
-  const flow = useFlowStore.getState()
-  const { accessToken, orderId, captureId, config } = flow
+// 由 config + 链路 id 构建某步的 body 对象；无 body 或依赖未就绪时返回 null。
+function buildBodyFor(id: StepId, config: FlowConfig, captureId: string): object | null {
   switch (id) {
-    case 'auth': {
-      const r = await api.fetchAccessToken()
-      if (r.ok && r.data.accessToken) flow.setAccessToken(r.data.accessToken)
-      return r
-    }
     case 'onboarding':
-      return api.createPartnerReferral(accessToken, config.trackingId, config.returnUrl)
-    case 'createOrder': {
-      const r = await api.createOrder(accessToken, {
-        amount: config.amount, currency: config.currency, payeeEmail: config.payeeEmail,
+      return buildPartnerReferralBody(config.trackingId, config.returnUrl)
+    case 'createOrder':
+      return buildOrderBody({
+        amount: config.amount,
+        currency: config.currency,
+        payeeEmail: config.payeeEmail,
         referenceId: `psp_${config.currency}`,
       })
-      const id2 = (r.data as { id?: string }).id
-      if (r.ok && id2) flow.setOrderId(id2)
-      return r
-    }
-    case 'capture': {
-      const r = await api.captureOrder(accessToken, orderId)
-      const cap = (r.data as { purchase_units?: Array<{ payments?: { captures?: Array<{ id: string }> } }> })
-        .purchase_units?.[0]?.payments?.captures?.[0]?.id
-      if (r.ok && cap) flow.setCaptureId(cap)
-      return r
-    }
     case 'disburse':
-      return api.disburse(accessToken, captureId)
-    case 'refund': {
-      const r = await api.refund(accessToken, captureId)
-      const rid = (r.data as { id?: string }).id
-      if (r.ok && rid) flow.setRefundId(rid)
-      return r
-    }
+      return captureId ? buildReferencedPayoutBody(captureId) : null
+    case 'refund':
+      return buildRefundBody()
+    default:
+      return null
   }
+}
+
+async function runStep(id: StepId): Promise<api.ApiResult> {
+  const flow = useFlowStore.getState()
+  const cred = useCredentialsStore.getState()
+  const { accessToken, orderId, captureId, config, requestBodies } = flow
+
+  if (id === 'auth') {
+    const r = await api.fetchAccessToken()
+    if (r.ok && r.data.accessToken) flow.setAccessToken(r.data.accessToken)
+    return r
+  }
+
+  const step = STEPS.find((s) => s.id === id)!
+  const targetPath = step.pathTemplate
+    .replace('{orderId}', orderId)
+    .replace('{captureId}', captureId)
+  const authAssertion =
+    config.authAssertionEnabled && cred.clientId && config.payerId
+      ? generateAuthAssertion(cred.clientId, config.payerId)
+      : undefined
+
+  const r = await api.callCommon(targetPath, {
+    method: 'POST',
+    rawBody: STEP_HAS_BODY[id] ? requestBodies[id] : undefined,
+    token: accessToken,
+    bnCode: cred.bnCode || undefined,
+    authAssertion,
+  })
+
+  if (id === 'createOrder') {
+    const oid = (r.data as { id?: string }).id
+    if (r.ok && oid) flow.setOrderId(oid)
+  } else if (id === 'capture') {
+    const cap = (r.data as {
+      purchase_units?: Array<{ payments?: { captures?: Array<{ id: string }> } }>
+    }).purchase_units?.[0]?.payments?.captures?.[0]?.id
+    if (r.ok && cap) flow.setCaptureId(cap)
+  } else if (id === 'refund') {
+    const rid = (r.data as { id?: string }).id
+    if (r.ok && rid) flow.setRefundId(rid)
+  }
+  return r
 }
 
 export function StepDetail() {
@@ -64,12 +98,49 @@ export function StepDetail() {
   const setStepResult = useFlowStore((s) => s.setStepResult)
   const orderId = useFlowStore((s) => s.orderId)
   const captureId = useFlowStore((s) => s.captureId)
+  const accessToken = useFlowStore((s) => s.accessToken)
+  const requestBody = useFlowStore((s) => s.requestBodies[s.activeStep])
+  const editing = useFlowStore((s) => Boolean(s.bodyEditing[s.activeStep]))
+  const setRequestBody = useFlowStore((s) => s.setRequestBody)
+  const setBodyEditing = useFlowStore((s) => s.setBodyEditing)
   const isConfigured = useCredentialsStore((s) => s.isConfigured())
+  const clientId = useCredentialsStore((s) => s.clientId)
+  const bnCode = useCredentialsStore((s) => s.bnCode)
+  const [showToken, setShowToken] = useState(false)
 
   const step = STEPS.find((s) => s.id === activeStep)!
   const resolvedPath = step.pathTemplate
     .replace('{orderId}', orderId || '{orderId}')
     .replace('{captureId}', captureId || '{captureId}')
+
+  // 进入某步时若还没生成 body，则由 config 生成初值。
+  useEffect(() => {
+    if (!STEP_HAS_BODY[activeStep]) return
+    if (requestBody !== undefined) return
+    const built = buildBodyFor(activeStep, config, captureId)
+    if (built !== null) setRequestBody(activeStep, JSON.stringify(built, null, 2))
+  }, [activeStep, requestBody, config, captureId, setRequestBody])
+
+  const regenerate = () => {
+    const built = buildBodyFor(activeStep, config, captureId)
+    if (built !== null) setRequestBody(activeStep, JSON.stringify(built, null, 2))
+  }
+
+  // 改结构化字段：更新 config 并按新值重建当前步 body（覆盖手动编辑）。
+  const onField = (patch: Partial<FlowConfig>) => {
+    updateConfig(patch)
+    const built = buildBodyFor(activeStep, { ...config, ...patch }, captureId)
+    if (built !== null) setRequestBody(activeStep, JSON.stringify(built, null, 2))
+  }
+
+  const authAssertionPreview =
+    config.authAssertionEnabled && clientId && config.payerId
+      ? generateAuthAssertion(clientId, config.payerId)
+      : ''
+
+  const maskedToken = accessToken
+    ? `Bearer ${accessToken.slice(0, 12)}…${accessToken.slice(-6)}`
+    : 'Bearer <先执行 Auth 获取>'
 
   const onSend = async () => {
     setStepResult(activeStep, 'running')
@@ -81,54 +152,120 @@ export function StepDetail() {
     }
   }
 
-  const showConfigFields = activeStep === 'createOrder' || activeStep === 'onboarding'
+  const inputCls = 'rounded border border-line bg-white px-2 py-1 font-mono text-sm'
 
   return (
     <div className="flex flex-col gap-3">
+      {/* 请求行 */}
       <Card>
-        <div className="mb-1 text-xs font-semibold uppercase tracking-wider text-muted">这一步在干什么</div>
-        <p className="text-sm leading-relaxed">{EXPLAIN[activeStep]}</p>
-      </Card>
-
-      <Card>
-        <div className="mb-2 flex items-center gap-2">
+        <div className="flex items-center gap-2">
           <Badge tone="ink">{step.method}</Badge>
           <span className="font-mono text-sm">{resolvedPath}</span>
         </div>
-        {showConfigFields && (
-          <div className="grid grid-cols-2 gap-2 text-sm">
-            {activeStep === 'createOrder' && (
-              <>
-                <label className="flex flex-col gap-1">金额
-                  <input className="rounded border border-line bg-white px-2 py-1 font-mono"
-                    value={config.amount} onChange={(e) => updateConfig({ amount: e.target.value })} />
-                </label>
-                <label className="flex flex-col gap-1">币种
-                  <input className="rounded border border-line bg-white px-2 py-1 font-mono"
-                    value={config.currency} onChange={(e) => updateConfig({ currency: e.target.value })} />
-                </label>
-                <label className="col-span-2 flex flex-col gap-1">Payee Email（被授权商户）
-                  <input className="rounded border border-line bg-white px-2 py-1 font-mono"
-                    value={config.payeeEmail} onChange={(e) => updateConfig({ payeeEmail: e.target.value })} />
-                </label>
-              </>
-            )}
-            {activeStep === 'onboarding' && (
-              <>
-                <label className="flex flex-col gap-1">Tracking ID
-                  <input className="rounded border border-line bg-white px-2 py-1 font-mono"
-                    value={config.trackingId} onChange={(e) => updateConfig({ trackingId: e.target.value })} />
-                </label>
-                <label className="flex flex-col gap-1">Return URL
-                  <input className="rounded border border-line bg-white px-2 py-1 font-mono"
-                    value={config.returnUrl} onChange={(e) => updateConfig({ returnUrl: e.target.value })} />
-                </label>
-              </>
-            )}
-          </div>
-        )}
       </Card>
 
+      {/* 结构化输入 */}
+      <Card className="flex flex-col gap-3">
+        <div className="text-xs font-semibold uppercase tracking-wider text-muted">关键参数</div>
+        <div className="grid grid-cols-2 gap-2 text-sm">
+          {activeStep === 'createOrder' && (
+            <>
+              <label className="flex flex-col gap-1">金额
+                <input className={inputCls} value={config.amount}
+                  onChange={(e) => onField({ amount: e.target.value })} />
+              </label>
+              <label className="flex flex-col gap-1">币种
+                <input className={inputCls} value={config.currency}
+                  onChange={(e) => onField({ currency: e.target.value })} />
+              </label>
+              <label className="col-span-2 flex flex-col gap-1">Payee Email（被授权商户）
+                <input className={inputCls} value={config.payeeEmail}
+                  onChange={(e) => onField({ payeeEmail: e.target.value })} />
+              </label>
+            </>
+          )}
+          {activeStep === 'onboarding' && (
+            <>
+              <label className="flex flex-col gap-1">Tracking ID
+                <input className={inputCls} value={config.trackingId}
+                  onChange={(e) => onField({ trackingId: e.target.value })} />
+              </label>
+              <label className="flex flex-col gap-1">Return URL
+                <input className={inputCls} value={config.returnUrl}
+                  onChange={(e) => onField({ returnUrl: e.target.value })} />
+              </label>
+            </>
+          )}
+          {/* payer_id + Auth Assertion 开关：对所有走 /common 的步骤可用 */}
+          {activeStep !== 'auth' && (
+            <>
+              <label className="flex flex-col gap-1">Payer ID（商户）
+                <input className={inputCls} value={config.payerId}
+                  onChange={(e) => updateConfig({ payerId: e.target.value })} />
+              </label>
+              <label className="flex items-end gap-2">
+                <input type="checkbox" checked={config.authAssertionEnabled}
+                  onChange={(e) => updateConfig({ authAssertionEnabled: e.target.checked })} />
+                带 PayPal-Auth-Assertion
+              </label>
+            </>
+          )}
+        </div>
+      </Card>
+
+      {/* Request body（默认只读，可编辑，实时保存） */}
+      {STEP_HAS_BODY[activeStep] && (
+        <Card className="flex flex-col gap-2">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-semibold uppercase tracking-wider text-muted">Request Body</span>
+            <div className="flex gap-2">
+              <Button variant="ghost" className="px-2 py-1 text-xs"
+                onClick={() => setBodyEditing(activeStep, !editing)}>
+                <Pencil size={14} /> {editing ? '完成' : '编辑'}
+              </Button>
+              <Button variant="ghost" className="px-2 py-1 text-xs" onClick={regenerate}>
+                <RotateCcw size={14} /> 重新生成
+              </Button>
+            </div>
+          </div>
+          {editing ? (
+            <textarea
+              className="min-h-48 w-full rounded border border-line bg-white p-2 font-mono text-xs"
+              value={requestBody ?? ''}
+              onChange={(e) => setRequestBody(activeStep, e.target.value)}
+            />
+          ) : (
+            <pre className="max-h-80 overflow-auto whitespace-pre-wrap break-all font-mono text-xs">
+              {requestBody ?? '（尚未生成 —— disburse 需先完成 Capture 拿到 capture id，可点「重新生成」）'}
+            </pre>
+          )}
+        </Card>
+      )}
+
+      {/* Headers 回显 */}
+      <Card className="flex flex-col gap-1">
+        <div className="mb-1 text-xs font-semibold uppercase tracking-wider text-muted">Request Headers</div>
+        <div className="font-mono text-xs leading-relaxed">
+          {activeStep === 'auth' ? (
+            <div>Authorization: Basic &lt;clientId:secret 的 base64&gt;</div>
+          ) : (
+            <>
+              <div className="flex items-center gap-1">
+                Authorization: {showToken ? `Bearer ${accessToken || '<先执行 Auth>'}` : maskedToken}
+                <button className="text-muted hover:text-ink" onClick={() => setShowToken((v) => !v)}>
+                  {showToken ? <EyeOff size={12} /> : <Eye size={12} />}
+                </button>
+              </div>
+              <div>Content-Type: application/json</div>
+              <div>Prefer: return=representation</div>
+              {bnCode && <div>PayPal-Partner-Attribution-Id: {bnCode}</div>}
+              {authAssertionPreview && <div className="break-all">PayPal-Auth-Assertion: {authAssertionPreview}</div>}
+            </>
+          )}
+        </div>
+      </Card>
+
+      {/* 发送 */}
       <div className="flex items-center gap-3">
         <Button onClick={onSend} disabled={!isConfigured || status === 'running'}>
           <Send size={16} /> 发送
@@ -139,10 +276,11 @@ export function StepDetail() {
         )}
       </div>
 
+      {/* Response（发送后显示在下方） */}
       {response !== undefined && (
         <Card>
-          <div className="mb-1 text-xs font-semibold uppercase tracking-wider text-muted">响应</div>
-          <pre className="max-h-80 overflow-auto whitespace-pre-wrap break-all font-mono text-xs">
+          <div className="mb-1 text-xs font-semibold uppercase tracking-wider text-muted">Response</div>
+          <pre className="max-h-96 overflow-auto whitespace-pre-wrap break-all font-mono text-xs">
             {JSON.stringify(response, null, 2)}
           </pre>
         </Card>
