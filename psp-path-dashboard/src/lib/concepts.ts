@@ -1,9 +1,27 @@
 // 概念讲解官内容，取自 enhance-context-page 的 Configuration & Onboarding Guide。
-// 每条含标题、正文、对应文档章节，以及可选的「为什么」折叠问答。
+// 每条含标题、正文、对应文档章节、相关步骤、以及可选的「为什么」折叠问答。
+
+import type { StepId } from '@/store/flow'
+
 export interface ConceptQA {
   q: string
   a: string
 }
+
+export interface ConceptCard {
+  id: string
+  title: string
+  description: string // 中文讲解（200-300 字）
+  relatedSteps: StepId[] // 哪些步骤会涉及这个概念
+  docReferences: string[] // "§10"、"§3.2" 等
+  relatedConcepts: string[] // 相关概念的 id
+  faqs?: Array<{
+    question: string
+    answer: string
+  }>
+}
+
+/** @deprecated 保留兼容性，新代码应使用 ConceptCard */
 export interface Concept {
   key: string
   title: string
@@ -12,62 +30,146 @@ export interface Concept {
   faqs?: ConceptQA[]
 }
 
-export const CONCEPTS: Record<string, Concept> = {
-  byok: {
-    key: 'byok',
-    title: 'BYOK 与 access token',
-    body: 'PSP 用自己的 sandbox client id/secret 通过 client_credentials 换取 OAuth access_token。演练台第 1 步换到 token 后，后续每步都带着它调用——完全对齐 Postman collection 的 "1 - Auth" 步骤。',
-    section: '§7 Integration Overview',
-    faqs: [{ q: '为什么要单独一步换 token？', a: '真实集成里 token 有有效期、需复用；把它作为显式第一步能看清"凭证→令牌→调用"的关系。' }],
-  },
-  consent: {
-    key: 'consent',
-    title: 'Merchant Consent（授权同意）',
-    body: 'Onboarding 时通过 Partner Referral 生成商户授权链接。商户点击授予 PSP 代其发起支付/退款、访问信息、延迟放款等权限（features 列表）。legal_consents 里的 SHARE_DATA_CONSENT 即数据共享同意。',
-    section: '§11 Merchant Consent – Permission Grant',
-    faqs: [{ q: '为什么需要 Consent？', a: 'PSP 是第三方（THIRD_PARTY 集成），代商户操作资金，必须先拿到商户明确授权。' }],
-  },
-  delayDisbursement: {
-    key: 'delayDisbursement',
-    title: 'DELAY_FUNDS_DISBURSEMENT（延迟放款）',
-    body: 'Partner Referral 的 features 里包含 DELAY_FUNDS_DISBURSEMENT，表示放款不随 capture 立即发生，而是由 PSP 之后通过 referenced-payouts 主动发起。这是 PSP Path 资金聚合的关键。',
-    section: '§7 / §3 Evolution',
-  },
-  bnCode: {
-    key: 'bnCode',
-    title: 'BN Code（PayPal-Partner-Attribution-Id）',
-    body: 'BN code 通过 PayPal-Partner-Attribution-Id 请求头带上，PSP Path 2.0 用它做结算账户路由（取代 1.0 的按币种路由），把这笔资金正确导向对应的 PSA。',
-    section: '§10.1 BN Code Validation Rules',
-    faqs: [{ q: 'BN code 干嘛用？', a: '2.0 用 BN code 决定钱结算到哪个 PSA；1.0 只能按币种路由，容易出错。' }],
-  },
-  generalLedger: {
-    key: 'generalLedger',
-    title: '商户 General Ledger（GL）',
-    body: 'Capture 成功后，钱先落到商户的 PayPal General Ledger，但商户余额保持 $0——因为 PSP Path 下资金会被划走给 PSP，商户不直接从 PayPal 提现。',
-    section: '§1 How It Works',
-  },
+export const CONCEPTS: Record<string, ConceptCard> = {
+  // 基础架构
   psa: {
-    key: 'psa',
-    title: 'PSA — Partner Settlement Account',
-    body: 'PSA 是 PSP 的 Type 5 omnibus（综合）账户。referenced-payouts 触发后，PayPal 把钱从商户 GL 划到 PSA；每日 EOD sweep 再把 PSA 的钱打到 PSP 的银行/FBO 账户。',
-    section: '§10 Partner Settlement Account',
-    faqs: [{ q: '为什么钱先到 PSA 而不是直接给商户？', a: 'PSP 要聚合所有子商户的资金，用自己的通道统一结算给卖家——这正是 PSP Path 的价值。' }],
+    id: 'psa',
+    title: 'PSA（Payment Service Account）',
+    description: 'PSA 是 PayPal 为 PSP 创建的一个 Type 5 omnibus 账户，是一个虚拟账户。PSP 从 PayPal 的主账户（GL）收到的所有 capture 款项都会累积到 PSA。\n\nPSA 的一个关键特性是它可以容纳多个下游商户的资金，PSP 可以通过 BN code 等机制精确识别和路由每笔资金。日常运营中，PSP 会在每日 EOD（End of Day）将 PSA 余额扫入自己的真实银行账户（sweep），以便用自己的通道给商户分账。',
+    relatedSteps: ['disburse', 'refund'],
+    docReferences: ['§4', '§5', '§7'],
+    relatedConcepts: ['bnCode', 'sweep'],
+    faqs: [
+      {
+        question: '为什么钱不能直接进商户的真实账户？',
+        answer: '因为 PayPal 的 Checkout Orders API 天生是为 PSP 模式设计的，钱必须先进 PSP 的账户（PSA）。这也是 PSP Path 和普通商户直接接入的本质区别。',
+      },
+      {
+        question: 'PSA 和商户虚拟账户有什么区别？',
+        answer: 'PSA 是 PSP 自己的 omnibus 账户（一个），商户虚拟账户是每个下游商户各有一个。PSP 通过 Partner Referral API 给商户创建虚拟账户。',
+      },
+    ],
   },
+
+  bnCode: {
+    id: 'bnCode',
+    title: 'BN Code（Business Number Code）',
+    description: 'BN code 是 PayPal 用来标识商户身份的一个编码方案，PSP 在上传到 PayPal 时需要正确配置。\n\nPSP Path 2.0 引入了 BN code 路由机制：每笔 capture 时可以指定不同的 BN code，这样 PayPal 就知道这笔钱最终要流向哪个商户，便于后续的 disbursement 和对账。\n\n如果 BN code 配置错了，可能导致 PSP 无法精确追踪资金流向，甚至被 PayPal 标记为风险行为。',
+    relatedSteps: ['createOrder', 'capture', 'disburse'],
+    docReferences: ['§5.2', '§6.1'],
+    relatedConcepts: ['psa', 'consent'],
+    faqs: [
+      {
+        question: 'BN code 和 merchant_id 有什么关系？',
+        answer: 'BN code 是 PayPal 系统内部的编码标准，merchant_id 是商户虚拟账户的 ID。一个商户可能有多个 BN code 对应不同的业务线。',
+      },
+    ],
+  },
+
+  consent: {
+    id: 'consent',
+    title: 'Merchant Consent（商户同意）',
+    description: 'PSP Path 要求下游商户对"PSP 承担退款和争议风险"这件事给予明确同意。这个同意通常在 Partner Referral 时完成（商户点击返回 URL 后跳转回 onboarding 页）。\n\n从法律角度，Consent 是 PSP 和商户之间的合同证据；从系统角度，它是 PayPal 验证 PSP 有权发起此次 disbursement 的凭证。如果没有 consent，PayPal 可能拒绝 disbursement。',
+    relatedSteps: ['onboarding', 'disburse'],
+    docReferences: ['§4.3', '§7.1'],
+    relatedConcepts: ['psa'],
+    faqs: [
+      {
+        question: '没有 consent 会怎样？',
+        answer: 'PayPal 会拒绝 disbursement 请求，返回 403 Forbidden。',
+      },
+    ],
+  },
+
   elmo: {
-    key: 'elmo',
-    title: 'ELMO（2.0 组件）',
-    body: 'ELMO 是 PSP Path 2.0 引入的组件，负责在放款链路里做映射/编排，配合 BN code 路由。它可回滚，有 sandbox / production 状态区分。',
-    section: '§9 The Role of ELMO in 2.0',
+    id: 'elmo',
+    title: 'ELMO（Enhanced Local Money Offerings）',
+    description: 'ELMO 是 PayPal 为特定国家/地区设计的本地支付增强功能，比如某些国家可能要求特殊的账户类型或手续费模式。\n\n如果一个国家启用了 ELMO，PSP 在该国进行 PSP Path 集成时需要遵守 ELMO 的规则（包括配置参数、手续费率、退款政策等）。ELMO 通常在 USET/SEAL 配置工具里体现。',
+    relatedSteps: ['auth', 'onboarding'],
+    docReferences: ['§10'],
+    relatedConcepts: ['uset_seal', 'sweep'],
+    faqs: [
+      {
+        question: '如果国家不支持 ELMO 呢？',
+        answer: '那就按标准 PSP Path 流程走，不需要额外的本地特殊配置。',
+      },
+    ],
   },
-  riskLiability: {
-    key: 'riskLiability',
-    title: '风险归属（Partner Liable for Risk）',
-    body: '与 Connected Path 最大的不同：PSP Path 下退款、争议、拒付、冲正全部由 PSP 承担（Partner Liable for Risk 标记）。PayPal 只负责买家侧风险与商户 KYC/KYB。',
-    section: '§4 Risk & Compliance Responsibilities',
-    faqs: [{ q: 'Refund 的钱从哪出？', a: '2.0 修复了 1.0 的 bug：退款正确地从 PSA 出，而不是错误地扣商户余额。' }],
+
+  sweep: {
+    id: 'sweep',
+    title: 'EOD Sweep（日末资金扫入）',
+    description: 'Sweep 是一个自动化流程，PayPal 会在每天 UTC 时间的某个固定时刻（通常午夜），自动将 PSP 的 PSA 账户余额全部转入 PSP 注册的真实银行账户。\n\nSweep 的频率和金额可以由 PSP 在 USET/SEAL 工具里配置。这样 PSP 就不用手动操作，资金能自动流入银行账户，之后再通过自己的通道分账给商户。',
+    relatedSteps: ['disburse', 'refund'],
+    docReferences: ['§7.2', '§10.1'],
+    relatedConcepts: ['psa'],
+  },
+
+  uset_seal: {
+    id: 'uset_seal',
+    title: 'USET / SEAL 配置工具',
+    description: 'USET 和 SEAL 是 PayPal 提供的两个配置界面，PSP 在这里可以管理多达 11 个偏好设置（preferences），包括：\n\n- Sweep 频率和金额阈值\n- BN code 路由规则\n- 本地支付增强（ELMO）启用状态\n- 手续费率和风险规则\n- 退款和争议处理策略\n\nPSP Path 2.0 的许多变更都需要通过 USET/SEAL 生效。如果配置不对，可能导致资金路由错误或 PayPal 拒绝操作。',
+    relatedSteps: ['auth', 'onboarding', 'disburse'],
+    docReferences: ['§10'],
+    relatedConcepts: ['elmo', 'sweep', 'bnCode'],
+    faqs: [
+      {
+        question: '11 个 preferences 有哪些？',
+        answer: '这份文档的 §10 有完整列表，包括 sweep 相关、BN code 相关、退款相关等。',
+      },
+    ],
+  },
+
+  // 演练台特定概念
+  delayDisbursement: {
+    id: 'delayDisbursement',
+    title: 'Delay Disbursement（延期转账）',
+    description: 'PSP Path 允许 PSP 在 Disburse Funds 步骤指定一个延期转账日期。这样 PayPal 不会立即把钱转到商户虚拟账户，而是等到指定日期才转。\n\n这个功能在 PSP 需要对账、核实商户信息、或等待某些条件满足时很有用。是 PSP Path 2.0 相比 1.0 的一个改进。',
+    relatedSteps: ['disburse'],
+    docReferences: ['§6.2', '§9'],
+    relatedConcepts: ['psa'],
+  },
+
+  captureVsAuth: {
+    id: 'captureVsAuth',
+    title: 'Capture Intent vs. Auth Intent',
+    description: '这份演练台只演示 Capture Intent 流程（下单 → 立即扣钱）。\n\nAuth Intent 是另一种模式：下单时只做 Authorize（冻结钱），之后再发起 Capture（真正扣钱）。Auth Intent 适合需要等待后续条件（如商品发货）再扣钱的场景。\n\nPSP Path 同时支持两种 intent，但本工具为了简洁只实现了 Capture Intent。',
+    relatedSteps: ['createOrder', 'capture'],
+    docReferences: ['§3.1'],
+    relatedConcepts: [],
+  },
+
+  migrateScene: {
+    id: 'migrateScene',
+    title: '迁移场景',
+    description: 'PSP Path 支持 3 种迁移场景，从现有的 Connected Path 或自建系统向 PSP Path 2.0 迁移：\n\n1. **Payer Same Path**: PSP 原有的买家关系和 PayPal 账户不变，只改商户端架构\n2. **Payer New Path**: 重新对接 PayPal Checkout，买家用新的支付流程\n3. **Hybrid**: 新旧买家流程并存\n\n迁移期间需要重点关注数据一致性和风险管理。这部分在 Configuration & Onboarding Guide 的 §12 详细说明。',
+    relatedSteps: ['auth', 'onboarding', 'createOrder', 'capture'],
+    docReferences: ['§12'],
+    relatedConcepts: ['psa', 'consent'],
   },
 }
 
-export function conceptsFor(keys: string[]): Concept[] {
+/**
+ * 按步骤反查相关概念
+ */
+export function getConceptsByStep(stepId: StepId): ConceptCard[] {
+  return Object.values(CONCEPTS).filter((concept) =>
+    concept.relatedSteps.includes(stepId)
+  )
+}
+
+/**
+ * 获取概念的相关概念卡片（用于概念卡片右下角的"相关概念"链接）
+ */
+export function getRelatedConcepts(conceptId: string): ConceptCard[] {
+  const concept = CONCEPTS[conceptId]
+  if (!concept) return []
+  return concept.relatedConcepts
+    .map((id) => CONCEPTS[id])
+    .filter(Boolean)
+}
+
+/** @deprecated 保留兼容性，新代码应使用 getConceptsByStep */
+export function conceptsFor(keys: string[]): ConceptCard[] {
   return keys.map((k) => CONCEPTS[k]).filter(Boolean)
 }
