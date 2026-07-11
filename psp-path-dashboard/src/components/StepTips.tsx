@@ -41,12 +41,12 @@ export function StepTips() {
           {openTips && (
             <div className="mt-2 flex flex-col gap-2">
               {concepts.map((c) => (
-                <div key={c.key} className="text-sm">
+                <div key={c.id} className="text-sm">
                   <div className="flex items-center justify-between">
                     <span className="font-medium">{c.title}</span>
-                    <Badge tone="muted">{c.section}</Badge>
+                    <Badge tone="muted">{c.docReferences.join(', ')}</Badge>
                   </div>
-                  <p className="text-ink/80">{c.body}</p>
+                  <p className="whitespace-pre-line text-ink/80">{c.description}</p>
                 </div>
               ))}
             </div>
