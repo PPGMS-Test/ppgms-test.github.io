@@ -6,5 +6,5 @@ const __dirname = fileURLToPath(new URL('.', import.meta.url))
 
 export default defineConfig({
   resolve: { alias: { '@': resolve(__dirname, 'src') } },
-  test: { environment: 'jsdom', include: ['src/**/*.test.ts'] },
+  test: { environment: 'jsdom', include: ['src/**/*.test.ts', 'src/**/*.test.tsx'] },
 })
