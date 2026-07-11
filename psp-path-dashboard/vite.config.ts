@@ -7,6 +7,7 @@ const __dirname = fileURLToPath(new URL('.', import.meta.url))
 
 export default defineConfig({
   plugins: [react()],
+  base: '/__6__-API/psp-path-dashboard/',
   resolve: { alias: { '@': resolve(__dirname, 'src') } },
   server: { port: 5180, host: true, open: false },
   build: { outDir: 'dist', emptyOutDir: true },

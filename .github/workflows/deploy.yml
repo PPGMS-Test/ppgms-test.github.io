@@ -35,6 +35,7 @@ jobs:
             github-homepage/pnpm-lock.yaml
             applepay-dashboard/pnpm-lock.yaml
             bopis-dashboard/pnpm-lock.yaml
+            psp-path-dashboard/pnpm-lock.yaml
 
       # ── applepay-dashboard ──────────────────────────────────────────
       - name: Install applepay-dashboard dependencies
@@ -52,6 +53,15 @@ jobs:
 
       - name: Build bopis-dashboard
         working-directory: bopis-dashboard
+        run: pnpm build
+
+      # ── psp-path-dashboard ──────────────────────────────────────────
+      - name: Install psp-path-dashboard dependencies
+        working-directory: psp-path-dashboard
+        run: pnpm install --no-frozen-lockfile
+
+      - name: Build psp-path-dashboard
+        working-directory: psp-path-dashboard
         run: pnpm build
 
       # ── github-homepage ─────────────────────────────────────────────
@@ -81,6 +91,12 @@ jobs:
         run: |
           mkdir -p github-homepage/dist/__2__-jsv6-test/bopis-dashboard
           cp -r bopis-dashboard/dist/. github-homepage/dist/__2__-jsv6-test/bopis-dashboard/
+
+      # Merge: psp-path-dashboard dist. Vite base = /__6__-API/psp-path-dashboard/
+      - name: Merge psp-path-dashboard into dist
+        run: |
+          mkdir -p github-homepage/dist/__6__-API/psp-path-dashboard
+          cp -r psp-path-dashboard/dist/. github-homepage/dist/__6__-API/psp-path-dashboard/
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
