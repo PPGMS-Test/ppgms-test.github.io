@@ -63,6 +63,49 @@ export function buildPartnerReferralBody(trackingId: string, returnUrl: string) 
   }
 }
 
+export interface ReferencedPayoutsItemsParams {
+  captureId: string
+  merchantId: string
+  amount: string
+  currency: string
+  disbursalDate?: string
+}
+
+export function buildReferencedPayoutsItemsBody(params: ReferencedPayoutsItemsParams) {
+  return {
+    referenced_id: params.captureId,
+    items: [
+      {
+        id: params.merchantId,
+        amount: {
+          currency_code: params.currency,
+          value: params.amount,
+        },
+        disbursal_type: 'DELAYED',
+        disbursal_date: params.disbursalDate || new Date().toISOString().split('T')[0],
+      },
+    ],
+  }
+}
+
+export interface RefundParams {
+  amount?: string
+  currency?: string
+  reason?: string
+  noteToPayer?: string
+}
+
+export function buildRefundBody(params: RefundParams) {
+  return {
+    amount: {
+      currency_code: params.currency || 'USD',
+      value: params.amount || '0.00',
+    },
+    reason_code: params.reason || 'REFUND',
+    note_to_payer: params.noteToPayer || '',
+  }
+}
+
 export interface PspOrderInput {
   amount: string
   currency: string

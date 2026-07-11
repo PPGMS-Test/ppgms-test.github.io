@@ -2,6 +2,8 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import {
   buildPartnerReferralBody,
   buildPspOrderBody,
+  buildReferencedPayoutsItemsBody,
+  buildRefundBody,
   createPartnerReferral,
   createPspOrder,
   capturePspOrder,
@@ -47,6 +49,81 @@ describe('body 模板', () => {
     expect(body.intent).toBe('CAPTURE')
     expect(body.purchase_units[0].payee.email_address).toBe('m@x.com')
     expect(body.purchase_units[0].amount.value).toBe('160.00')
+  })
+})
+
+describe('buildReferencedPayoutsItemsBody', () => {
+  it('should return body with referenced_id and items', () => {
+    const body = buildReferencedPayoutsItemsBody({
+      captureId: 'CAP-123',
+      merchantId: 'MERCH-456',
+      amount: '100.00',
+      currency: 'USD',
+    })
+    expect(body.referenced_id).toBe('CAP-123')
+    expect(body.items[0].id).toBe('MERCH-456')
+    expect(body.items[0].amount.value).toBe('100.00')
+    expect(body.items[0].amount.currency_code).toBe('USD')
+    expect(body.items[0].disbursal_type).toBe('DELAYED')
+  })
+
+  it('should use default disbursal_date when not provided', () => {
+    const body = buildReferencedPayoutsItemsBody({
+      captureId: 'CAP-123',
+      merchantId: 'MERCH-456',
+      amount: '100.00',
+      currency: 'USD',
+    })
+    expect(body.items[0].disbursal_date).toMatch(/^\d{4}-\d{2}-\d{2}$/)
+  })
+
+  it('should use provided disbursal_date', () => {
+    const body = buildReferencedPayoutsItemsBody({
+      captureId: 'CAP-123',
+      merchantId: 'MERCH-456',
+      amount: '100.00',
+      currency: 'USD',
+      disbursalDate: '2026-07-15',
+    })
+    expect(body.items[0].disbursal_date).toBe('2026-07-15')
+  })
+})
+
+describe('buildRefundBody', () => {
+  it('should return body with amount and reason_code', () => {
+    const body = buildRefundBody({
+      amount: '50.00',
+      currency: 'USD',
+      reason: 'REFUND',
+    })
+    expect(body.amount.value).toBe('50.00')
+    expect(body.amount.currency_code).toBe('USD')
+    expect(body.reason_code).toBe('REFUND')
+  })
+
+  it('should use defaults for optional fields', () => {
+    const body = buildRefundBody({})
+    expect(body.amount.value).toBe('0.00')
+    expect(body.amount.currency_code).toBe('USD')
+    expect(body.reason_code).toBe('REFUND')
+    expect(body.note_to_payer).toBe('')
+  })
+
+  it('should use provided note_to_payer', () => {
+    const body = buildRefundBody({
+      amount: '25.00',
+      currency: 'GBP',
+      reason: 'CUSTOMER_REQUEST',
+      noteToPayer: 'Refund approved',
+    })
+    expect(body.note_to_payer).toBe('Refund approved')
+  })
+
+  it('should use GBP currency when provided', () => {
+    const body = buildRefundBody({
+      currency: 'GBP',
+    })
+    expect(body.amount.currency_code).toBe('GBP')
   })
 })
 
