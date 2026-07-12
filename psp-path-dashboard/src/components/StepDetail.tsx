@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Send, Pencil, RotateCcw, Eye, EyeOff } from 'lucide-react'
+import { Send, Pencil, RotateCcw, Eye, EyeOff, Info } from 'lucide-react'
 import { STEPS } from '@/lib/steps'
 import { useFlowStore, type StepId, type FlowConfig } from '@/store/flow'
 import { useCredentialsStore } from '@/store/credentials'
@@ -14,6 +14,8 @@ import { generateAuthAssertion } from '@/lib/auth-assertion'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/Tooltip'
+import { StepTips } from '@/components/StepTips'
 
 // 哪些步骤有 request body（capture 无 body；auth 走独立路由）。
 const STEP_HAS_BODY: Record<StepId, boolean> = {
@@ -178,6 +180,7 @@ export function StepDetail() {
         <div className="flex items-center gap-2">
           <Badge tone="ink">{step.method}</Badge>
           <span className="font-mono text-sm">{resolvedPath}</span>
+          <StepTips />
         </div>
       </Card>
 
@@ -216,7 +219,22 @@ export function StepDetail() {
           {/* payer_id + Auth Assertion 开关：对所有走 /common 的步骤可用 */}
           {activeStep !== 'auth' && (
             <>
-              <label className="flex flex-col gap-1">Payer ID（商户）
+              <label className="flex flex-col gap-1">
+                <span className="flex items-center gap-1">
+                  Payer ID（被代理商户）
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button type="button" aria-label="Payer ID 说明" className="text-muted hover:text-ink">
+                        <Info size={13} />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      这是 PSP <b>代表的下游商户</b>的 PayPal Payer ID，不是 PSP 自己账户的 ID——PayPal-Auth-Assertion
+                      要声明「我（PSP）在代表哪个商户操作」。真实值要等商户完成 §11 Partner Referral 授权后才能从
+                      PayPal 拿到。这里默认预填的是 HKPSP 自己账号的 Payer ID，仅供没有真实商户时占位测试，不代表真实商户身份。
+                    </TooltipContent>
+                  </Tooltip>
+                </span>
                 <input className={inputCls} value={config.payerId}
                   onChange={(e) => updateConfig({ payerId: e.target.value })} />
               </label>

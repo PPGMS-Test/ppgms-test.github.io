@@ -8,7 +8,7 @@
 //
 // 字段来源（PSP sandbox 账号 HKPSP）：
 //   API Caller = HKPSP@PP.com（即默认 payee email）
-//   Payer ID   = WYFHZPJBHKKYU（账号的 PayPal Merchant ID；当前流程用 payee.email_address，未直接使用，留作参考）
+//   Payer ID   = WYFHZPJBHKKYU（HKPSP 自己账号的 PayPal Merchant ID，不是下游商户的）
 
 export const DEFAULT_CREDENTIALS = {
   clientId:
@@ -21,5 +21,9 @@ export const DEFAULT_CREDENTIALS = {
 /** Create Order 的默认 payee（被授权商户）email。凭证/请求预览里可改。 */
 export const DEFAULT_PAYEE_EMAIL = 'HKPSP@PP.com'
 
-/** 账号的 PayPal Merchant/Payer ID，留作参考；当前 create order 用 email 而非 merchant_id。 */
+/**
+ * PayPal-Auth-Assertion 里 payer_id 字段的默认值——语义上应是 PSP 代表的「下游商户」的 Payer ID，
+ * 不是 PSP 自己的。真实值要商户完成 Partner Referral 授权后才能拿到；这里预填 HKPSP 自己账号的
+ * Payer ID 仅作占位，方便没有真实商户时也能跑通请求。
+ */
 export const DEFAULT_PAYER_ID = 'WYFHZPJBHKKYU'
