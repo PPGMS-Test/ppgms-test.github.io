@@ -3,7 +3,6 @@ import { STEPS } from '@/lib/steps'
 import { conceptsFor } from '@/lib/concepts'
 import { useFlowStore, type StepId } from '@/store/flow'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/Tooltip'
-import { Badge } from '@/components/ui/Badge'
 
 // 每步一句话：这一步在干什么/钱在哪/谁担风险。
 const EXPLAIN: Record<StepId, string> = {
@@ -33,9 +32,9 @@ export function StepTips() {
         {concepts.length > 0 && (
           <ul className="mt-2 flex flex-col gap-1 border-t border-line pt-2">
             {concepts.map((c) => (
+              // justify-between 右侧暂空着——章节号先拿掉，占位留给以后放别的内容
               <li key={c.id} className="flex items-center justify-between gap-2">
                 <span>{c.title}</span>
-                <Badge tone="muted">{c.docReferences.join(', ')}</Badge>
               </li>
             ))}
           </ul>

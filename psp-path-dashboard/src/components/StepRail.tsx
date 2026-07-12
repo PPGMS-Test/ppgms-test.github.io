@@ -43,7 +43,8 @@ export function StepRail() {
                 <span className="flex-1">
                   <span className="font-mono text-xs text-muted">{step.order}.</span> {step.title}
                 </span>
-                <span className="text-[10px] text-muted">{step.docSection}</span>
+                {/* 占位：暂不展示章节号，留给以后放别的内容 */}
+                <span className="text-[10px] text-muted"></span>
               </button>
             )
           })}
