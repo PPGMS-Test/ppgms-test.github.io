@@ -238,10 +238,14 @@ export function StepDetail() {
                 <input className={inputCls} value={config.payerId}
                   onChange={(e) => updateConfig({ payerId: e.target.value })} />
               </label>
-              <label className="flex items-end gap-2">
-                <input type="checkbox" checked={config.authAssertionEnabled}
-                  onChange={(e) => updateConfig({ authAssertionEnabled: e.target.checked })} />
-                带 PayPal-Auth-Assertion
+              <label className="flex flex-col gap-1">
+                {/* 与 Payer ID 的标签行等高的占位，让下面的 checkbox 行跟输入框对齐 */}
+                <span className="invisible" aria-hidden="true">占位</span>
+                <span className="flex items-center gap-2 rounded border border-transparent px-2 py-1">
+                  <input type="checkbox" checked={config.authAssertionEnabled}
+                    onChange={(e) => updateConfig({ authAssertionEnabled: e.target.checked })} />
+                  带 PayPal-Auth-Assertion
+                </span>
               </label>
             </>
           )}
