@@ -87,13 +87,13 @@ describe('steps.ts', () => {
   })
 
   it('should have backward-compatible STEPS array', () => {
-    expect(STEPS).toHaveLength(9)
+    expect(STEPS).toHaveLength(8)
     expect(STEPS[0].id).toBe('auth')
     expect(STEPS[1].id).toBe('onboarding')
     expect(STEPS[2].id).toBe('createOrder')
     expect(STEPS[3].id).toBe('capture')
-    expect(STEPS[4].id).toBe('disburse')
-    expect(STEPS[5].id).toBe('refund')
+    expect(STEPS[4].id).toBe('refund')
+    expect(STEPS[7].id).toBe('disburse')
   })
 
   it('should have matching IDs between STEPS_DETAILED and STEPS', () => {

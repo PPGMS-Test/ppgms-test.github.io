@@ -6,11 +6,11 @@ beforeEach(() => useFlowStore.getState().reset())
 
 describe('StepRail component', () => {
   describe('step data structure', () => {
-    it('应该包含主流程的 6 个步骤，以及 DISBURSEMENT MODE 小节的 3 个入口（共 9 条，8 个不重复 id）', () => {
+    it('应该包含主流程的 6 个步骤，以及 DISBURSEMENT MODE 小节新增的 createOrderDelayed/captureDelayed（共 8 条，全部不重复）', () => {
       const allSteps = ['auth', 'onboarding', 'createOrder', 'capture', 'disburse', 'refund'] as StepId[]
       const definedSteps = STEPS.map((s) => s.id)
       expect(definedSteps).toEqual(expect.arrayContaining(allSteps))
-      expect(definedSteps.length).toBe(9)
+      expect(definedSteps.length).toBe(8)
       expect(new Set(definedSteps).size).toBe(8)
     })
 
@@ -23,14 +23,10 @@ describe('StepRail component', () => {
       expect(STEPS_BY_PHASE.MONEY_MOVE).toContain('refund')
     })
 
-    it('DISBURSEMENT MODE 小节复用 disburse 这个 id（唯一允许重复的 id），其余 id 都不重复', () => {
+    it('每个步骤应有唯一的 id', () => {
       const ids = STEPS.map((s) => s.id)
-      const counts = ids.reduce<Record<string, number>>((acc, id) => {
-        acc[id] = (acc[id] ?? 0) + 1
-        return acc
-      }, {})
-      const duplicated = Object.entries(counts).filter(([, count]) => count > 1)
-      expect(duplicated).toEqual([['disburse', 2]])
+      const uniqueIds = new Set(ids)
+      expect(uniqueIds.size).toBe(ids.length)
     })
 
     it('每个步骤应有 group、title、icon 等必要字段', () => {

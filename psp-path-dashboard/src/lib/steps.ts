@@ -437,23 +437,20 @@ export const STEPS: StepDef[] = [
   { id: 'capture', group: 'ORDER', order: 4, title: 'Capture Order', icon: 'ShoppingCart',
     method: 'POST', pathTemplate: '/v2/checkout/orders/{orderId}/capture', docSection: '§1 Three-Part Model', fundSegment: 'gl',
     conceptKeys: ['generalLedger'] },
-  { id: 'disburse', group: 'MONEY MOVE', order: 5, title: 'Disburse Funds (referenced payouts)', icon: 'ArrowLeftRight',
-    method: 'POST', pathTemplate: '/v1/payments/referenced-payouts-items', docSection: '§10 PSA', fundSegment: 'psa',
-    conceptKeys: ['psa', 'elmo'] },
-  { id: 'refund', group: 'MONEY MOVE', order: 6, title: 'Refund Payment', icon: 'RefreshCw',
+  { id: 'refund', group: 'REFUND', order: 5, title: 'Refund Payment', icon: 'RefreshCw',
     method: 'POST', pathTemplate: '/v2/payments/captures/{captureId}/refund', docSection: '§4 Risk', fundSegment: 'psp',
     conceptKeys: ['riskLiability'] },
   // DISBURSEMENT MODE 小节：createOrder/capture 各复制一份变体（共享同一份 orderId/captureId），
-  // referenced-payouts-items 直接复用上面的 disburse（同一个 id，再出现一次入口）。
-  { id: 'createOrderDelayed', group: 'DISBURSEMENT MODE', order: 7, title: 'Create Order (Delayed Disbursement)', icon: 'ShoppingCart',
+  // Disburse Funds 唯一的入口就放在这里（原来 MONEY MOVE 下的那份已挪走，不再重复出现）。
+  { id: 'createOrderDelayed', group: 'DISBURSEMENT MODE', order: 6, title: 'Create Order (Delayed Disbursement)', icon: 'ShoppingCart',
     method: 'POST', pathTemplate: '/v2/checkout/orders', docSection: '§1 Three-Part Model', fundSegment: 'buyer',
     conceptKeys: ['bnCode', 'delayDisbursement'] },
-  { id: 'captureDelayed', group: 'DISBURSEMENT MODE', order: 8, title: 'Capture Order', icon: 'ShoppingCart',
+  { id: 'captureDelayed', group: 'DISBURSEMENT MODE', order: 7, title: 'Capture Order', icon: 'ShoppingCart',
     method: 'POST', pathTemplate: '/v2/checkout/orders/{orderId}/capture', docSection: '§1 Three-Part Model', fundSegment: 'gl',
     conceptKeys: ['generalLedger'] },
-  { id: 'disburse', group: 'DISBURSEMENT MODE', order: 9, title: 'Disburse Funds (referenced payouts)', icon: 'ArrowLeftRight',
+  { id: 'disburse', group: 'DISBURSEMENT MODE', order: 8, title: 'Disburse Funds (referenced payouts)', icon: 'ArrowLeftRight',
     method: 'POST', pathTemplate: '/v1/payments/referenced-payouts-items', docSection: '§10 PSA', fundSegment: 'psa',
     conceptKeys: ['psa', 'elmo'] },
 ]
 
-export const STEP_GROUPS = ['AUTH', 'ONBOARDING', 'ORDER', 'MONEY MOVE', 'DISBURSEMENT MODE'] as const
+export const STEP_GROUPS = ['AUTH', 'ONBOARDING', 'ORDER', 'REFUND', 'DISBURSEMENT MODE'] as const
