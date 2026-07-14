@@ -214,7 +214,7 @@ export function StepDetail() {
                 <input className={inputCls} value={config.currency}
                   onChange={(e) => onField({ currency: e.target.value })} />
               </label>
-              <label className="col-span-2 flex flex-col gap-1">Payee Email（被授权商户）
+              <label className="col-span-2 flex flex-col gap-1">Payee Email（下游商户）
                 <input className={inputCls} value={config.payeeEmail}
                   onChange={(e) => onField({ payeeEmail: e.target.value })} />
               </label>
@@ -237,7 +237,7 @@ export function StepDetail() {
             <>
               <label className="flex flex-col gap-1">
                 <span className="flex items-center gap-1">
-                  Payer ID（被代理商户）
+                  Payer ID（下游商户）
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <button type="button" aria-label="Payer ID 说明" className="inline-flex shrink-0 items-center text-muted hover:text-ink">
@@ -245,9 +245,11 @@ export function StepDetail() {
                       </button>
                     </TooltipTrigger>
                     <TooltipContent>
-                      这是授权给到 PSP 的<b>代下游商户</b>的 PayPal Payer ID，不是 PSP 自己账户的 ID——PayPal-Auth-Assertion
-                      要声明「我（PSP）在代表哪个商户操作」。真实值要等商户完成 §11 Partner Referral 授权后才能从
-                      PayPal 拿到。这里默认预填的是 HKPSP 自己账号的 Payer ID，仅供没有真实商户时占位测试，不代表真实商户身份。
+                      跟上面 Create Order 用的 <b>Payee Email 是同一个下游商户</b>，只是这里换成 Payer ID
+                      这种标识方式——PayPal-Auth-Assertion 要用 Payer ID 声明「我（PSP）在代表哪个商户操作」。
+                      不是 PSP 自己的 Payer ID，「PSP 自己的 payer_id」这个概念在本演练台里完全用不到。
+                      真实值要等商户完成 §11 Partner Referral 授权后才能从 PayPal 拿到；这里默认预填的是占位值，
+                      请替换成真实下游商户的 Payer ID。
                     </TooltipContent>
                   </Tooltip>
                 </span>
