@@ -240,7 +240,7 @@ export function StepDetail() {
                   Payer ID（被代理商户）
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <button type="button" aria-label="Payer ID 说明" className="text-muted hover:text-ink">
+                      <button type="button" aria-label="Payer ID 说明" className="inline-flex shrink-0 items-center text-muted hover:text-ink">
                         <Info size={13} />
                       </button>
                     </TooltipTrigger>
@@ -305,9 +305,14 @@ export function StepDetail() {
             <div>Authorization: Basic &lt;clientId:secret 的 base64&gt;</div>
           ) : (
             <>
-              <div className="flex items-center gap-1">
+              <div>
                 Authorization: {showToken ? `Bearer ${accessToken || '<先执行 Auth>'}` : maskedToken}
-                <button className="text-muted hover:text-ink" onClick={() => setShowToken((v) => !v)}>
+                <button
+                  type="button"
+                  aria-label={showToken ? '隐藏 token' : '显示 token'}
+                  className="ml-1 inline-flex items-center align-middle text-muted hover:text-ink"
+                  onClick={() => setShowToken((v) => !v)}
+                >
                   {showToken ? <EyeOff size={12} /> : <Eye size={12} />}
                 </button>
               </div>

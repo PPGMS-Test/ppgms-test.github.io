@@ -23,7 +23,7 @@ export function StepTips() {
   return (
     <Tooltip>
       <TooltipTrigger asChild>
-        <button type="button" aria-label="这一步的说明" className="shrink-0 text-ink/70 hover:text-ink">
+        <button type="button" aria-label="这一步的说明" className="inline-flex shrink-0 items-center text-ink/70 hover:text-ink">
           <Lightbulb size={16} />
         </button>
       </TooltipTrigger>
