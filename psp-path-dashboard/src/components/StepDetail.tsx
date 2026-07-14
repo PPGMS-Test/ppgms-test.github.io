@@ -48,10 +48,20 @@ function buildBodyFor(id: StepId, config: FlowConfig, captureId: string): object
   }
 }
 
-// 从 partner-referrals 响应的 links 数组里取商户授权链接（rel === 'action_url'），方便直接点开。
-export function extractActionUrl(response: unknown): string | null {
+// 从响应的 links 数组里按 rel 取对应的 href，找不到返回 null。
+export function extractLinkByRel(response: unknown, rel: string): string | null {
   const links = (response as { links?: Array<{ rel?: string; href?: string }> } | undefined)?.links
-  return links?.find((l) => l.rel === 'action_url')?.href ?? null
+  return links?.find((l) => l.rel === rel)?.href ?? null
+}
+
+// partner-referrals 响应里的商户授权链接，方便直接点开。
+export function extractActionUrl(response: unknown): string | null {
+  return extractLinkByRel(response, 'action_url')
+}
+
+// create order 响应里指向下一步 Capture 端点的链接（rel === 'capture'）。
+export function extractCaptureLink(response: unknown): string | null {
+  return extractLinkByRel(response, 'capture')
 }
 
 async function runStep(id: StepId): Promise<api.ApiResult> {
@@ -159,6 +169,7 @@ export function StepDetail() {
     : 'Bearer <先执行 Auth 获取>'
 
   const actionUrl = extractActionUrl(response)
+  const captureLink = extractCaptureLink(response)
 
   const onSend = async () => {
     if (STEP_HAS_BODY[activeStep]) {
@@ -245,11 +256,13 @@ export function StepDetail() {
                       </button>
                     </TooltipTrigger>
                     <TooltipContent>
-                      跟上面 Create Order 用的 <b>Payee Email 是同一个下游商户</b>，只是这里换成 Payer ID
-                      这种标识方式——PayPal-Auth-Assertion 要用 Payer ID 声明「我（PSP）在代表哪个商户操作」。
-                      不是 PSP 自己的 Payer ID，「PSP 自己的 payer_id」这个概念在本演练台里完全用不到。
-                      真实值要等商户完成 §11 Partner Referral 授权后才能从 PayPal 拿到；这里默认预填的是占位值，
-                      请替换成真实下游商户的 Payer ID。
+                      这是授权给到 PSP 的<b>商户(merchant)</b>的 PayPal Payer ID <br/>
+                      我这里使用如下的<b>HK</b>商户: <br/>
+                      <ul className="list-disc pl-4">
+                        <li>payer_id: <code>CDQG5AS6GD7JXB5T</code></li>
+                        <li>email: <code>psp-test-2026-hk@test.com</code></li>
+                        <li>pwd: <code>12345678</code></li>
+                      </ul>
                     </TooltipContent>
                   </Tooltip>
                 </span>
@@ -351,6 +364,17 @@ export function StepDetail() {
             >
               <ExternalLink size={14} className="shrink-0" />
               打开商户授权链接（action_url）
+            </a>
+          )}
+          {captureLink && (
+            <a
+              href={captureLink}
+              target="_blank"
+              rel="noreferrer"
+              className="mb-2 flex items-center gap-1 break-all text-sm text-ink underline hover:text-accent"
+            >
+              <ExternalLink size={14} className="shrink-0" />
+              打开 Capture 端点链接（rel=capture）
             </a>
           )}
           <pre className="max-h-96 overflow-auto whitespace-pre-wrap break-all font-mono text-xs">
