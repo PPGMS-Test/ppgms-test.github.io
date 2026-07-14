@@ -10,6 +10,7 @@ paypal-backend-api/.env
 # psp-path-dashboard
 psp-path-dashboard/node_modules
 psp-path-dashboard/dist
+psp-path-dashboard/.env.local
 
 node_modules
 

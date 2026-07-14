@@ -2,9 +2,10 @@
 // 其余步骤前端拼完整 body + headers，走通用转发路由 /api/common（x-target-path 指定 PayPal path）。
 import { useCredentialsStore } from '@/store/credentials'
 
-// 无论开发还是生产，都直连已部署的 paypal-backend-api（Cloudflare Pages），
-// 不区分环境、不走本地 30041——与 applepay-dashboard / bopis-dashboard 的约定一致。
-const PROXY_BASE = 'https://ppgms-test-github-io.pages.dev'
+// 默认直连已部署的 paypal-backend-api（Cloudflare Pages），跟 applepay-dashboard /
+// bopis-dashboard 的约定一致。需要联调本地后端排查问题时，用 `pnpm dev:local`
+// （设置 VITE_PROXY_BASE 指向 http://localhost:30041）或自己建 .env.local 覆盖。
+const PROXY_BASE = import.meta.env.VITE_PROXY_BASE || 'https://ppgms-test-github-io.pages.dev'
 
 export interface ApiResult<T = unknown> {
   ok: boolean
