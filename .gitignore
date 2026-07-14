@@ -6,6 +6,7 @@ github-homepage/dist
 paypal-backend-api/node_modules
 paypal-backend-api/.next
 paypal-backend-api/.env
+paypal-backend-api/tsconfig.tsbuildinfo
 
 # psp-path-dashboard
 psp-path-dashboard/node_modules
