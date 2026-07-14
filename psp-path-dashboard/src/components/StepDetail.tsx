@@ -59,9 +59,9 @@ export function extractActionUrl(response: unknown): string | null {
   return extractLinkByRel(response, 'action_url')
 }
 
-// create order 响应里指向下一步 Capture 端点的链接（rel === 'capture'）。
-export function extractCaptureLink(response: unknown): string | null {
-  return extractLinkByRel(response, 'capture')
+// create order 响应里买家的 approve 链接（rel === 'approve'），方便直接点开走审批流程。
+export function extractApproveLink(response: unknown): string | null {
+  return extractLinkByRel(response, 'approve')
 }
 
 async function runStep(id: StepId): Promise<api.ApiResult> {
@@ -169,7 +169,7 @@ export function StepDetail() {
     : 'Bearer <先执行 Auth 获取>'
 
   const actionUrl = extractActionUrl(response)
-  const captureLink = extractCaptureLink(response)
+  const approveLink = extractApproveLink(response)
 
   const onSend = async () => {
     if (STEP_HAS_BODY[activeStep]) {
@@ -366,15 +366,15 @@ export function StepDetail() {
               打开商户授权链接（action_url）
             </a>
           )}
-          {captureLink && (
+          {approveLink && (
             <a
-              href={captureLink}
+              href={approveLink}
               target="_blank"
               rel="noreferrer"
               className="mb-2 flex items-center gap-1 break-all text-sm text-ink underline hover:text-accent"
             >
               <ExternalLink size={14} className="shrink-0" />
-              打开 Capture 端点链接（rel=capture）
+              打开 Buyer Approve 链接（rel=approve）
             </a>
           )}
           <pre className="max-h-96 overflow-auto whitespace-pre-wrap break-all font-mono text-xs">
