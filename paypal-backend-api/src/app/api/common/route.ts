@@ -51,9 +51,10 @@ export async function POST(req: Request) {
       ...(rawBody ? { body: rawBody } : {}),
     })
     const data = await res.json().catch(() => ({}))
-    console.log(`[api/common] ← status ${res.status}`)
+    const debugId = res.headers.get('paypal-debug-id') ?? undefined
+    console.log(`[api/common] ← status ${res.status}${debugId ? ` (paypal-debug-id: ${debugId})` : ''}`)
     console.log('[api/common] ← body:', JSON.stringify(data, null, 2))
-    return corsJson(data, res.status)
+    return corsJson(data, res.status, debugId)
   } catch (error) {
     console.error('[api/common] fetch to PayPal failed:', error)
     return corsJson({ error: 'Failed to forward request to PayPal' }, 502)
