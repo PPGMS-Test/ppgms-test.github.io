@@ -26,6 +26,8 @@ interface FlowState {
   stepStatus: Record<StepId, StepStatus>
   responses: Partial<Record<StepId, unknown>>
   errors: Partial<Record<StepId, string>>
+  /** PayPal 响应的 paypal-debug-id，跟 PayPal 支持排查问题时要用到 */
+  debugIds: Partial<Record<StepId, string>>
   // 可编辑配置
   config: FlowConfig
   requestBodies: Partial<Record<StepId, string>>
@@ -37,7 +39,7 @@ interface FlowState {
   setOrderId: (v: string) => void
   setCaptureId: (v: string) => void
   setRefundId: (v: string) => void
-  setStepResult: (s: StepId, status: StepStatus, response?: unknown, error?: string) => void
+  setStepResult: (s: StepId, status: StepStatus, response?: unknown, error?: string, debugId?: string) => void
   updateConfig: (patch: Partial<FlowConfig>) => void
   setRequestBody: (s: StepId, raw: string) => void
   setBodyEditing: (s: StepId, on: boolean) => void
@@ -71,6 +73,7 @@ const INITIAL_STATE = {
   } as Record<StepId, StepStatus>,
   responses: {} as Partial<Record<StepId, unknown>>,
   errors: {} as Partial<Record<StepId, string>>,
+  debugIds: {} as Partial<Record<StepId, string>>,
   requestBodies: {} as Partial<Record<StepId, string>>,
   bodyEditing: {} as Partial<Record<StepId, boolean>>,
   activeStep: 'auth' as StepId,
@@ -84,11 +87,12 @@ export const useFlowStore = create<FlowState>((set) => ({
   setOrderId: (orderId) => set({ orderId }),
   setCaptureId: (captureId) => set({ captureId }),
   setRefundId: (refundId) => set({ refundId }),
-  setStepResult: (s, status, response, error) =>
+  setStepResult: (s, status, response, error, debugId) =>
     set((state) => ({
       stepStatus: { ...state.stepStatus, [s]: status },
       responses: response !== undefined ? { ...state.responses, [s]: response } : state.responses,
       errors: error !== undefined ? { ...state.errors, [s]: error } : state.errors,
+      debugIds: debugId !== undefined ? { ...state.debugIds, [s]: debugId } : state.debugIds,
     })),
   updateConfig: (patch) => set((state) => ({ config: { ...state.config, ...patch } })),
   setRequestBody: (s, raw) =>

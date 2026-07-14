@@ -11,6 +11,8 @@ export interface ApiResult<T = unknown> {
   ok: boolean
   status: number
   data: T
+  /** PayPal 响应的 paypal-debug-id 头（backend 经 x-paypal-debug-id 转发），用于跟 PayPal 支持排查问题 */
+  debugId?: string
 }
 
 /** Step 1：BYOK Basic auth → access_token */
@@ -51,5 +53,6 @@ export async function callCommon(targetPath: string, opts: CommonOpts): Promise<
     ...(opts.rawBody !== undefined ? { body: opts.rawBody } : {}),
   })
   const data = await res.json().catch(() => ({}))
-  return { ok: res.ok, status: res.status, data }
+  const debugId = res.headers.get('x-paypal-debug-id') ?? undefined
+  return { ok: res.ok, status: res.status, data, debugId }
 }

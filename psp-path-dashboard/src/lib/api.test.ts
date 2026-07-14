@@ -99,10 +99,37 @@ describe('api.ts', () => {
   })
 
   describe('callCommon', () => {
+    it('should extract x-paypal-debug-id response header into debugId', async () => {
+      ;(global.fetch as any).mockResolvedValueOnce({
+        ok: true,
+        status: 201,
+        headers: { get: (name: string) => (name === 'x-paypal-debug-id' ? 'DBG-123' : null) },
+        json: () => Promise.resolve({ id: 'order-123' }),
+      })
+
+      const result = await callCommon('/v2/checkout/orders', { token: 'mock-token' })
+
+      expect(result.debugId).toBe('DBG-123')
+    })
+
+    it('should leave debugId undefined when response has no debug id header', async () => {
+      ;(global.fetch as any).mockResolvedValueOnce({
+        ok: true,
+        status: 201,
+        headers: { get: () => null },
+        json: () => Promise.resolve({ id: 'order-123' }),
+      })
+
+      const result = await callCommon('/v2/checkout/orders', { token: 'mock-token' })
+
+      expect(result.debugId).toBeUndefined()
+    })
+
     it('should call common endpoint with POST method by default', async () => {
       ;(global.fetch as any).mockResolvedValueOnce({
         ok: true,
         status: 201,
+        headers: { get: () => null },
         json: () => Promise.resolve({ id: 'order-123' }),
       })
 
@@ -136,6 +163,7 @@ describe('api.ts', () => {
       ;(global.fetch as any).mockResolvedValueOnce({
         ok: true,
         status: 200,
+        headers: { get: () => null },
         json: () => Promise.resolve({ status: 'COMPLETED' }),
       })
 
@@ -152,6 +180,7 @@ describe('api.ts', () => {
       ;(global.fetch as any).mockResolvedValueOnce({
         ok: true,
         status: 201,
+        headers: { get: () => null },
         json: () => Promise.resolve({}),
       })
 
@@ -168,6 +197,7 @@ describe('api.ts', () => {
       ;(global.fetch as any).mockResolvedValueOnce({
         ok: true,
         status: 201,
+        headers: { get: () => null },
         json: () => Promise.resolve({}),
       })
 
@@ -186,6 +216,7 @@ describe('api.ts', () => {
       ;(global.fetch as any).mockResolvedValueOnce({
         ok: true,
         status: 200,
+        headers: { get: () => null },
         json: () => Promise.resolve({}),
       })
 
@@ -206,6 +237,7 @@ describe('api.ts', () => {
       ;(global.fetch as any).mockResolvedValueOnce({
         ok: false,
         status: 400,
+        headers: { get: () => null },
         json: () => Promise.resolve(errorResponse),
       })
 
@@ -223,6 +255,7 @@ describe('api.ts', () => {
       ;(global.fetch as any).mockResolvedValueOnce({
         ok: true,
         status: 204,
+        headers: { get: () => null },
         json: () => Promise.reject(new Error('Invalid JSON')),
       })
 
@@ -239,6 +272,7 @@ describe('api.ts', () => {
       ;(global.fetch as any).mockResolvedValueOnce({
         ok: true,
         status: 200,
+        headers: { get: () => null },
         json: () => Promise.resolve({}),
       })
 
@@ -254,6 +288,7 @@ describe('api.ts', () => {
       ;(global.fetch as any).mockResolvedValueOnce({
         ok: true,
         status: 200,
+        headers: { get: () => null },
         json: () => Promise.resolve({}),
       })
 
@@ -271,6 +306,7 @@ describe('api.ts', () => {
       ;(global.fetch as any).mockResolvedValueOnce({
         ok: true,
         status: 201,
+        headers: { get: () => null },
         json: () => Promise.resolve({ id: 'order-456' }),
       })
 

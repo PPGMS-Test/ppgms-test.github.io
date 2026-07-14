@@ -111,6 +111,7 @@ export function StepDetail() {
   const activeStep = useFlowStore((s) => s.activeStep)
   const status = useFlowStore((s) => s.stepStatus[s.activeStep])
   const response = useFlowStore((s) => s.responses[s.activeStep])
+  const debugId = useFlowStore((s) => s.debugIds[s.activeStep])
   const config = useFlowStore((s) => s.config)
   const updateConfig = useFlowStore((s) => s.updateConfig)
   const setStepResult = useFlowStore((s) => s.setStepResult)
@@ -192,7 +193,7 @@ export function StepDetail() {
     setStepResult(activeStep, 'running')
     try {
       const r = await runStep(activeStep)
-      setStepResult(activeStep, r.ok ? 'success' : 'error', r.data, r.ok ? undefined : `HTTP ${r.status}`)
+      setStepResult(activeStep, r.ok ? 'success' : 'error', r.data, r.ok ? undefined : `HTTP ${r.status}`, r.debugId)
     } catch (e) {
       setStepResult(activeStep, 'error', { error: String(e) }, String(e))
     }
@@ -376,6 +377,11 @@ export function StepDetail() {
               <ExternalLink size={14} className="shrink-0" />
               打开 Buyer Approve 链接（rel=approve）
             </a>
+          )}
+          {debugId && (
+            <div className="mb-2 break-all font-mono text-xs text-muted">
+              paypal-debug-id: <span className="text-ink">{debugId}</span>
+            </div>
           )}
           <pre className="max-h-96 overflow-auto whitespace-pre-wrap break-all font-mono text-xs">
             {JSON.stringify(response, null, 2)}
