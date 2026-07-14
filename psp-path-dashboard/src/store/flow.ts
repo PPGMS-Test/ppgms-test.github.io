@@ -43,7 +43,24 @@ interface FlowState {
   reset: () => void
 }
 
-const INITIAL = {
+// Onboarding 的 tracking_id 每次都要唯一，否则重复调用会被 PayPal 当成同一个 referral。
+export function generateTrackingId(): string {
+  return `psp-playground-${crypto.randomUUID()}`
+}
+
+function createInitialConfig(): FlowConfig {
+  return {
+    amount: '160.00',
+    currency: 'GBP',
+    payeeEmail: DEFAULT_PAYEE_EMAIL,
+    trackingId: generateTrackingId(),
+    returnUrl: 'https://example.com/return',
+    payerId: DEFAULT_PAYER_ID,
+    authAssertionEnabled: false,
+  }
+}
+
+const INITIAL_STATE = {
   accessToken: '',
   orderId: '',
   captureId: '',
@@ -53,22 +70,14 @@ const INITIAL = {
   } as Record<StepId, StepStatus>,
   responses: {} as Partial<Record<StepId, unknown>>,
   errors: {} as Partial<Record<StepId, string>>,
-  config: {
-    amount: '160.00',
-    currency: 'GBP',
-    payeeEmail: DEFAULT_PAYEE_EMAIL,
-    trackingId: 'psp-playground-merchant-1',
-    returnUrl: 'https://example.com/return',
-    payerId: DEFAULT_PAYER_ID,
-    authAssertionEnabled: false,
-  } as FlowConfig,
   requestBodies: {} as Partial<Record<StepId, string>>,
   bodyEditing: {} as Partial<Record<StepId, boolean>>,
   activeStep: 'auth' as StepId,
 }
 
 export const useFlowStore = create<FlowState>((set) => ({
-  ...INITIAL,
+  ...INITIAL_STATE,
+  config: createInitialConfig(),
   setActiveStep: (activeStep) => set({ activeStep }),
   setAccessToken: (accessToken) => set({ accessToken }),
   setOrderId: (orderId) => set({ orderId }),
@@ -85,5 +94,5 @@ export const useFlowStore = create<FlowState>((set) => ({
     set((state) => ({ requestBodies: { ...state.requestBodies, [s]: raw } })),
   setBodyEditing: (s, on) =>
     set((state) => ({ bodyEditing: { ...state.bodyEditing, [s]: on } })),
-  reset: () => set(INITIAL),
+  reset: () => set({ ...INITIAL_STATE, config: createInitialConfig() }),
 }))

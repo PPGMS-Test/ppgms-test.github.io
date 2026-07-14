@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
-import { Send, Pencil, RotateCcw, Eye, EyeOff, Info } from 'lucide-react'
+import { Send, Pencil, RotateCcw, Eye, EyeOff, Info, ExternalLink } from 'lucide-react'
 import { STEPS } from '@/lib/steps'
-import { useFlowStore, type StepId, type FlowConfig } from '@/store/flow'
+import { useFlowStore, generateTrackingId, type StepId, type FlowConfig } from '@/store/flow'
 import { useCredentialsStore } from '@/store/credentials'
 import * as api from '@/lib/api'
 import {
@@ -46,6 +46,12 @@ function buildBodyFor(id: StepId, config: FlowConfig, captureId: string): object
     default:
       return null
   }
+}
+
+// 从 partner-referrals 响应的 links 数组里取商户授权链接（rel === 'action_url'），方便直接点开。
+export function extractActionUrl(response: unknown): string | null {
+  const links = (response as { links?: Array<{ rel?: string; href?: string }> } | undefined)?.links
+  return links?.find((l) => l.rel === 'action_url')?.href ?? null
 }
 
 async function runStep(id: StepId): Promise<api.ApiResult> {
@@ -124,6 +130,14 @@ export function StepDetail() {
   }, [activeStep, requestBody, config, captureId, setRequestBody])
 
   const regenerate = () => {
+    // Onboarding 每次重新生成都换一个新的 tracking_id，避免和之前发过的请求重复。
+    if (activeStep === 'onboarding') {
+      const trackingId = generateTrackingId()
+      updateConfig({ trackingId })
+      const built = buildBodyFor(activeStep, { ...config, trackingId }, captureId)
+      if (built !== null) setRequestBody(activeStep, JSON.stringify(built, null, 2))
+      return
+    }
     const built = buildBodyFor(activeStep, config, captureId)
     if (built !== null) setRequestBody(activeStep, JSON.stringify(built, null, 2))
   }
@@ -143,6 +157,8 @@ export function StepDetail() {
   const maskedToken = accessToken
     ? `Bearer ${accessToken.slice(0, 12)}…${accessToken.slice(-6)}`
     : 'Bearer <先执行 Auth 获取>'
+
+  const actionUrl = extractActionUrl(response)
 
   const onSend = async () => {
     if (STEP_HAS_BODY[activeStep]) {
@@ -229,7 +245,7 @@ export function StepDetail() {
                       </button>
                     </TooltipTrigger>
                     <TooltipContent>
-                      这是 PSP <b>代表的下游商户</b>的 PayPal Payer ID，不是 PSP 自己账户的 ID——PayPal-Auth-Assertion
+                      这是授权给到 PSP 的<b>代下游商户</b>的 PayPal Payer ID，不是 PSP 自己账户的 ID——PayPal-Auth-Assertion
                       要声明「我（PSP）在代表哪个商户操作」。真实值要等商户完成 §11 Partner Referral 授权后才能从
                       PayPal 拿到。这里默认预填的是 HKPSP 自己账号的 Payer ID，仅供没有真实商户时占位测试，不代表真实商户身份。
                     </TooltipContent>
@@ -319,6 +335,17 @@ export function StepDetail() {
       {response !== undefined && (
         <Card>
           <div className="mb-1 text-xs font-semibold uppercase tracking-wider text-muted">Response</div>
+          {actionUrl && (
+            <a
+              href={actionUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="mb-2 flex items-center gap-1 break-all text-sm text-ink underline hover:text-accent"
+            >
+              <ExternalLink size={14} className="shrink-0" />
+              打开商户授权链接（action_url）
+            </a>
+          )}
           <pre className="max-h-96 overflow-auto whitespace-pre-wrap break-all font-mono text-xs">
             {JSON.stringify(response, null, 2)}
           </pre>

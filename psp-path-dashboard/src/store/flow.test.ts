@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest'
-import { useFlowStore } from './flow'
+import { useFlowStore, generateTrackingId } from './flow'
+import { DEFAULT_PAYER_ID } from '@/config/default-credentials'
 
 beforeEach(() => useFlowStore.getState().reset())
 
@@ -31,7 +32,7 @@ describe('flow store', () => {
 describe('flow store v2 扩展', () => {
   it('config 新增 payerId 默认值与 authAssertionEnabled=false', () => {
     const s = useFlowStore.getState()
-    expect(s.config.payerId).toBe('WYFHZPJBHKKYU')
+    expect(s.config.payerId).toBe(DEFAULT_PAYER_ID)
     expect(s.config.authAssertionEnabled).toBe(false)
   })
   it('setRequestBody / setBodyEditing 读写', () => {
@@ -46,5 +47,18 @@ describe('flow store v2 扩展', () => {
     useFlowStore.getState().reset()
     expect(useFlowStore.getState().requestBodies.refund).toBeUndefined()
     expect(useFlowStore.getState().config.authAssertionEnabled).toBe(false)
+  })
+  it('generateTrackingId 每次调用都不同，且带固定前缀', () => {
+    const a = generateTrackingId()
+    const b = generateTrackingId()
+    expect(a).not.toBe(b)
+    expect(a).toMatch(/^psp-playground-/)
+  })
+  it('reset 后 trackingId 会换成新的，不复用旧值', () => {
+    const before = useFlowStore.getState().config.trackingId
+    useFlowStore.getState().reset()
+    const after = useFlowStore.getState().config.trackingId
+    expect(after).not.toBe(before)
+    expect(after).toMatch(/^psp-playground-/)
   })
 })
