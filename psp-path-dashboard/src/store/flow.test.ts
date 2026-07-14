@@ -30,10 +30,10 @@ describe('flow store', () => {
 })
 
 describe('flow store v2 扩展', () => {
-  it('config 新增 payerId 默认值与 authAssertionEnabled=false', () => {
+  it('config 新增 payerId 默认值与 sendAuthAssertion=false', () => {
     const s = useFlowStore.getState()
     expect(s.config.payerId).toBe(DEFAULT_PAYER_ID)
-    expect(s.config.authAssertionEnabled).toBe(false)
+    expect(s.config.sendAuthAssertion).toBe(false)
   })
   it('setRequestBody / setBodyEditing 读写', () => {
     useFlowStore.getState().setRequestBody('createOrder', '{"a":1}')
@@ -43,10 +43,10 @@ describe('flow store v2 扩展', () => {
   })
   it('reset 清空 requestBodies/bodyEditing 与新 config', () => {
     useFlowStore.getState().setRequestBody('refund', '{}')
-    useFlowStore.getState().updateConfig({ authAssertionEnabled: true })
+    useFlowStore.getState().updateConfig({ sendAuthAssertion: true })
     useFlowStore.getState().reset()
     expect(useFlowStore.getState().requestBodies.refund).toBeUndefined()
-    expect(useFlowStore.getState().config.authAssertionEnabled).toBe(false)
+    expect(useFlowStore.getState().config.sendAuthAssertion).toBe(false)
   })
   it('generateTrackingId 每次调用都不同，且带固定前缀', () => {
     const a = generateTrackingId()

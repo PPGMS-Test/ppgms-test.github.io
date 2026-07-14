@@ -12,7 +12,8 @@ export interface FlowConfig {
   trackingId: string
   returnUrl: string
   payerId: string
-  authAssertionEnabled: boolean
+  /** 是否要在请求里带 PayPal-Auth-Assertion 头；还需要 payerId 非空才会真正发送 */
+  sendAuthAssertion: boolean
 }
 
 interface FlowState {
@@ -56,7 +57,7 @@ function createInitialConfig(): FlowConfig {
     trackingId: generateTrackingId(),
     returnUrl: 'https://example.com/return',
     payerId: DEFAULT_PAYER_ID,
-    authAssertionEnabled: false,
+    sendAuthAssertion: false,
   }
 }
 

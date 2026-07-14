@@ -70,7 +70,7 @@ async function runStep(id: StepId): Promise<api.ApiResult> {
     .replace('{orderId}', orderId)
     .replace('{captureId}', captureId)
   const authAssertion =
-    config.authAssertionEnabled && cred.clientId && config.payerId
+    config.sendAuthAssertion && cred.clientId && config.payerId
       ? generateAuthAssertion(cred.clientId, config.payerId)
       : undefined
 
@@ -150,7 +150,7 @@ export function StepDetail() {
   }
 
   const authAssertionPreview =
-    config.authAssertionEnabled && clientId && config.payerId
+    config.sendAuthAssertion && clientId && config.payerId
       ? generateAuthAssertion(clientId, config.payerId)
       : ''
 
@@ -260,8 +260,8 @@ export function StepDetail() {
                 {/* 与 Payer ID 的标签行等高的占位，让下面的 checkbox 行跟输入框对齐 */}
                 <span className="invisible" aria-hidden="true">占位</span>
                 <span className="flex items-center gap-2 rounded border border-transparent px-2 py-1">
-                  <input type="checkbox" checked={config.authAssertionEnabled}
-                    onChange={(e) => updateConfig({ authAssertionEnabled: e.target.checked })} />
+                  <input type="checkbox" checked={config.sendAuthAssertion}
+                    onChange={(e) => updateConfig({ sendAuthAssertion: e.target.checked })} />
                   带 PayPal-Auth-Assertion
                 </span>
               </label>
