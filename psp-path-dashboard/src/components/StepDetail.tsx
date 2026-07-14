@@ -25,6 +25,8 @@ const STEP_HAS_BODY: Record<StepId, boolean> = {
   capture: false,
   disburse: true,
   refund: true,
+  createOrderDelayed: true,
+  captureDelayed: false,
 }
 
 // 由 config + 链路 id 构建某步的 body 对象；无 body 或依赖未就绪时返回 null。
@@ -38,6 +40,14 @@ function buildBodyFor(id: StepId, config: FlowConfig, captureId: string): object
         currency: config.currency,
         payeeEmail: config.payeeEmail,
         referenceId: `psp_${config.currency}`,
+      })
+    case 'createOrderDelayed':
+      return buildOrderBody({
+        amount: config.amount,
+        currency: config.currency,
+        payeeEmail: config.payeeEmail,
+        referenceId: `psp_${config.currency}`,
+        disbursementMode: 'DELAYED',
       })
     case 'disburse':
       return captureId ? buildReferencedPayoutBody(captureId) : null
@@ -92,10 +102,10 @@ async function runStep(id: StepId): Promise<api.ApiResult> {
     authAssertion,
   })
 
-  if (id === 'createOrder') {
+  if (id === 'createOrder' || id === 'createOrderDelayed') {
     const oid = (r.data as { id?: string }).id
     if (r.ok && oid) flow.setOrderId(oid)
-  } else if (id === 'capture') {
+  } else if (id === 'capture' || id === 'captureDelayed') {
     const cap = (r.data as {
       purchase_units?: Array<{ payments?: { captures?: Array<{ id: string }> } }>
     }).purchase_units?.[0]?.payments?.captures?.[0]?.id
@@ -216,7 +226,7 @@ export function StepDetail() {
       <Card className="flex flex-col gap-3">
         <div className="text-xs font-semibold uppercase tracking-wider text-muted">关键参数</div>
         <div className="grid grid-cols-2 gap-2 text-sm">
-          {activeStep === 'createOrder' && (
+          {(activeStep === 'createOrder' || activeStep === 'createOrderDelayed') && (
             <>
               <label className="flex flex-col gap-1">金额
                 <input className={inputCls} value={config.amount}

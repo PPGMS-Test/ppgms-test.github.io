@@ -36,6 +36,8 @@ export interface OrderInput {
   currency: string
   payeeEmail: string
   referenceId: string
+  /** 不填=PayPal 默认 INSTANT（capture 即结算）；'DELAYED' 才会真正对应 referenced-payouts-items 的放款场景 */
+  disbursementMode?: 'INSTANT' | 'DELAYED'
 }
 
 export function buildOrderBody(input: OrderInput) {
@@ -53,6 +55,9 @@ export function buildOrderBody(input: OrderInput) {
           },
         },
         payee: { email_address: input.payeeEmail },
+        ...(input.disbursementMode
+          ? { payment_instruction: { disbursement_mode: input.disbursementMode } }
+          : {}),
         items: [
           {
             name: 'Playground Item',

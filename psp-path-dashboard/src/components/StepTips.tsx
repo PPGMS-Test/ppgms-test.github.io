@@ -6,12 +6,14 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/Tooltip
 
 // 每步一句话：这一步在干什么/钱在哪/谁担风险。
 const EXPLAIN: Record<StepId, string> = {
-  auth: '用 BYOK 凭证换取 OAuth access_token。之后每一步都带着它调用，等价于 Postman 里的第 1 步 Auth。',
+  auth: '用 BYOK 凭证换取 OAuth access_token。',
   onboarding: '通过 Partner Referral 让商户授权 PSP 代其收款/退款/延迟放款。产出一个商户点击授权的链接。',
-  createOrder: '以 CAPTURE intent 建单，payee 指向下游商户，带 BN code 头。此刻还没扣钱。',
+  createOrder: '以 CAPTURE intent 建单, payee 指向下游商户，带 BN code 头。此刻还没扣钱。',
   capture: '捕获订单，买家的钱进入商户 General Ledger（商户余额仍为 $0，等待划给 PSP）。',
   disburse: '用 capture id 触发 referenced-payouts，把钱从商户 GL 划到 PSP 的 PSA（Type 5 账户），日终 sweep 到 PSP 银行账户。',
   refund: '发起退款。PSP Path 下退款由 PSP 承担，且 2.0 保证退款从 PSA 出而非错误扣商户余额。',
+  createOrderDelayed: '跟 Create Order 一样，但带上 payment_instruction.disbursement_mode=DELAYED——capture 后资金不会自动结算，要靠下面的 Disburse Funds 显式放款。',
+  captureDelayed: '和主流程的 Capture Order 是同一个 API，这里只是放进 DISBURSEMENT MODE 小节方便连着测。',
 }
 
 // 内联小灯泡 + 悬浮提示：不占独立面板/一整行，鼠标悬停才展开讲解与相关概念。

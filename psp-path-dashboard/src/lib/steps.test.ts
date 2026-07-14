@@ -2,8 +2,8 @@ import { describe, it, expect } from 'vitest'
 import { STEPS_DETAILED, STEPS_BY_PHASE, FUND_FLOW, STEPS } from '@/lib/steps'
 
 describe('steps.ts', () => {
-  it('should have all 6 steps defined in STEPS_DETAILED', () => {
-    expect(Object.keys(STEPS_DETAILED)).toHaveLength(6)
+  it('should have all 8 steps defined in STEPS_DETAILED', () => {
+    expect(Object.keys(STEPS_DETAILED)).toHaveLength(8)
     expect(STEPS_DETAILED.auth).toBeDefined()
     expect(STEPS_DETAILED.onboarding).toBeDefined()
     expect(STEPS_DETAILED.createOrder).toBeDefined()
@@ -87,7 +87,7 @@ describe('steps.ts', () => {
   })
 
   it('should have backward-compatible STEPS array', () => {
-    expect(STEPS).toHaveLength(6)
+    expect(STEPS).toHaveLength(9)
     expect(STEPS[0].id).toBe('auth')
     expect(STEPS[1].id).toBe('onboarding')
     expect(STEPS[2].id).toBe('createOrder')

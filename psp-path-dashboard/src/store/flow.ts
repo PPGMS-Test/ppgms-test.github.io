@@ -2,7 +2,17 @@
 import { create } from 'zustand'
 import { DEFAULT_PAYEE_EMAIL, DEFAULT_PAYER_ID } from '@/config/default-credentials'
 
-export type StepId = 'auth' | 'onboarding' | 'createOrder' | 'capture' | 'disburse' | 'refund'
+export type StepId =
+  | 'auth'
+  | 'onboarding'
+  | 'createOrder'
+  | 'capture'
+  | 'disburse'
+  | 'refund'
+  // DISBURSEMENT MODE 小节：createOrder/capture 的变体，共享同一份 orderId/captureId，
+  // 唯一区别是 createOrderDelayed 会带 payment_instruction.disbursement_mode=DELAYED。
+  | 'createOrderDelayed'
+  | 'captureDelayed'
 export type StepStatus = 'idle' | 'running' | 'success' | 'error'
 
 export interface FlowConfig {
@@ -70,6 +80,7 @@ const INITIAL_STATE = {
   refundId: '',
   stepStatus: {
     auth: 'idle', onboarding: 'idle', createOrder: 'idle', capture: 'idle', disburse: 'idle', refund: 'idle',
+    createOrderDelayed: 'idle', captureDelayed: 'idle',
   } as Record<StepId, StepStatus>,
   responses: {} as Partial<Record<StepId, unknown>>,
   errors: {} as Partial<Record<StepId, string>>,

@@ -306,6 +306,75 @@ export const STEPS_DETAILED: Record<StepId, Step> = {
     ],
     docReference: '§8',
   },
+
+  createOrderDelayed: {
+    id: 'createOrderDelayed',
+    name: 'Create Order (Delayed Disbursement)',
+    phase: 'ORDER',
+    description: '和 Create Order 一样，但 purchase_units[].payment_instruction.disbursement_mode 设为 DELAYED，capture 后资金不会自动结算，需要后续显式调用 referenced-payouts-items 才会放款。',
+    fundFlowStage: 'Buyer → PayPal GL（记录待支付，标记延迟放款）',
+    apiInfo: {
+      method: 'POST',
+      endpoint: '/orders',
+      description: 'PayPal Checkout Orders API，创建订单并声明 disbursement_mode=DELAYED',
+    },
+    payloadFields: [
+      {
+        name: 'intent',
+        required: true,
+        description: '必须是 CAPTURE',
+      },
+      {
+        name: 'purchase_units[].payment_instruction.disbursement_mode',
+        required: true,
+        description: '固定为 DELAYED，声明这笔资金要延迟放款',
+      },
+    ],
+    responseHighlights: [
+      {
+        field: 'id',
+        description: '订单 ID',
+        nextStepUsage: '本小节的 Capture Order 需要这个 ID',
+      },
+      {
+        field: 'status',
+        description: '订单状态（通常 CREATED）',
+      },
+    ],
+    docReference: '§3.1 & §6',
+  },
+
+  captureDelayed: {
+    id: 'captureDelayed',
+    name: 'Capture Order',
+    phase: 'ORDER',
+    description: '跟主流程的 Capture Payment 是同一个 API 调用，只是入口放在 DISBURSEMENT MODE 小节里，方便配合上面的 Create Order (Delayed Disbursement) 一起测试。',
+    fundFlowStage: 'Buyer → PayPal GL（钱进来了，标记延迟放款）',
+    apiInfo: {
+      method: 'POST',
+      endpoint: '/orders/{orderId}/capture',
+      description: '确认支付，真正从买家扣钱',
+    },
+    payloadFields: [
+      {
+        name: 'orderId',
+        required: true,
+        description: '上面 Create Order (Delayed Disbursement) 返回的订单 ID',
+      },
+    ],
+    responseHighlights: [
+      {
+        field: 'capture_id',
+        description: 'Capture 交易 ID',
+        nextStepUsage: '本小节的 Disburse Funds 需要这个 ID',
+      },
+      {
+        field: 'amount.value',
+        description: '实际收款金额',
+      },
+    ],
+    docReference: '§3.1 & §6',
+  },
 }
 
 /**
@@ -374,6 +443,17 @@ export const STEPS: StepDef[] = [
   { id: 'refund', group: 'MONEY MOVE', order: 6, title: 'Refund Payment', icon: 'RefreshCw',
     method: 'POST', pathTemplate: '/v2/payments/captures/{captureId}/refund', docSection: '§4 Risk', fundSegment: 'psp',
     conceptKeys: ['riskLiability'] },
+  // DISBURSEMENT MODE 小节：createOrder/capture 各复制一份变体（共享同一份 orderId/captureId），
+  // referenced-payouts-items 直接复用上面的 disburse（同一个 id，再出现一次入口）。
+  { id: 'createOrderDelayed', group: 'DISBURSEMENT MODE', order: 7, title: 'Create Order (Delayed Disbursement)', icon: 'ShoppingCart',
+    method: 'POST', pathTemplate: '/v2/checkout/orders', docSection: '§1 Three-Part Model', fundSegment: 'buyer',
+    conceptKeys: ['bnCode', 'delayDisbursement'] },
+  { id: 'captureDelayed', group: 'DISBURSEMENT MODE', order: 8, title: 'Capture Order', icon: 'ShoppingCart',
+    method: 'POST', pathTemplate: '/v2/checkout/orders/{orderId}/capture', docSection: '§1 Three-Part Model', fundSegment: 'gl',
+    conceptKeys: ['generalLedger'] },
+  { id: 'disburse', group: 'DISBURSEMENT MODE', order: 9, title: 'Disburse Funds (referenced payouts)', icon: 'ArrowLeftRight',
+    method: 'POST', pathTemplate: '/v1/payments/referenced-payouts-items', docSection: '§10 PSA', fundSegment: 'psa',
+    conceptKeys: ['psa', 'elmo'] },
 ]
 
-export const STEP_GROUPS = ['AUTH', 'ONBOARDING', 'ORDER', 'MONEY MOVE'] as const
+export const STEP_GROUPS = ['AUTH', 'ONBOARDING', 'ORDER', 'MONEY MOVE', 'DISBURSEMENT MODE'] as const

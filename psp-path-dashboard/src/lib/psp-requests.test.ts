@@ -21,6 +21,21 @@ describe('psp-requests', () => {
     expect(b.purchase_units[0].payee.email_address).toBe('m@x.com')
     expect(b.purchase_units[0].amount.value).toBe('160.00')
     expect(b.purchase_units[0].reference_id).toBe('psp_GBP')
+    expect(b.purchase_units[0]).not.toHaveProperty('payment_instruction')
+  })
+  it('不填 disbursementMode 时不带 payment_instruction', () => {
+    const b = buildOrderBody({ amount: '1', currency: 'GBP', payeeEmail: 'm@x.com', referenceId: 'r' })
+    expect(b.purchase_units[0]).not.toHaveProperty('payment_instruction')
+  })
+  it('disbursementMode=DELAYED 时带 payment_instruction.disbursement_mode', () => {
+    const b = buildOrderBody({
+      amount: '1',
+      currency: 'GBP',
+      payeeEmail: 'm@x.com',
+      referenceId: 'r',
+      disbursementMode: 'DELAYED',
+    })
+    expect(b.purchase_units[0].payment_instruction).toEqual({ disbursement_mode: 'DELAYED' })
   })
   it('referenced payout 用 TRANSACTION_ID + captureId', () => {
     expect(buildReferencedPayoutBody('CAP1')).toEqual({
