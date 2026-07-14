@@ -32,5 +32,5 @@ export const DEFAULT_PAYEE_EMAIL = 'psp-test-2026-hk@test.com'
  * payer_id」这个概念在本演练台里完全用不到。真实值要商户完成 Partner Referral 授权后才能从 PayPal
  * 拿到；这里只是占位值，方便没有真实商户时也能跑通请求，请替换成真实下游商户的 Payer ID。
  */
-export const DEFAULT_PAYER_ID = 'CDQG5AS6GD7JXB5T'
+export const DEFAULT_PAYER_ID = 'CAWH8CFWQKULW'
 

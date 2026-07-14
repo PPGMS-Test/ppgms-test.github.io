@@ -4,6 +4,7 @@
 export function generateAuthAssertion(clientId: string, payerId: string): string {
   const header = 'eyJhbGciOiJub25lIn0=' // base64({"alg":"none"})
   const json = JSON.stringify({ iss: clientId, payer_id: payerId })
+  console.log("Generating PayPal Auth Assertion, merchant payer-id:", payerId)
   const payload = btoa(unescape(encodeURIComponent(json)))
   return `${header}.${payload}.`
 }
