@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JS v6 EUR Order Debug</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            padding: 20px;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            padding: 30px;
+        }
+        h1 {
+            color: #003087;
+            margin-bottom: 30px;
+            font-size: 28px;
+        }
+        .account-switcher {
+            background: #f0f8ff;
+            border: 1px solid #0066cc;
+            border-radius: 6px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+        .account-switcher h2 {
+            color: #003087;
+            font-size: 16px;
+            margin-bottom: 15px;
+        }
+        .radio-group {
+            display: flex;
+            gap: 25px;
+        }
+        .radio-option {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .radio-option input[type="radio"] {
+            cursor: pointer;
+            width: 18px;
+            height: 18px;
+        }
+        .radio-option label {
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        .radio-option .note {
+            display: block;
+            font-size: 12px;
+            color: #666;
+            margin-top: 2px;
+            margin-left: 26px;
+        }
+
+        .payment-button-container {
+            margin: 30px 0;
+            text-align: center;
+            min-height: 150px;
+            padding: 20px;
+            background: #f9f9f9;
+            border-radius: 6px;
+        }
+
+        .controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .control-group {
+            display: flex;
+            flex-direction: column;
+        }
+        .control-group label {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        .control-group input,
+        .control-group select {
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .logs-section {
+            margin-top: 40px;
+            border-top: 2px solid #e0e0e0;
+            padding-top: 20px;
+        }
+        .logs-section h3 {
+            color: #003087;
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+        #logs {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 15px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            max-height: 400px;
+            overflow-y: auto;
+            line-height: 1.4;
+        }
+        .log-entry {
+            margin-bottom: 8px;
+            padding: 4px 0;
+            border-left: 3px solid transparent;
+            padding-left: 8px;
+        }
+        .log-entry.info {
+            color: #4ec9b0;
+            border-left-color: #4ec9b0;
+        }
+        .log-entry.success {
+            color: #6a9955;
+            border-left-color: #6a9955;
+        }
+        .log-entry.error {
+            color: #f48771;
+            border-left-color: #f48771;
+        }
+        .log-entry.warn {
+            color: #dcdcaa;
+            border-left-color: #dcdcaa;
+        }
+        .log-entry.debug {
+            color: #858585;
+            border-left-color: #858585;
+        }
+        button {
+            background: #003087;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: background 0.3s;
+        }
+        button:hover {
+            background: #001f4f;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .info-box {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            border-radius: 4px;
+            padding: 12px;
+            margin-bottom: 20px;
+            color: #856404;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🇪🇺 JS v6 EUR Order Debug</h1>
+
+        <div class="info-box">
+            <strong>Purpose:</strong> Compare C2 (China) vs US account behavior with EUR currency and PayPal button v6 SDK.
+            <br><strong>Scenario:</strong> DE buyer, EUR 25.90, create-order → checkout
+        </div>
+
+        <div class="account-switcher">
+            <h2>📋 Select Account</h2>
+            <div class="radio-group">
+                <div class="radio-option">
+                    <input type="radio" id="account-c2" name="account" value="c2" checked>
+                    <div>
+                        <label for="account-c2">C2 (China)</label>
+                        <span class="note">Has EUR/SEPA permission</span>
+                    </div>
+                </div>
+                <div class="radio-option">
+                    <input type="radio" id="account-us" name="account" value="us">
+                    <div>
+                        <label for="account-us">US</label>
+                        <span class="note">Default account, needs permission check</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <div class="control-group">
+                <label for="amount">Amount (EUR)</label>
+                <input type="number" id="amount" value="25.90" min="0.01" max="999999" step="0.01">
+            </div>
+            <div class="control-group">
+                <label for="country">Buyer Country</label>
+                <select id="country">
+                    <option value="DE" selected>Germany (DE)</option>
+                    <option value="FR">France (FR)</option>
+                    <option value="IT">Italy (IT)</option>
+                    <option value="ES">Spain (ES)</option>
+                    <option value="AT">Austria (AT)</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="payment-button-container" id="paymentContainer">
+            <!-- PayPal button will render here -->
+        </div>
+
+        <div class="logs-section">
+            <h3>📊 Debug Logs</h3>
+            <div id="logs"></div>
+        </div>
+    </div>
+
+    <!-- PayPal JS v6 SDK -->
+    <script src="https://www.paypal.com/sdk/js?client-id=PLACEHOLDER&components=buttons,messages&buyer-country=DE"></script>
+
+    <script>
+        // Account credentials
+        const accounts = {
+            c2: {
+                clientId: 'AVL8y9YHjNzCqVQPx5_4zn7g5HkQJiDw3Y2oV5w9r8H0-MQ9BUmRJvNdVx_-6PYu94bEIXhf0V2Xp2sY', // C2 sandbox
+                secret: 'EJvxI0fW7SnpKjKqRpLmNoPqRsTuVwXyZaBcDeFgHiJkLmNoPqRsTuVwXyZaBcDeFgHiJkLmNoPqRsTuVwXyZaBcDeFgHiJkLmNoPqRs'
+            },
+            us: {
+                clientId: 'AbnO8yHnTG-bZQIrZqfYfqMKsKPlO4n2hFp2qIB6pzLfBEL9vNx6Y2KhE3OaQ0xZ',
+                secret: 'EOv2MlxMz8V3nKpQrStUvWxYzAbCdEfGhIjKlMnOpQrStUvWxYzAbCdEfGhIjKlMnOpQrStUvWxYz'
+            }
+        };
+
+        let currentAccount = 'c2';
+        let accessToken = null;
+        let tokenExpiry = 0;
+
+        // Logger utility
+        class Logger {
+            constructor(elementId) {
+                this.element = document.getElementById(elementId);
+            }
+
+            log(message, type = 'info') {
+                const timestamp = new Date().toLocaleTimeString();
+                const entry = document.createElement('div');
+                entry.className = `log-entry ${type}`;
+                entry.textContent = `[${timestamp}] ${message}`;
+                this.element.appendChild(entry);
+                this.element.scrollTop = this.element.scrollHeight;
+            }
+
+            info(msg) { this.log(msg, 'info'); }
+            success(msg) { this.log(msg, 'success'); }
+            error(msg) { this.log(msg, 'error'); }
+            warn(msg) { this.log(msg, 'warn'); }
+            debug(msg) { this.log(msg, 'debug'); }
+        }
+
+        const logger = new Logger('logs');
+
+        // Account switcher
+        document.querySelectorAll('input[name="account"]').forEach(radio => {
+            radio.addEventListener('change', (e) => {
+                currentAccount = e.target.value;
+                logger.info(`Switched to ${currentAccount.toUpperCase()} account`);
+                accessToken = null;
+                tokenExpiry = 0;
+                location.reload(); // Reload to apply new client-id to SDK
+            });
+        });
+
+        // Get OAuth token
+        async function getAccessToken() {
+            const now = Date.now();
+            if (accessToken && now < tokenExpiry) {
+                logger.debug('Using cached access token');
+                return accessToken;
+            }
+
+            const account = accounts[currentAccount];
+            const auth = btoa(`${account.clientId}:${account.secret}`);
+
+            logger.info(`Fetching OAuth token for ${currentAccount.toUpperCase()} account...`);
+
+            try {
+                const response = await fetch('https://api-m.sandbox.paypal.com/v1/oauth2/token', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Basic ${auth}`,
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    body: 'grant_type=client_credentials'
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Token request failed: ${response.status} ${response.statusText}`);
+                }
+
+                const data = await response.json();
+                accessToken = data.access_token;
+                tokenExpiry = now + (data.expires_in * 1000);
+
+                logger.success(`OAuth token obtained (expires in ${data.expires_in}s)`);
+                return accessToken;
+            } catch (error) {
+                logger.error(`Token fetch error: ${error.message}`);
+                throw error;
+            }
+        }
+
+        // Create order
+        async function createOrder() {
+            const amount = document.getElementById('amount').value;
+            const country = document.getElementById('country').value;
+
+            const token = await getAccessToken();
+            const body = {
+                intent: 'CAPTURE',
+                purchase_units: [{
+                    reference_id: `order-${Date.now()}`,
+                    amount: {
+                        currency_code: 'EUR',
+                        value: amount
+                    },
+                    shipping: {
+                        type: 'SHIPPING',
+                        address: {
+                            address_line_1: '123 Main St',
+                            admin_area_2: country === 'DE' ? 'Berlin' : 'Paris',
+                            postal_code: country === 'DE' ? '10115' : '75001',
+                            country_code: country
+                        }
+                    }
+                }],
+                application_context: {
+                    brand_name: 'Test Store',
+                    locale: 'en-US',
+                    user_action: 'PAY'
+                }
+            };
+
+            logger.info(`Creating order: EUR ${amount} for ${country}...`);
+            logger.debug(`Order body: ${JSON.stringify(body, null, 2)}`);
+
+            try {
+                const response = await fetch('https://api-m.sandbox.paypal.com/v2/checkout/orders', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(body)
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    logger.error(`Create order failed: ${response.status}`);
+                    logger.error(`Response: ${JSON.stringify(data, null, 2)}`);
+                    throw new Error(data.message || 'Create order failed');
+                }
+
+                logger.success(`Order created: ${data.id}`);
+                logger.debug(`Status: ${data.status}`);
+                return data.id;
+            } catch (error) {
+                logger.error(`Order creation error: ${error.message}`);
+                throw error;
+            }
+        }
+
+        // Capture order
+        async function captureOrder(orderId) {
+            const token = await getAccessToken();
+
+            logger.info(`Capturing order ${orderId}...`);
+
+            try {
+                const response = await fetch(`https://api-m.sandbox.paypal.com/v2/checkout/orders/${orderId}/capture`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    logger.error(`Capture failed: ${response.status}`);
+                    logger.error(`Response: ${JSON.stringify(data, null, 2)}`);
+                    throw new Error(data.message || 'Capture failed');
+                }
+
+                logger.success(`Order captured successfully`);
+                logger.debug(`Status: ${data.status}`);
+                logger.debug(`Payer: ${JSON.stringify(data.payer, null, 2)}`);
+                return data;
+            } catch (error) {
+                logger.error(`Capture error: ${error.message}`);
+                throw error;
+            }
+        }
+
+        // Initialize PayPal SDK
+        function initSDK() {
+            const account = accounts[currentAccount];
+
+            logger.info(`Initializing PayPal SDK (account: ${currentAccount.toUpperCase()})`);
+            logger.debug(`Client ID: ${account.clientId.substring(0, 20)}...`);
+
+            paypal.Buttons({
+                createOrder: async function(data, actions) {
+                    try {
+                        const orderId = await createOrder();
+                        return orderId;
+                    } catch (error) {
+                        logger.error(`createOrder callback failed: ${error.message}`);
+                        return actions.reject();
+                    }
+                },
+
+                onApprove: async function(data, actions) {
+                    logger.info(`Buyer approved, order: ${data.orderID}`);
+                    try {
+                        await captureOrder(data.orderID);
+                        logger.success('Payment completed');
+                        return actions.order.capture();
+                    } catch (error) {
+                        logger.error(`onApprove callback failed: ${error.message}`);
+                        return actions.reject();
+                    }
+                },
+
+                onError: function(err) {
+                    logger.error(`SDK error: ${err.message || err}`);
+                }
+            }).render('#paymentContainer');
+
+            logger.success('SDK initialized and button rendered');
+        }
+
+        // Start
+        logger.info('Page loaded, waiting for SDK...');
+        document.addEventListener('paypalscriptload', () => {
+            logger.info('PayPal SDK script loaded');
+            initSDK();
+        });
+
+        // Fallback if script loaded before event listener attached
+        if (typeof paypal !== 'undefined' && paypal.Buttons) {
+            initSDK();
+        }
+    </script>
+</body>
+</html>
