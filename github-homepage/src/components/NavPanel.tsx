@@ -4,7 +4,7 @@ import {
   Layers, Code2, Globe, CreditCard, FlaskConical, Settings, BookOpen, Zap,
   Wallet, DollarSign, ShoppingCart, Clock, Star, Database, Layout, Smartphone,
   Apple, ChevronsRight, Package, AlertCircle, CheckCircle, Droplet,
-  Wrench,
+  Wrench, Server,
   type LucideIcon,
 } from 'lucide-react'
 import type { NavPanelData, NavItem, NavSubGroup } from '../types'
@@ -35,7 +35,7 @@ const LUCIDE_MAP: Record<string, LucideIcon> = {
   'chevrons-right': ChevronsRight, 'package': Package,
   'alert-circle': AlertCircle, 'check-circle': CheckCircle,
   'droplet': Droplet, 'folder': Folder,
-  'wrench': Wrench,
+  'wrench': Wrench, 'server': Server,
 }
 
 function toCssName(name: string) {
