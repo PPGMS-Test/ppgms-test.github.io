@@ -43,8 +43,8 @@ export const CREDENTIAL_PRESETS: CredentialPreset[] = [
     clientId: 'Ae-cHHlxYpe7aDw4RPA9MmS0gJl3y2pPQgwkGXmaRdc2NxjiFBQoMbG4m006PirzQ5fVbTPdsAGnrk3I',
     clientSecret: 'EE6S8_AFncCAw-38chvrFRWgJAJv2erxkPMcCVqeT8ISrD3jDZEIxfquenHHoI0obKq5DifxZYyScrZ5',
     bnCodes: [
-      { code: 'testPSPyqBNCODE1', country: 'HK' },
-      { code: 'testPSPyqBNCODE2', country: 'SG' },
+      { code: 'testPSPyqBNCODE1', country: 'C2,HK' },
+      { code: 'testPSPyqBNCODE2', country: 'C2,SG' },
     ],
     // ********
     payerId: 'AES9BQ3KZHL6L',

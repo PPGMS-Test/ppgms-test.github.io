@@ -304,7 +304,7 @@ export function StepDetail() {
                 <span className="flex items-center gap-2 rounded border border-transparent px-2 py-1">
                   <input type="checkbox" checked={config.sendBnCode}
                     onChange={(e) => updateConfig({ sendBnCode: e.target.checked })} />
-                  带 PayPal-Partner-Attribution-Id（关闭测试不传 BN Code 的场景）
+                  带 PayPal-Partner-Attribution-Id
                 </span>
               </label>
             </>
