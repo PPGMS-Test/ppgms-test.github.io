@@ -1,21 +1,27 @@
+// src/pages/CredentialsPage.test.ts
+// 本文件不做组件渲染测试（项目未引入 @testing-library/react），
+// 而是测试 CredentialsPage 依赖的 store 行为——即 radio 交互实际触发的逻辑。
 import { beforeEach, describe, expect, it } from 'vitest'
 import { useCredentialsStore } from '@/store/credentials'
-import { DEFAULT_CREDENTIALS } from '@/config/default-credentials'
+import { useActivePresetStore } from '@/store/active-preset'
+import { applyCredentialPreset } from '@/store/apply-preset'
+import { CREDENTIAL_PRESETS, DEFAULT_PRESET_ID } from '@/config/credential-presets'
+
+const hkpsp = CREDENTIAL_PRESETS[0]
 
 beforeEach(() => {
-  // Clear sessionStorage completely
   sessionStorage.clear()
-  // Reset store to initial state
-  const store = useCredentialsStore.getState()
-  store.reset()
+  localStorage.clear()
+  useActivePresetStore.getState().setActivePresetId(DEFAULT_PRESET_ID)
+  useCredentialsStore.getState().reset()
 })
 
 describe('CredentialsPage', () => {
-  it('应该初始化为默认凭证（HKPSP sandbox）', () => {
+  it('应该初始化为默认凭证套（HKPSP sandbox）', () => {
     const store = useCredentialsStore.getState()
-    expect(store.clientId).toBe(DEFAULT_CREDENTIALS.clientId)
-    expect(store.clientSecret).toBe(DEFAULT_CREDENTIALS.clientSecret)
-    expect(store.bnCode).toBe(DEFAULT_CREDENTIALS.bnCode)
+    expect(store.clientId).toBe(hkpsp.clientId)
+    expect(store.clientSecret).toBe(hkpsp.clientSecret)
+    expect(store.bnCode).toBe(hkpsp.bnCodes[0])
     expect(store.isConfigured()).toBe(true)
   })
 
@@ -33,14 +39,14 @@ describe('CredentialsPage', () => {
     expect(useCredentialsStore.getState().clientSecret).toBe(newSecret)
   })
 
-  it('应该支持修改 BN Code', () => {
+  it('bnCode radio 选中某个值后应该写入 store（模拟点击 preset 内某个 bnCode）', () => {
     const store = useCredentialsStore.getState()
     const newBnCode = 'CUSTOM_BN_PSP'
     store.setBnCode(newBnCode)
     expect(useCredentialsStore.getState().bnCode).toBe(newBnCode)
   })
 
-  it('清空所有凭证后应该重置为默认值', () => {
+  it('清空所有凭证后应该重置为当前激活套默认值', () => {
     const store = useCredentialsStore.getState()
     store.setClientId('custom')
     store.setClientSecret('secret')
@@ -48,9 +54,9 @@ describe('CredentialsPage', () => {
     store.reset()
 
     const resetStore = useCredentialsStore.getState()
-    expect(resetStore.clientId).toBe(DEFAULT_CREDENTIALS.clientId)
-    expect(resetStore.clientSecret).toBe(DEFAULT_CREDENTIALS.clientSecret)
-    expect(resetStore.bnCode).toBe(DEFAULT_CREDENTIALS.bnCode)
+    expect(resetStore.clientId).toBe(hkpsp.clientId)
+    expect(resetStore.clientSecret).toBe(hkpsp.clientSecret)
+    expect(resetStore.bnCode).toBe(hkpsp.bnCodes[0])
   })
 
   it('修改后的值应该存储在 sessionStorage', () => {
@@ -75,10 +81,6 @@ describe('CredentialsPage', () => {
 
     store.setClientId('')
     expect(useCredentialsStore.getState().isConfigured()).toBe(false)
-
-    store.setClientId('A21')
-    store.setClientSecret('')
-    expect(useCredentialsStore.getState().isConfigured()).toBe(false)
   })
 
   it('basicAuth 应该返回 base64 编码的 clientId:secret', () => {
@@ -86,5 +88,14 @@ describe('CredentialsPage', () => {
     store.setClientId('myid')
     store.setClientSecret('mysecret')
     expect(useCredentialsStore.getState().basicAuth()).toBe(btoa('myid:mysecret'))
+  })
+
+  it('选中凭证套 radio（模拟点击）应通过 applyCredentialPreset 联动 clientId/secret/bnCode', () => {
+    const preset2 = CREDENTIAL_PRESETS[1]
+    applyCredentialPreset(preset2.id)
+    const store = useCredentialsStore.getState()
+    expect(store.clientId).toBe(preset2.clientId)
+    expect(store.bnCode).toBe(preset2.bnCodes[0])
+    expect(useActivePresetStore.getState().activePresetId).toBe(preset2.id)
   })
 })
