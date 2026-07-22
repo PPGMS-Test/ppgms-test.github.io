@@ -4,6 +4,7 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import { useCredentialsStore } from '@/store/credentials'
 import { useActivePresetStore } from '@/store/active-preset'
+import { useFlowStore } from '@/store/flow'
 import { applyCredentialPreset } from '@/store/apply-preset'
 import { CREDENTIAL_PRESETS, DEFAULT_PRESET_ID } from '@/config/credential-presets'
 
@@ -14,6 +15,7 @@ beforeEach(() => {
   localStorage.clear()
   useActivePresetStore.getState().setActivePresetId(DEFAULT_PRESET_ID)
   useCredentialsStore.getState().reset()
+  useFlowStore.getState().reset()
 })
 
 describe('CredentialsPage', () => {
@@ -97,5 +99,17 @@ describe('CredentialsPage', () => {
     expect(store.clientId).toBe(preset2.clientId)
     expect(store.bnCode).toBe(preset2.bnCodes[0])
     expect(useActivePresetStore.getState().activePresetId).toBe(preset2.id)
+  })
+
+  it('Payee Email 初始值取自当前激活凭证套，且可在本页修改', () => {
+    expect(useFlowStore.getState().config.payeeEmail).toBe(hkpsp.payeeEmail)
+    useFlowStore.getState().updateConfig({ payeeEmail: 'custom@test.com' })
+    expect(useFlowStore.getState().config.payeeEmail).toBe('custom@test.com')
+  })
+
+  it('Payer ID 初始值取自当前激活凭证套，且可在本页修改', () => {
+    expect(useFlowStore.getState().config.payerId).toBe(hkpsp.payerId)
+    useFlowStore.getState().updateConfig({ payerId: 'CUSTOM_PAYER_ID' })
+    expect(useFlowStore.getState().config.payerId).toBe('CUSTOM_PAYER_ID')
   })
 })

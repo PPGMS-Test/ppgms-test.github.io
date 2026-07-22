@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import { ArrowLeft, KeyRound, Trash2 } from 'lucide-react'
 import { useCredentialsStore } from '@/store/credentials'
 import { useActivePresetStore } from '@/store/active-preset'
+import { useFlowStore } from '@/store/flow'
 import { applyCredentialPreset } from '@/store/apply-preset'
 import { CREDENTIAL_PRESETS, getPresetById } from '@/config/credential-presets'
 import { Card } from '@/components/ui/Card'
@@ -13,6 +14,13 @@ export function CredentialsPage() {
     useCredentialsStore()
   const activePresetId = useActivePresetStore((s) => s.activePresetId)
   const activePreset = getPresetById(activePresetId)
+  const { payerId, payeeEmail } = useFlowStore((s) => s.config)
+  const updateFlowConfig = useFlowStore((s) => s.updateConfig)
+
+  const resetAll = () => {
+    reset()
+    updateFlowConfig({ payerId: activePreset.payerId, payeeEmail: activePreset.payeeEmail })
+  }
 
   return (
     <div className="mx-auto flex max-w-2xl flex-col gap-4 p-6">
@@ -30,6 +38,7 @@ export function CredentialsPage() {
         选择一套凭证套会整体覆盖 client id / secret / BN code / payer id / payee email；
         修改后的 client id/secret/BN code 存于当前标签页 sessionStorage，选中的凭证套存于 localStorage。
         默认值来自 <code>config/credential-presets.ts</code>（仅限 sandbox）。
+        Payer ID / Payee Email 只能在这里修改，各请求步骤详情页里为只读展示。
       </p>
 
       <Card className="flex flex-col gap-2">
@@ -83,8 +92,24 @@ export function CredentialsPage() {
             </label>
           ))}
         </div>
+        <label className="flex flex-col gap-1 text-sm">
+          Payee Email（下游商户）
+          <input
+            className="rounded border border-line bg-white px-3 py-2 font-mono text-sm"
+            value={payeeEmail}
+            onChange={(e) => updateFlowConfig({ payeeEmail: e.target.value })}
+          />
+        </label>
+        <label className="flex flex-col gap-1 text-sm">
+          Payer ID（下游商户）
+          <input
+            className="rounded border border-line bg-white px-3 py-2 font-mono text-sm"
+            value={payerId}
+            onChange={(e) => updateFlowConfig({ payerId: e.target.value })}
+          />
+        </label>
         <div className="flex justify-end">
-          <Button variant="outline" onClick={reset}>
+          <Button variant="outline" onClick={resetAll}>
             <Trash2 size={16} /> 清空
           </Button>
         </div>

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { Send, Pencil, RotateCcw, Eye, EyeOff, Info, ExternalLink } from 'lucide-react'
 import { STEPS } from '@/lib/steps'
 import { useFlowStore, generateTrackingId, type StepId, type FlowConfig } from '@/store/flow'
@@ -210,6 +211,7 @@ export function StepDetail() {
   }
 
   const inputCls = 'rounded border border-line bg-white px-2 py-1 font-mono text-sm'
+  const readOnlyInputCls = `${inputCls} cursor-not-allowed bg-line/20 text-muted`
 
   return (
     <div className="flex flex-col gap-3">
@@ -236,9 +238,8 @@ export function StepDetail() {
                 <input className={inputCls} value={config.currency}
                   onChange={(e) => onField({ currency: e.target.value })} />
               </label>
-              <label className="col-span-2 flex flex-col gap-1">Payee Email（下游商户）
-                <input className={inputCls} value={config.payeeEmail}
-                  onChange={(e) => onField({ payeeEmail: e.target.value })} />
+              <label className="col-span-2 flex flex-col gap-1">Payee Email（下游商户，只读——去<Link to="/credentials" className="underline">凭证管理页</Link>改）
+                <input className={readOnlyInputCls} value={config.payeeEmail} disabled readOnly />
               </label>
             </>
           )}
@@ -259,7 +260,7 @@ export function StepDetail() {
             <>
               <label className="flex flex-col gap-1">
                 <span className="flex items-center gap-1">
-                  Payer ID（下游商户）
+                  Payer ID（下游商户，只读——去<Link to="/credentials" className="underline">凭证管理页</Link>改）
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <button type="button" aria-label="Payer ID 说明" className="inline-flex shrink-0 items-center text-muted hover:text-ink">
@@ -277,8 +278,7 @@ export function StepDetail() {
                     </TooltipContent>
                   </Tooltip>
                 </span>
-                <input className={inputCls} value={config.payerId}
-                  onChange={(e) => updateConfig({ payerId: e.target.value })} />
+                <input className={readOnlyInputCls} value={config.payerId} disabled readOnly />
               </label>
               <label className="flex flex-col gap-1">
                 {/* 与 Payer ID 的标签行等高的占位，让下面的 checkbox 行跟输入框对齐 */}
