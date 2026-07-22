@@ -99,7 +99,7 @@ async function runStep(id: StepId): Promise<api.ApiResult> {
     method: 'POST',
     rawBody: STEP_HAS_BODY[id] ? requestBodies[id] : undefined,
     token: accessToken,
-    bnCode: cred.bnCode || undefined,
+    bnCode: config.sendBnCode ? (cred.bnCode || undefined) : undefined,
     authAssertion,
   })
 
@@ -238,7 +238,7 @@ export function StepDetail() {
                 <input className={inputCls} value={config.currency}
                   onChange={(e) => onField({ currency: e.target.value })} />
               </label>
-              <label className="col-span-2 flex flex-col gap-1">Payee Email（下游商户，只读——去<Link to="/credentials" className="underline">凭证管理页</Link>改）
+              <label className="col-span-2 flex flex-col gap-1">Payee Email 
                 <input className={readOnlyInputCls} value={config.payeeEmail} disabled readOnly />
               </label>
             </>
@@ -260,7 +260,7 @@ export function StepDetail() {
             <>
               <label className="flex flex-col gap-1">
                 <span className="flex items-center gap-1">
-                  Payer ID（下游商户，只读——去<Link to="/credentials" className="underline">凭证管理页</Link>改）
+                  Payer ID (<Link to="/credentials" className="underline">Merchant</Link>)
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <button type="button" aria-label="Payer ID 说明" className="inline-flex shrink-0 items-center text-muted hover:text-ink">
@@ -287,6 +287,18 @@ export function StepDetail() {
                   <input type="checkbox" checked={config.sendAuthAssertion}
                     onChange={(e) => updateConfig({ sendAuthAssertion: e.target.checked })} />
                   带 PayPal-Auth-Assertion
+                </span>
+              </label>
+              <label className="flex flex-col gap-1">
+                BN Code (<Link to="/credentials" className="underline">凭证管理页</Link>)
+                <input className={readOnlyInputCls} value={bnCode || '(未设置)'} disabled readOnly />
+              </label>
+              <label className="flex flex-col gap-1">
+                <span className="invisible" aria-hidden="true">占位</span>
+                <span className="flex items-center gap-2 rounded border border-transparent px-2 py-1">
+                  <input type="checkbox" checked={config.sendBnCode}
+                    onChange={(e) => updateConfig({ sendBnCode: e.target.checked })} />
+                  带 PayPal-Partner-Attribution-Id（关闭测试不传 BN Code 的场景）
                 </span>
               </label>
             </>

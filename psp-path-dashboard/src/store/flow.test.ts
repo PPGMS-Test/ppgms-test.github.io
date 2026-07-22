@@ -33,11 +33,12 @@ describe('flow store', () => {
 })
 
 describe('flow store v2 扩展', () => {
-  it('config 新增 payerId/payeeEmail 默认值取自当前激活凭证套，sendAuthAssertion=false', () => {
+  it('config 新增 payerId/payeeEmail 默认值取自当前激活凭证套，sendAuthAssertion=false，sendBnCode=true', () => {
     const s = useFlowStore.getState()
     expect(s.config.payerId).toBe(hkpsp.payerId)
     expect(s.config.payeeEmail).toBe(hkpsp.payeeEmail)
     expect(s.config.sendAuthAssertion).toBe(false)
+    expect(s.config.sendBnCode).toBe(true)
   })
   it('reset 后 payerId/payeeEmail 取当前激活套（切换套后 reset 会用新套的值）', () => {
     useActivePresetStore.getState().setActivePresetId(CREDENTIAL_PRESETS[1].id)
@@ -54,10 +55,11 @@ describe('flow store v2 扩展', () => {
   })
   it('reset 清空 requestBodies/bodyEditing 与新 config', () => {
     useFlowStore.getState().setRequestBody('refund', '{}')
-    useFlowStore.getState().updateConfig({ sendAuthAssertion: true })
+    useFlowStore.getState().updateConfig({ sendAuthAssertion: true, sendBnCode: false })
     useFlowStore.getState().reset()
     expect(useFlowStore.getState().requestBodies.refund).toBeUndefined()
     expect(useFlowStore.getState().config.sendAuthAssertion).toBe(false)
+    expect(useFlowStore.getState().config.sendBnCode).toBe(true)
   })
   it('generateTrackingId 每次调用都不同，且带固定前缀', () => {
     const a = generateTrackingId()

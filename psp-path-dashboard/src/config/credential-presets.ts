@@ -29,14 +29,23 @@ export const CREDENTIAL_PRESETS: CredentialPreset[] = [
     payerId: 'CAWH8CFWQKULW',
     payeeEmail: 'psp-test-2026-hk@test.com',
   },
+  //email-addr: psp-test-hk02@test.com
+  //pwd: 12345678
   {
-    id: 'preset-2',
-    label: 'TODO：新凭证套',
-    clientId: 'TODO_CLIENT_ID',
-    clientSecret: 'TODO_CLIENT_SECRET',
-    bnCodes: ['TODO_BNCODE'],
-    payerId: 'TODO_PAYER_ID',
-    payeeEmail: 'TODO_PAYEE_EMAIL',
+    id: 'yuncong-hk-psp1',
+    label: 'psp-psa-hk02',
+    clientId: 'Ae-cHHlxYpe7aDw4RPA9MmS0gJl3y2pPQgwkGXmaRdc2NxjiFBQoMbG4m006PirzQ5fVbTPdsAGnrk3I',
+    clientSecret: 'EE6S8_AFncCAw-38chvrFRWgJAJv2erxkPMcCVqeT8ISrD3jDZEIxfquenHHoI0obKq5DifxZYyScrZ5',
+    bnCodes: [
+      //C2, HK merchant
+      'testPSPyqBNCODE1',
+      //C2, SG merchant
+      'testPSPyqBNCODE2'
+    ],
+    // ********
+    payerId: 'AES9BQ3KZHL6L',
+    //pwd; 12345678
+    payeeEmail: 'psp-test-sg-merchant-01@test.com',
   },
 ]
 

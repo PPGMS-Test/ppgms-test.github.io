@@ -25,6 +25,8 @@ export interface FlowConfig {
   payerId: string
   /** 是否要在请求里带 PayPal-Auth-Assertion 头；还需要 payerId 非空才会真正发送 */
   sendAuthAssertion: boolean
+  /** 是否要在请求里带 PayPal-Partner-Attribution-Id（BN Code）头，默认 true；关闭用于测试不传 bnCode 的场景 */
+  sendBnCode: boolean
 }
 
 interface FlowState {
@@ -72,6 +74,7 @@ function createInitialConfig(): FlowConfig {
     returnUrl: 'https://example.com/return',
     payerId: preset.payerId,
     sendAuthAssertion: false,
+    sendBnCode: true,
   }
 }
 
