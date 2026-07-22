@@ -290,7 +290,9 @@ export function StepDetail() {
                 </span>
               </label>
               <label className="flex flex-col gap-1">
-                BN Code (<Link to="/credentials" className="underline">凭证管理页</Link>)
+                <span className="flex items-center gap-1 whitespace-nowrap">
+                  BN Code (<Link to="/credentials" className="underline">凭证页</Link>)
+                </span>
                 <input className={readOnlyInputCls} value={bnCode || '(未设置)'} disabled readOnly />
               </label>
               <label className="flex flex-col gap-1">
