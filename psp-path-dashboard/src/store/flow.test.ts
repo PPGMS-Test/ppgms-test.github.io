@@ -1,6 +1,9 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import { useFlowStore, generateTrackingId } from './flow'
-import { DEFAULT_PAYER_ID } from '@/config/default-credentials'
+import { CREDENTIAL_PRESETS } from '@/config/credential-presets'
+import { useActivePresetStore } from './active-preset'
+
+const hkpsp = CREDENTIAL_PRESETS[0]
 
 beforeEach(() => useFlowStore.getState().reset())
 
@@ -30,10 +33,18 @@ describe('flow store', () => {
 })
 
 describe('flow store v2 扩展', () => {
-  it('config 新增 payerId 默认值与 sendAuthAssertion=false', () => {
+  it('config 新增 payerId/payeeEmail 默认值取自当前激活凭证套，sendAuthAssertion=false', () => {
     const s = useFlowStore.getState()
-    expect(s.config.payerId).toBe(DEFAULT_PAYER_ID)
+    expect(s.config.payerId).toBe(hkpsp.payerId)
+    expect(s.config.payeeEmail).toBe(hkpsp.payeeEmail)
     expect(s.config.sendAuthAssertion).toBe(false)
+  })
+  it('reset 后 payerId/payeeEmail 取当前激活套（切换套后 reset 会用新套的值）', () => {
+    useActivePresetStore.getState().setActivePresetId(CREDENTIAL_PRESETS[1].id)
+    useFlowStore.getState().reset()
+    expect(useFlowStore.getState().config.payerId).toBe(CREDENTIAL_PRESETS[1].payerId)
+    expect(useFlowStore.getState().config.payeeEmail).toBe(CREDENTIAL_PRESETS[1].payeeEmail)
+    useActivePresetStore.getState().setActivePresetId(hkpsp.id)
   })
   it('setRequestBody / setBodyEditing 读写', () => {
     useFlowStore.getState().setRequestBody('createOrder', '{"a":1}')

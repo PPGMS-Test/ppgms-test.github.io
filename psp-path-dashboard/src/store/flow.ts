@@ -1,6 +1,7 @@
 // 演练台流程状态：串联各步产出 + 每步状态/响应 + 可编辑请求配置。
 import { create } from 'zustand'
-import { DEFAULT_PAYEE_EMAIL, DEFAULT_PAYER_ID } from '@/config/default-credentials'
+import { getPresetById } from '@/config/credential-presets'
+import { useActivePresetStore } from './active-preset'
 
 export type StepId =
   | 'auth'
@@ -62,13 +63,14 @@ export function generateTrackingId(): string {
 }
 
 function createInitialConfig(): FlowConfig {
+  const preset = getPresetById(useActivePresetStore.getState().activePresetId)
   return {
     amount: '160.00',
     currency: 'GBP',
-    payeeEmail: DEFAULT_PAYEE_EMAIL,
+    payeeEmail: preset.payeeEmail,
     trackingId: generateTrackingId(),
     returnUrl: 'https://example.com/return',
-    payerId: DEFAULT_PAYER_ID,
+    payerId: preset.payerId,
     sendAuthAssertion: false,
   }
 }
