@@ -4,6 +4,8 @@ import { Send, Pencil, RotateCcw, Eye, EyeOff, Info, ExternalLink } from 'lucide
 import { STEPS } from '@/lib/steps'
 import { useFlowStore, generateTrackingId, type StepId, type FlowConfig } from '@/store/flow'
 import { useCredentialsStore } from '@/store/credentials'
+import { useActivePresetStore } from '@/store/active-preset'
+import { getPresetById, getBnCodeCountry } from '@/config/credential-presets'
 import * as api from '@/lib/api'
 import {
   buildPartnerReferralBody,
@@ -136,6 +138,8 @@ export function StepDetail() {
   const isConfigured = useCredentialsStore((s) => s.isConfigured())
   const clientId = useCredentialsStore((s) => s.clientId)
   const bnCode = useCredentialsStore((s) => s.bnCode)
+  const activePresetId = useActivePresetStore((s) => s.activePresetId)
+  const bnCodeCountry = getBnCodeCountry(getPresetById(activePresetId), bnCode)
   const [showToken, setShowToken] = useState(false)
 
   const step = STEPS.find((s) => s.id === activeStep)!
@@ -291,7 +295,7 @@ export function StepDetail() {
               </label>
               <label className="flex flex-col gap-1">
                 <span className="flex items-center gap-1 whitespace-nowrap">
-                  BN Code (<Link to="/credentials" className="underline">凭证页</Link>)
+                  BN Code（{bnCodeCountry ? `商户国家：${bnCodeCountry}` : '未知国家'}）
                 </span>
                 <input className={readOnlyInputCls} value={bnCode || '(未设置)'} disabled readOnly />
               </label>

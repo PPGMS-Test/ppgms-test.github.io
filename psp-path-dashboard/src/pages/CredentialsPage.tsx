@@ -79,16 +79,16 @@ export function CredentialsPage() {
         </label>
         <div className="flex flex-col gap-1 text-sm">
           <span>BN Code（PayPal-Partner-Attribution-Id）—— {activePreset.label} 可选：</span>
-          {activePreset.bnCodes.map((code) => (
-            <label key={code} className="flex items-center gap-2">
+          {activePreset.bnCodes.map((option) => (
+            <label key={option.code} className="flex items-center gap-2">
               <input
                 type="radio"
                 name="bn-code"
-                value={code}
-                checked={bnCode === code}
-                onChange={() => setBnCode(code)}
+                value={option.code}
+                checked={bnCode === option.code}
+                onChange={() => setBnCode(option.code)}
               />
-              {code}
+              {option.code}（{option.country}）
             </label>
           ))}
         </div>

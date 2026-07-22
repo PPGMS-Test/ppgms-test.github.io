@@ -25,7 +25,7 @@ function currentPreset(): CredentialPreset {
 }
 
 function presetToFields(preset: CredentialPreset) {
-  return { clientId: preset.clientId, clientSecret: preset.clientSecret, bnCode: preset.bnCodes[0] }
+  return { clientId: preset.clientId, clientSecret: preset.clientSecret, bnCode: preset.bnCodes[0].code }
 }
 
 export const useCredentialsStore = create<CredentialsState>()(

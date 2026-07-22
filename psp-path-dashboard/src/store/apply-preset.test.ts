@@ -21,7 +21,7 @@ describe('applyCredentialPreset', () => {
     expect(useActivePresetStore.getState().activePresetId).toBe(preset2.id)
     expect(useCredentialsStore.getState().clientId).toBe(preset2.clientId)
     expect(useCredentialsStore.getState().clientSecret).toBe(preset2.clientSecret)
-    expect(useCredentialsStore.getState().bnCode).toBe(preset2.bnCodes[0])
+    expect(useCredentialsStore.getState().bnCode).toBe(preset2.bnCodes[0].code)
     expect(useFlowStore.getState().config.payerId).toBe(preset2.payerId)
     expect(useFlowStore.getState().config.payeeEmail).toBe(preset2.payeeEmail)
   })

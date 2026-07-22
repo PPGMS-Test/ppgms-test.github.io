@@ -16,7 +16,7 @@ beforeEach(() => {
 describe('credentials store', () => {
   it('默认预填当前激活套（HKPSP）凭证，初始即已配置', () => {
     expect(useCredentialsStore.getState().clientId).toBe(hkpsp.clientId)
-    expect(useCredentialsStore.getState().bnCode).toBe(hkpsp.bnCodes[0])
+    expect(useCredentialsStore.getState().bnCode).toBe(hkpsp.bnCodes[0].code)
     expect(useCredentialsStore.getState().isConfigured()).toBe(true)
   })
   it('清空 clientId/secret 后视为未配置', () => {
@@ -43,7 +43,7 @@ describe('credentials store', () => {
     useCredentialsStore.getState().applyPreset(preset2)
     expect(useCredentialsStore.getState().clientId).toBe(preset2.clientId)
     expect(useCredentialsStore.getState().clientSecret).toBe(preset2.clientSecret)
-    expect(useCredentialsStore.getState().bnCode).toBe(preset2.bnCodes[0])
+    expect(useCredentialsStore.getState().bnCode).toBe(preset2.bnCodes[0].code)
   })
   it('reset 恢复为当前激活套的默认值', () => {
     useActivePresetStore.getState().setActivePresetId(CREDENTIAL_PRESETS[1].id)

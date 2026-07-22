@@ -73,7 +73,7 @@ function createInitialConfig(): FlowConfig {
     trackingId: generateTrackingId(),
     returnUrl: 'https://example.com/return',
     payerId: preset.payerId,
-    sendAuthAssertion: false,
+    sendAuthAssertion: true,
     sendBnCode: true,
   }
 }

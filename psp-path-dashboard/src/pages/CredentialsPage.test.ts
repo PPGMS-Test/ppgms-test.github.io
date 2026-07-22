@@ -23,7 +23,7 @@ describe('CredentialsPage', () => {
     const store = useCredentialsStore.getState()
     expect(store.clientId).toBe(hkpsp.clientId)
     expect(store.clientSecret).toBe(hkpsp.clientSecret)
-    expect(store.bnCode).toBe(hkpsp.bnCodes[0])
+    expect(store.bnCode).toBe(hkpsp.bnCodes[0].code)
     expect(store.isConfigured()).toBe(true)
   })
 
@@ -58,7 +58,7 @@ describe('CredentialsPage', () => {
     const resetStore = useCredentialsStore.getState()
     expect(resetStore.clientId).toBe(hkpsp.clientId)
     expect(resetStore.clientSecret).toBe(hkpsp.clientSecret)
-    expect(resetStore.bnCode).toBe(hkpsp.bnCodes[0])
+    expect(resetStore.bnCode).toBe(hkpsp.bnCodes[0].code)
   })
 
   it('修改后的值应该存储在 sessionStorage', () => {
@@ -97,7 +97,7 @@ describe('CredentialsPage', () => {
     applyCredentialPreset(preset2.id)
     const store = useCredentialsStore.getState()
     expect(store.clientId).toBe(preset2.clientId)
-    expect(store.bnCode).toBe(preset2.bnCodes[0])
+    expect(store.bnCode).toBe(preset2.bnCodes[0].code)
     expect(useActivePresetStore.getState().activePresetId).toBe(preset2.id)
   })
 
