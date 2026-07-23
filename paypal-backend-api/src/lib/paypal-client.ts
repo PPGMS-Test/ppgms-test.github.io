@@ -127,12 +127,14 @@ export async function captureOrder(orderId: string) {
 
 export async function patchOrder(orderId: string, patchBody: unknown) {
   try {
-    const { statusCode, headers } = await ordersController.patchOrder({
+    const { headers } = await ordersController.patchOrder({
       id: orderId,
       body: patchBody as Parameters<typeof ordersController.patchOrder>[0]['body'],
     })
     const debugId = (headers as Record<string, string>)?.['paypal-debug-id'] ?? undefined
-    return { jsonResponse: { success: true }, httpStatusCode: statusCode, debugId }
+    // PayPal returns 204 (no body) on success; a 204 Response can't carry a JSON body,
+    // so we report 200 for our own synthesized { success: true } payload instead.
+    return { jsonResponse: { success: true }, httpStatusCode: 200, debugId }
   } catch (error) {
     if (error instanceof ApiError) {
       return { jsonResponse: error.result as CustomError, httpStatusCode: error.statusCode }
