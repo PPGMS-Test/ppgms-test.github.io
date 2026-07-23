@@ -97,6 +97,10 @@
       .then(function (data) {
         logMessage('POST /api/checkout/orders/create - response', data);
         return data.id;
+      })
+      .catch(function (err) {
+        logMessage('createOrder error', { message: String(err) });
+        throw err;
       });
   }
 
