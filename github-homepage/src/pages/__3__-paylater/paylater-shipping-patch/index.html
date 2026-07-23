@@ -50,7 +50,9 @@
 <script>
   var CLIENT_ID = 'Aa9Fj_yJs0Ylv2ZxdwWd-5ATa8vNqnn8ykMXksfwk5TRR0zvu1XoTZRhrAvI5YtnyaIJrFSanfQUq-9O';
   var CLIENT_SECRET = 'ELMHpqnP61kMOWIiz0NF-xKTmBXehYcgl6fv5VVJOpe_Usm57VCnjosY0tD78dAVo2CXglhQ4GVJql87';
-  var BACKEND_BASE = 'https://ppgms-test-github-io.pages.dev';
+  // 线上部署（还没同步新增的 PATCH 接口，等后端 push 部署后可以切回这个）：
+  // var BACKEND_BASE = 'https://ppgms-test-github-io.pages.dev';
+  var BACKEND_BASE = 'http://localhost:30041';
 
   document.getElementById('clientIdDisplay').textContent = CLIENT_ID;
   document.getElementById('clientSecretDisplay').textContent = CLIENT_SECRET;
@@ -70,19 +72,19 @@
   function createOrder() {
     var body = {
       intent: 'CAPTURE',
-      purchase_units: [{
-        reference_id: 'default',
+      purchaseUnits: [{
+        referenceId: 'default',
         description: 'PayPal Pay Later 测试订单 - 无线降噪耳机',
         amount: {
-          currency_code: 'USD',
+          currencyCode: 'USD',
           value: '40.00',
-          breakdown: { item_total: { currency_code: 'USD', value: '40.00' } }
+          breakdown: { itemTotal: { currencyCode: 'USD', value: '40.00' } }
         },
         items: [{
           name: 'Wireless Noise-Cancelling Headphones',
           description: 'Over-ear, Bluetooth 5.3, 30h battery',
           quantity: '1',
-          unit_amount: { currency_code: 'USD', value: '40.00' },
+          unitAmount: { currencyCode: 'USD', value: '40.00' },
           category: 'PHYSICAL_GOODS'
         }]
       }]
@@ -155,7 +157,7 @@
 
     var script = document.createElement('script');
     script.src = 'https://www.sandbox.paypal.com/sdk/js?client-id=' + CLIENT_ID +
-      '&currency=USD&intent=capture&enable-funding=paylater&components=buttons';
+      '&currency=USD&intent=capture&enable-funding=paylater&components=buttons&buyer-country=US';
     script.onload = function () {
       logMessage('PayPal SDK loaded');
       paypal.Buttons({
