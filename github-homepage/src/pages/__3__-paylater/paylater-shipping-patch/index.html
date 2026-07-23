@@ -8,7 +8,7 @@
 <script src="https://unpkg.com/lucide@latest"></script>
 <style>
   body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-  #logsContainer { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+  .log-panel { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
 </style>
 </head>
 <body class="bg-gray-100 min-h-screen p-6">
@@ -41,9 +41,30 @@
 
     <div class="bg-white rounded-lg shadow p-4">
       <h2 class="font-semibold text-gray-700 flex items-center gap-2 mb-2">
-        <i data-lucide="terminal" class="w-4 h-4"></i> 日志
+        <i data-lucide="activity" class="w-4 h-4"></i> 事件日志
       </h2>
-      <div id="logsContainer" class="text-xs bg-gray-900 text-green-400 rounded p-3 h-96 overflow-y-auto whitespace-pre-wrap"></div>
+      <div id="logsEvents" class="log-panel text-xs bg-gray-900 text-gray-300 rounded p-3 h-24 overflow-y-auto whitespace-pre-wrap"></div>
+    </div>
+
+    <div class="bg-white rounded-lg shadow p-4">
+      <h2 class="font-semibold text-gray-700 flex items-center gap-2 mb-2">
+        <i data-lucide="terminal" class="w-4 h-4"></i> Create 日志
+      </h2>
+      <div id="logsCreate" class="log-panel text-xs bg-gray-900 text-green-400 rounded p-3 h-64 overflow-y-auto whitespace-pre-wrap"></div>
+    </div>
+
+    <div class="bg-white rounded-lg shadow p-4">
+      <h2 class="font-semibold text-gray-700 flex items-center gap-2 mb-2">
+        <i data-lucide="terminal" class="w-4 h-4"></i> Patch 日志
+      </h2>
+      <div id="logsPatch" class="log-panel text-xs bg-gray-900 text-yellow-400 rounded p-3 h-64 overflow-y-auto whitespace-pre-wrap"></div>
+    </div>
+
+    <div class="bg-white rounded-lg shadow p-4">
+      <h2 class="font-semibold text-gray-700 flex items-center gap-2 mb-2">
+        <i data-lucide="terminal" class="w-4 h-4"></i> Capture 日志
+      </h2>
+      <div id="logsCapture" class="log-panel text-xs bg-gray-900 text-blue-400 rounded p-3 h-64 overflow-y-auto whitespace-pre-wrap"></div>
     </div>
   </div>
 
@@ -57,8 +78,15 @@
   document.getElementById('clientIdDisplay').textContent = CLIENT_ID;
   document.getElementById('clientSecretDisplay').textContent = CLIENT_SECRET;
 
-  function logMessage(label, data) {
-    var el = document.getElementById('logsContainer');
+  var LOG_PANEL_IDS = {
+    events: 'logsEvents',
+    create: 'logsCreate',
+    patch: 'logsPatch',
+    capture: 'logsCapture'
+  };
+
+  function logMessage(panel, label, data) {
+    var el = document.getElementById(LOG_PANEL_IDS[panel]);
     var ts = new Date().toISOString().split('T')[1].split('.')[0];
     var line = '[' + ts + '] ' + label;
     if (data !== undefined) {
@@ -89,7 +117,7 @@
         }]
       }]
     };
-    logMessage('POST /api/checkout/orders/create - request', body);
+    logMessage('create', 'POST /api/checkout/orders/create - request', body);
     return fetch(BACKEND_BASE + '/api/checkout/orders/create', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -97,11 +125,11 @@
     })
       .then(function (res) { return res.json(); })
       .then(function (data) {
-        logMessage('POST /api/checkout/orders/create - response', data);
+        logMessage('create', 'POST /api/checkout/orders/create - response', data);
         return data.id;
       })
       .catch(function (err) {
-        logMessage('createOrder error', { message: String(err) });
+        logMessage('create', 'createOrder error', { message: String(err) });
         throw err;
       });
   }
@@ -119,7 +147,7 @@
         }
       }
     }];
-    logMessage('PATCH /api/checkout/orders/' + orderId + ' - request', patchBody);
+    logMessage('patch', 'PATCH /api/checkout/orders/' + orderId + ' - request', patchBody);
     return fetch(BACKEND_BASE + '/api/checkout/orders/' + orderId, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
@@ -127,28 +155,36 @@
     })
       .then(function (res) { return res.json(); })
       .then(function (data) {
-        logMessage('PATCH /api/checkout/orders/' + orderId + ' - response', data);
+        logMessage('patch', 'PATCH /api/checkout/orders/' + orderId + ' - response', data);
+      })
+      .catch(function (err) {
+        logMessage('patch', 'patchOrderAmount error', { message: String(err) });
+        throw err;
       });
   }
 
   function captureOrderById(orderId) {
-    logMessage('POST /api/checkout/orders/' + orderId + '/capture - request', {});
+    logMessage('capture', 'POST /api/checkout/orders/' + orderId + '/capture - request', {});
     return fetch(BACKEND_BASE + '/api/checkout/orders/' + orderId + '/capture', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' }
     })
       .then(function (res) { return res.json(); })
       .then(function (data) {
-        logMessage('POST /api/checkout/orders/' + orderId + '/capture - response', data);
+        logMessage('capture', 'POST /api/checkout/orders/' + orderId + '/capture - response', data);
+      })
+      .catch(function (err) {
+        logMessage('capture', 'captureOrderById error', { message: String(err) });
+        throw err;
       });
   }
 
   function onApprove(data) {
-    logMessage('onApprove - buyer 已 approve', data);
+    logMessage('events', 'onApprove - buyer 已 approve', data);
     return patchOrderAmount(data.orderID)
       .then(function () { return captureOrderById(data.orderID); })
       .catch(function (err) {
-        logMessage('onApprove flow error', { message: String(err) });
+        logMessage('events', 'onApprove flow error', { message: String(err) });
       });
   }
 
@@ -159,17 +195,17 @@
     script.src = 'https://www.sandbox.paypal.com/sdk/js?client-id=' + CLIENT_ID +
       '&currency=USD&intent=capture&enable-funding=paylater&components=buttons&buyer-country=US';
     script.onload = function () {
-      logMessage('PayPal SDK loaded');
+      logMessage('events', 'PayPal SDK loaded');
       paypal.Buttons({
         fundingSource: paypal.FUNDING.PAYLATER,
         createOrder: createOrder,
         onApprove: onApprove,
-        onCancel: function (data) { logMessage('onCancel', data); },
-        onError: function (err) { logMessage('onError', { message: String(err) }); }
+        onCancel: function (data) { logMessage('events', 'onCancel', data); },
+        onError: function (err) { logMessage('events', 'onError', { message: String(err) }); }
       }).render('#paypal-button-container');
     };
     script.onerror = function () {
-      logMessage('PayPal SDK 加载失败');
+      logMessage('events', 'PayPal SDK 加载失败');
     };
     document.head.appendChild(script);
   });
