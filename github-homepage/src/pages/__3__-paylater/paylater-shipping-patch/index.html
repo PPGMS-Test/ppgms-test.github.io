@@ -4,68 +4,455 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>PayLater 加运费改单测试</title>
-<script src="https://cdn.tailwindcss.com"></script>
-<script src="https://unpkg.com/lucide@latest"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-  .log-panel { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+  :root {
+    --page-bg: #eae6db;
+    --paper: #fbf9f4;
+    --paper-shadow: rgba(28, 27, 25, 0.16);
+    --ink: #1c1b19;
+    --ink-soft: #706a5c;
+    --ink-faint: #a39d8d;
+    --rule: #d8d3c5;
+    --ledger-green: #1f6f4a;
+    --ledger-green-bg: #e7efe6;
+    --stamp-red: #b23a2e;
+    --amber: #c98a2c;
+    --amber-bg: #f6ecd9;
+    --font-mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+    --font-sans: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background: var(--page-bg);
+    background-image:
+      radial-gradient(circle at 1px 1px, rgba(28,27,25,0.05) 1px, transparent 0);
+    background-size: 22px 22px;
+    font-family: var(--font-sans);
+    color: var(--ink);
+    padding: 48px 16px 96px;
+    display: flex;
+    justify-content: center;
+  }
+
+  .receipt-wrap {
+    width: 100%;
+    max-width: 640px;
+    animation: feedIn 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  @keyframes feedIn {
+    from { opacity: 0; transform: translateY(-18px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .torn-edge {
+    height: 14px;
+    background:
+      linear-gradient(135deg, var(--page-bg) 50%, transparent 50.5%) 0 0,
+      linear-gradient(225deg, var(--page-bg) 50%, transparent 50.5%) 0 0;
+    background-size: 18px 18px;
+    background-color: var(--paper);
+  }
+  .torn-edge.bottom { transform: scaleY(-1); }
+
+  .receipt {
+    background: var(--paper);
+    box-shadow: 0 24px 48px -20px var(--paper-shadow), 0 2px 0 rgba(28,27,25,0.04);
+    padding: 8px 36px 4px;
+  }
+
+  /* ---- header ---- */
+  .receipt-head { padding: 20px 0 18px; text-align: center; }
+
+  .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    color: var(--ink-soft);
+    margin-bottom: 14px;
+  }
+  .eyebrow .dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--amber);
+    box-shadow: 0 0 0 3px var(--amber-bg);
+  }
+
+  h1 {
+    font-family: var(--font-mono);
+    font-weight: 700;
+    font-size: 22px;
+    letter-spacing: -0.01em;
+    margin: 0 0 10px;
+  }
+
+  .lede {
+    font-size: 13.5px;
+    line-height: 1.6;
+    color: var(--ink-soft);
+    margin: 0 auto;
+    max-width: 46ch;
+  }
+
+  .terminal-id {
+    margin-top: 18px;
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    color: var(--ink-faint);
+    display: flex;
+    justify-content: center;
+    gap: 18px;
+    flex-wrap: wrap;
+  }
+  .terminal-id span { letter-spacing: 0.08em; margin-right: 6px; }
+  .terminal-id code {
+    color: var(--ink-soft);
+    font-family: var(--font-mono);
+    word-break: break-all;
+  }
+
+  .rule {
+    border: none;
+    border-top: 1px dashed var(--rule);
+    margin: 4px 0;
+  }
+  .rule.solid { border-top-style: solid; }
+
+  /* ---- line item ---- */
+  .line-item { padding: 20px 0 6px; }
+  .item-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    font-size: 13.5px;
+  }
+  .item-name { font-weight: 600; }
+  .item-desc {
+    font-size: 12px;
+    color: var(--ink-faint);
+    margin-top: 2px;
+  }
+  .item-price { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+
+  /* ---- amount ticker (signature element) ---- */
+  .amount-ticker { padding: 14px 0 22px; font-family: var(--font-mono); }
+
+  .amount-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    font-size: 12.5px;
+    padding: 5px 0;
+    color: var(--ink-soft);
+  }
+  .amount-row .val { font-variant-numeric: tabular-nums; }
+
+  .amount-row.shipping {
+    color: var(--amber);
+    animation: printLine 0.35s ease both;
+  }
+  .amount-row.shipping[hidden] { display: none; }
+
+  .amount-row.total {
+    padding-top: 12px;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--ink);
+  }
+  .amount-row.total .label { letter-spacing: 0.04em; }
+
+  .total-value-wrap {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 10px;
+  }
+
+  .total-old {
+    font-variant-numeric: tabular-nums;
+    transition: color 0.2s ease;
+  }
+  .total-old.struck {
+    color: var(--stamp-red);
+    text-decoration: line-through;
+    text-decoration-thickness: 2px;
+    font-weight: 500;
+    font-size: 13px;
+  }
+
+  .total-new {
+    font-variant-numeric: tabular-nums;
+    color: var(--ledger-green);
+    font-size: 19px;
+  }
+  .total-new[hidden] { display: none; }
+  .total-new.stamp-in { animation: stampIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+
+  @keyframes stampIn {
+    0% { opacity: 0; transform: scale(1.5) rotate(-8deg); }
+    60% { opacity: 1; }
+    100% { opacity: 1; transform: scale(1) rotate(-2deg); }
+  }
+
+  .amount-status {
+    margin-top: 12px;
+    font-family: var(--font-sans);
+    font-size: 12px;
+    color: var(--ink-faint);
+    text-align: right;
+  }
+  .amount-status.settled { color: var(--ledger-green); font-weight: 600; }
+  .amount-status.failed { color: var(--stamp-red); font-weight: 600; }
+
+  /* ---- tender slot ---- */
+  .tender-slot { padding: 4px 0 26px; }
+  .tender-label {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    letter-spacing: 0.14em;
+    color: var(--ink-faint);
+    margin-bottom: 10px;
+  }
+  .tender-box {
+    border: 1.5px dashed var(--rule);
+    border-radius: 10px;
+    padding: 14px;
+    background: repeating-linear-gradient(
+      -45deg, rgba(28,27,25,0.015), rgba(28,27,25,0.015) 6px, transparent 6px, transparent 12px
+    );
+  }
+  #paypal-button-container { min-height: 45px; }
+
+  /* ---- events strip ---- */
+  .events-strip {
+    padding: 16px 0;
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+  }
+  .events-label {
+    flex-shrink: 0;
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    letter-spacing: 0.12em;
+    color: var(--ink-faint);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .events-label .pulse {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--ink-faint);
+  }
+  #logsEvents {
+    flex: 1;
+    min-width: 0;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--ink-soft);
+    max-height: 80px;
+    overflow-y: auto;
+  }
+
+  /* ---- txn log sections ---- */
+  .log-block { padding: 18px 0; }
+  .log-block-head {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+  .log-index {
+    font-family: var(--font-mono);
+    font-weight: 700;
+    font-size: 11px;
+    color: var(--paper);
+    background: var(--ink);
+    padding: 2px 6px;
+    border-radius: 3px;
+    letter-spacing: 0.04em;
+  }
+  .log-title {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    color: var(--ink);
+  }
+  .log-subtitle {
+    margin-left: auto;
+    font-family: var(--font-sans);
+    font-size: 11px;
+    color: var(--ink-faint);
+  }
+
+  .log-panel {
+    background: #17160f;
+    border-radius: 8px;
+    padding: 12px 14px;
+    height: 200px;
+    overflow-y: auto;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    line-height: 1.55;
+  }
+
+  .log-line {
+    color: #c9d6c2;
+    white-space: pre-wrap;
+    word-break: break-word;
+    margin-bottom: 10px;
+    animation: printLine 0.22s ease both;
+  }
+  .log-line:last-child { margin-bottom: 0; }
+  .log-line .ts { color: #6f7a68; }
+  .log-line .lbl { color: #e8dfc4; font-weight: 600; }
+  .log-line .body { color: #9fb597; display: block; margin-top: 3px; }
+  .log-line.err .lbl, .log-line.err .body { color: #e3a49a; }
+
+  @keyframes printLine {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .footer-note {
+    padding: 18px 0 22px;
+    text-align: center;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    color: var(--ink-faint);
+  }
+
+  a, button { font-family: inherit; }
+  :focus-visible {
+    outline: 2px solid var(--amber);
+    outline-offset: 2px;
+  }
+
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 4px; }
+
+  @media (max-width: 480px) {
+    body { padding: 28px 8px 64px; }
+    .receipt { padding: 4px 18px 4px; }
+    h1 { font-size: 18px; }
+    .log-panel { height: 160px; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .receipt-wrap, .amount-row.shipping, .total-new.stamp-in, .log-line {
+      animation: none !important;
+    }
+  }
 </style>
 </head>
-<body class="bg-gray-100 min-h-screen p-6">
-  <div class="max-w-3xl mx-auto space-y-6">
-    <h1 class="text-2xl font-bold text-gray-800">PayLater 加运费改单测试</h1>
-    <p class="text-sm text-gray-600">
-      流程：下单 $40.00 → 用户 Pay Later approve → 后端 PATCH 改单加 $20.00 运费到 $60.00 → capture
-    </p>
+<body>
+  <div class="receipt-wrap">
+    <div class="torn-edge"></div>
+    <div class="receipt">
 
-    <div class="bg-white rounded-lg shadow p-4 space-y-2">
-      <h2 class="font-semibold text-gray-700 flex items-center gap-2">
-        <i data-lucide="key-round" class="w-4 h-4"></i> Sandbox 凭证（写死，仅测试用）
-      </h2>
-      <div class="text-xs text-gray-500 space-y-1">
-        <div>Client ID: <span id="clientIdDisplay" class="font-mono text-gray-800"></span></div>
-        <div>Client Secret: <span id="clientSecretDisplay" class="font-mono text-gray-800"></span></div>
+      <header class="receipt-head">
+        <div class="eyebrow"><span class="dot"></span>SANDBOX TERMINAL · PAYLATER</div>
+        <h1>加运费改单测试</h1>
+        <p class="lede">下单 $40.00 → 用户 Pay Later 授权 → 后端改单加运费 $20.00 → 结算 $60.00，每一步的请求 / 响应都打印在下面的单据里。</p>
+        <div class="terminal-id">
+          <span>CLIENT ID</span><code id="clientIdDisplay"></code>
+          <span>SECRET</span><code id="clientSecretDisplay"></code>
+        </div>
+      </header>
+
+      <hr class="rule solid" />
+
+      <div class="line-item">
+        <div class="item-row">
+          <div>
+            <div class="item-name">1× Wireless Noise-Cancelling Headphones</div>
+            <div class="item-desc">Over-ear, Bluetooth 5.3, 30h battery</div>
+          </div>
+          <div class="item-price">$40.00</div>
+        </div>
       </div>
-    </div>
 
-    <div class="bg-white rounded-lg shadow p-4 space-y-3">
-      <h2 class="font-semibold text-gray-700 flex items-center gap-2">
-        <i data-lucide="credit-card" class="w-4 h-4"></i> 订单金额
-      </h2>
-      <div class="text-sm text-gray-600">
-        初始金额：<span class="font-mono">$40.00</span> →
-        Patch 后金额（含运费 $20.00）：<span class="font-mono">$60.00</span>
+      <div class="amount-ticker">
+        <div class="amount-row">
+          <span class="label">SUBTOTAL</span>
+          <span class="val">$40.00</span>
+        </div>
+        <div class="amount-row shipping" id="shippingRow" hidden>
+          <span class="label">SHIPPING（PATCH 新增）</span>
+          <span class="val">+ $20.00</span>
+        </div>
+        <hr class="rule solid" />
+        <div class="amount-row total">
+          <span class="label">TOTAL DUE</span>
+          <span class="total-value-wrap">
+            <span class="total-old" id="amountOld">$40.00</span>
+            <span class="total-new" id="amountNew" hidden>$60.00</span>
+          </span>
+        </div>
+        <div class="amount-status" id="amountStatus">等待 Pay Later 授权…</div>
       </div>
-      <div id="paypal-button-container" class="max-w-xs"></div>
-    </div>
 
-    <div class="bg-white rounded-lg shadow p-4">
-      <h2 class="font-semibold text-gray-700 flex items-center gap-2 mb-2">
-        <i data-lucide="activity" class="w-4 h-4"></i> 事件日志
-      </h2>
-      <div id="logsEvents" class="log-panel text-xs bg-gray-900 text-gray-300 rounded p-3 h-24 overflow-y-auto whitespace-pre-wrap"></div>
-    </div>
+      <div class="tender-slot">
+        <div class="tender-label">TENDER — 选择支付方式</div>
+        <div class="tender-box">
+          <div id="paypal-button-container"></div>
+        </div>
+      </div>
 
-    <div class="bg-white rounded-lg shadow p-4">
-      <h2 class="font-semibold text-gray-700 flex items-center gap-2 mb-2">
-        <i data-lucide="terminal" class="w-4 h-4"></i> Create 日志
-      </h2>
-      <div id="logsCreate" class="log-panel text-xs bg-gray-900 text-green-400 rounded p-3 h-64 overflow-y-auto whitespace-pre-wrap"></div>
-    </div>
+      <hr class="rule" />
 
-    <div class="bg-white rounded-lg shadow p-4">
-      <h2 class="font-semibold text-gray-700 flex items-center gap-2 mb-2">
-        <i data-lucide="terminal" class="w-4 h-4"></i> Patch 日志
-      </h2>
-      <div id="logsPatch" class="log-panel text-xs bg-gray-900 text-yellow-400 rounded p-3 h-64 overflow-y-auto whitespace-pre-wrap"></div>
-    </div>
+      <div class="events-strip">
+        <div class="events-label"><span class="pulse"></span>EVENTS</div>
+        <div id="logsEvents"></div>
+      </div>
 
-    <div class="bg-white rounded-lg shadow p-4">
-      <h2 class="font-semibold text-gray-700 flex items-center gap-2 mb-2">
-        <i data-lucide="terminal" class="w-4 h-4"></i> Capture 日志
-      </h2>
-      <div id="logsCapture" class="log-panel text-xs bg-gray-900 text-blue-400 rounded p-3 h-64 overflow-y-auto whitespace-pre-wrap"></div>
+      <hr class="rule" />
+
+      <section class="log-block">
+        <div class="log-block-head">
+          <span class="log-index">01</span>
+          <span class="log-title">CREATE — TXN LOG</span>
+          <span class="log-subtitle">$40.00 起单</span>
+        </div>
+        <div id="logsCreate" class="log-panel"></div>
+      </section>
+
+      <hr class="rule" />
+
+      <section class="log-block">
+        <div class="log-block-head">
+          <span class="log-index">02</span>
+          <span class="log-title">PATCH — CORRECTION LOG</span>
+          <span class="log-subtitle">加运费改单</span>
+        </div>
+        <div id="logsPatch" class="log-panel"></div>
+      </section>
+
+      <hr class="rule" />
+
+      <section class="log-block">
+        <div class="log-block-head">
+          <span class="log-index">03</span>
+          <span class="log-title">CAPTURE — SETTLEMENT LOG</span>
+          <span class="log-subtitle">$60.00 结算</span>
+        </div>
+        <div id="logsCapture" class="log-panel"></div>
+      </section>
+
+      <div class="footer-note">— END OF RECEIPT —</div>
     </div>
+    <div class="torn-edge bottom"></div>
   </div>
 
 <script>
@@ -85,16 +472,58 @@
     capture: 'logsCapture'
   };
 
-  function logMessage(panel, label, data) {
+  function logMessage(panel, label, data, isError) {
     var el = document.getElementById(LOG_PANEL_IDS[panel]);
     var ts = new Date().toISOString().split('T')[1].split('.')[0];
-    var line = '[' + ts + '] ' + label;
+
+    var line = document.createElement('div');
+    line.className = 'log-line' + (isError ? ' err' : '');
+
+    var tsSpan = document.createElement('span');
+    tsSpan.className = 'ts';
+    tsSpan.textContent = '[' + ts + '] ';
+
+    var lblSpan = document.createElement('span');
+    lblSpan.className = 'lbl';
+    lblSpan.textContent = label;
+
+    line.appendChild(tsSpan);
+    line.appendChild(lblSpan);
+
     if (data !== undefined) {
-      line += '\n' + JSON.stringify(data, null, 2);
+      var bodyEl = document.createElement('span');
+      bodyEl.className = 'body';
+      bodyEl.textContent = JSON.stringify(data, null, 2);
+      line.appendChild(bodyEl);
     }
-    el.textContent += line + '\n\n';
+
+    el.appendChild(line);
     el.scrollTop = el.scrollHeight;
     console.log(label, data);
+  }
+
+  function setAmountStatus(text, state) {
+    var el = document.getElementById('amountStatus');
+    el.textContent = text;
+    el.classList.remove('settled', 'failed');
+    if (state) el.classList.add(state);
+  }
+
+  function markAmountPatched() {
+    document.getElementById('shippingRow').hidden = false;
+    document.getElementById('amountOld').classList.add('struck');
+    var newEl = document.getElementById('amountNew');
+    newEl.hidden = false;
+    newEl.classList.add('stamp-in');
+    setAmountStatus('已改单：+ $20.00 运费');
+  }
+
+  function markAmountCaptured() {
+    setAmountStatus('已结算 · SETTLED', 'settled');
+  }
+
+  function markAmountFailed(step) {
+    setAmountStatus(step + ' 失败，见下方日志', 'failed');
   }
 
   function createOrder() {
@@ -129,7 +558,8 @@
         return data.id;
       })
       .catch(function (err) {
-        logMessage('create', 'createOrder error', { message: String(err) });
+        logMessage('create', 'createOrder error', { message: String(err) }, true);
+        markAmountFailed('CREATE');
         throw err;
       });
   }
@@ -156,9 +586,11 @@
       .then(function (res) { return res.json(); })
       .then(function (data) {
         logMessage('patch', 'PATCH /api/checkout/orders/' + orderId + ' - response', data);
+        markAmountPatched();
       })
       .catch(function (err) {
-        logMessage('patch', 'patchOrderAmount error', { message: String(err) });
+        logMessage('patch', 'patchOrderAmount error', { message: String(err) }, true);
+        markAmountFailed('PATCH');
         throw err;
       });
   }
@@ -172,25 +604,26 @@
       .then(function (res) { return res.json(); })
       .then(function (data) {
         logMessage('capture', 'POST /api/checkout/orders/' + orderId + '/capture - response', data);
+        markAmountCaptured();
       })
       .catch(function (err) {
-        logMessage('capture', 'captureOrderById error', { message: String(err) });
+        logMessage('capture', 'captureOrderById error', { message: String(err) }, true);
+        markAmountFailed('CAPTURE');
         throw err;
       });
   }
 
   function onApprove(data) {
     logMessage('events', 'onApprove - buyer 已 approve', data);
+    setAmountStatus('买家已授权，正在改单…');
     return patchOrderAmount(data.orderID)
       .then(function () { return captureOrderById(data.orderID); })
       .catch(function (err) {
-        logMessage('events', 'onApprove flow error', { message: String(err) });
+        logMessage('events', 'onApprove flow error', { message: String(err) }, true);
       });
   }
 
   document.addEventListener('DOMContentLoaded', function () {
-    lucide.createIcons();
-
     var script = document.createElement('script');
     script.src = 'https://www.sandbox.paypal.com/sdk/js?client-id=' + CLIENT_ID +
       '&currency=USD&intent=capture&enable-funding=paylater&components=buttons&buyer-country=US';
@@ -201,11 +634,11 @@
         createOrder: createOrder,
         onApprove: onApprove,
         onCancel: function (data) { logMessage('events', 'onCancel', data); },
-        onError: function (err) { logMessage('events', 'onError', { message: String(err) }); }
+        onError: function (err) { logMessage('events', 'onError', { message: String(err) }, true); }
       }).render('#paypal-button-container');
     };
     script.onerror = function () {
-      logMessage('events', 'PayPal SDK 加载失败');
+      logMessage('events', 'PayPal SDK 加载失败', undefined, true);
     };
     document.head.appendChild(script);
   });
