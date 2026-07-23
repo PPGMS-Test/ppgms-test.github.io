@@ -50,6 +50,11 @@
     "filePath": "__3__-paylater/JSV6-PLM/jsv6-cross-border-msg.html"
   },
   {
+    "name": "index",
+    "path": "__3__-paylater/paylater-shipping-patch",
+    "filePath": "__3__-paylater/paylater-shipping-patch/index.html"
+  },
+  {
     "name": "__3__-paylater-msg-dashboard",
     "path": "__3__-paylater/PLM-admin-dashboard/__3__-paylater-msg-dashboard.html",
     "filePath": "__3__-paylater/PLM-admin-dashboard/__3__-paylater-msg-dashboard.html"

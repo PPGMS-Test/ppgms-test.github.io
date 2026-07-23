@@ -251,6 +251,21 @@
         ]
       },
       {
+        "title": "paylater-shipping-patch",
+        "icon": "folder",
+        "expanded": true,
+        "items": [
+          {
+            "description": "",
+            "url": "__3__-paylater/paylater-shipping-patch/index.html",
+            "text": "paylater-shipping-patch",
+            "isFolder": false,
+            "hasChildren": false,
+            "isExternal": false
+          }
+        ]
+      },
+      {
         "title": "PLM-admin-dashboard",
         "icon": "folder",
         "expanded": true,

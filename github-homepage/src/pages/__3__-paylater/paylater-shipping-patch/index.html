@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>PayLater 加运费改单测试</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/lucide@latest"></script>
+<style>
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+  #logsContainer { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+</style>
+</head>
+<body class="bg-gray-100 min-h-screen p-6">
+  <div class="max-w-3xl mx-auto space-y-6">
+    <h1 class="text-2xl font-bold text-gray-800">PayLater 加运费改单测试</h1>
+    <p class="text-sm text-gray-600">
+      流程：下单 $40.00 → 用户 Pay Later approve → 后端 PATCH 改单加 $20.00 运费到 $60.00 → capture
+    </p>
+
+    <div class="bg-white rounded-lg shadow p-4 space-y-2">
+      <h2 class="font-semibold text-gray-700 flex items-center gap-2">
+        <i data-lucide="key-round" class="w-4 h-4"></i> Sandbox 凭证（写死，仅测试用）
+      </h2>
+      <div class="text-xs text-gray-500 space-y-1">
+        <div>Client ID: <span id="clientIdDisplay" class="font-mono text-gray-800"></span></div>
+        <div>Client Secret: <span id="clientSecretDisplay" class="font-mono text-gray-800"></span></div>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-lg shadow p-4 space-y-3">
+      <h2 class="font-semibold text-gray-700 flex items-center gap-2">
+        <i data-lucide="credit-card" class="w-4 h-4"></i> 订单金额
+      </h2>
+      <div class="text-sm text-gray-600">
+        初始金额：<span class="font-mono">$40.00</span> →
+        Patch 后金额（含运费 $20.00）：<span class="font-mono">$60.00</span>
+      </div>
+      <div id="paypal-button-container" class="max-w-xs"></div>
+    </div>
+
+    <div class="bg-white rounded-lg shadow p-4">
+      <h2 class="font-semibold text-gray-700 flex items-center gap-2 mb-2">
+        <i data-lucide="terminal" class="w-4 h-4"></i> 日志
+      </h2>
+      <div id="logsContainer" class="text-xs bg-gray-900 text-green-400 rounded p-3 h-96 overflow-y-auto whitespace-pre-wrap"></div>
+    </div>
+  </div>
+
+<script>
+  var CLIENT_ID = 'Aa9Fj_yJs0Ylv2ZxdwWd-5ATa8vNqnn8ykMXksfwk5TRR0zvu1XoTZRhrAvI5YtnyaIJrFSanfQUq-9O';
+  var CLIENT_SECRET = 'ELMHpqnP61kMOWIiz0NF-xKTmBXehYcgl6fv5VVJOpe_Usm57VCnjosY0tD78dAVo2CXglhQ4GVJql87';
+  var BACKEND_BASE = 'https://ppgms-test-github-io.pages.dev';
+
+  document.getElementById('clientIdDisplay').textContent = CLIENT_ID;
+  document.getElementById('clientSecretDisplay').textContent = CLIENT_SECRET;
+
+  function logMessage(label, data) {
+    var el = document.getElementById('logsContainer');
+    var ts = new Date().toISOString().split('T')[1].split('.')[0];
+    var line = '[' + ts + '] ' + label;
+    if (data !== undefined) {
+      line += '\n' + JSON.stringify(data, null, 2);
+    }
+    el.textContent += line + '\n\n';
+    el.scrollTop = el.scrollHeight;
+    console.log(label, data);
+  }
+
+  function createOrder() {
+    var body = {
+      intent: 'CAPTURE',
+      purchase_units: [{
+        reference_id: 'default',
+        description: 'PayPal Pay Later 测试订单 - 无线降噪耳机',
+        amount: {
+          currency_code: 'USD',
+          value: '40.00',
+          breakdown: { item_total: { currency_code: 'USD', value: '40.00' } }
+        },
+        items: [{
+          name: 'Wireless Noise-Cancelling Headphones',
+          description: 'Over-ear, Bluetooth 5.3, 30h battery',
+          quantity: '1',
+          unit_amount: { currency_code: 'USD', value: '40.00' },
+          category: 'PHYSICAL_GOODS'
+        }]
+      }]
+    };
+    logMessage('POST /api/checkout/orders/create - request', body);
+    return fetch(BACKEND_BASE + '/api/checkout/orders/create', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    })
+      .then(function (res) { return res.json(); })
+      .then(function (data) {
+        logMessage('POST /api/checkout/orders/create - response', data);
+        return data.id;
+      });
+  }
+
+  function patchOrderAmount(orderId) {
+    var patchBody = [{
+      op: 'replace',
+      path: "/purchase_units/@reference_id=='default'/amount",
+      value: {
+        currency_code: 'USD',
+        value: '60.00',
+        breakdown: {
+          item_total: { currency_code: 'USD', value: '40.00' },
+          shipping: { currency_code: 'USD', value: '20.00' }
+        }
+      }
+    }];
+    logMessage('PATCH /api/checkout/orders/' + orderId + ' - request', patchBody);
+    return fetch(BACKEND_BASE + '/api/checkout/orders/' + orderId, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(patchBody)
+    })
+      .then(function (res) { return res.json(); })
+      .then(function (data) {
+        logMessage('PATCH /api/checkout/orders/' + orderId + ' - response', data);
+      });
+  }
+
+  function captureOrderById(orderId) {
+    logMessage('POST /api/checkout/orders/' + orderId + '/capture - request', {});
+    return fetch(BACKEND_BASE + '/api/checkout/orders/' + orderId + '/capture', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' }
+    })
+      .then(function (res) { return res.json(); })
+      .then(function (data) {
+        logMessage('POST /api/checkout/orders/' + orderId + '/capture - response', data);
+      });
+  }
+
+  function onApprove(data) {
+    logMessage('onApprove - buyer 已 approve', data);
+    return patchOrderAmount(data.orderID)
+      .then(function () { return captureOrderById(data.orderID); })
+      .catch(function (err) {
+        logMessage('onApprove flow error', { message: String(err) });
+      });
+  }
+
+  document.addEventListener('DOMContentLoaded', function () {
+    lucide.createIcons();
+
+    var script = document.createElement('script');
+    script.src = 'https://www.sandbox.paypal.com/sdk/js?client-id=' + CLIENT_ID +
+      '&currency=USD&intent=capture&enable-funding=paylater&components=buttons';
+    script.onload = function () {
+      logMessage('PayPal SDK loaded');
+      paypal.Buttons({
+        fundingSource: paypal.FUNDING.PAYLATER,
+        createOrder: createOrder,
+        onApprove: onApprove,
+        onCancel: function (data) { logMessage('onCancel', data); },
+        onError: function (err) { logMessage('onError', { message: String(err) }); }
+      }).render('#paypal-button-container');
+    };
+    script.onerror = function () {
+      logMessage('PayPal SDK 加载失败');
+    };
+    document.head.appendChild(script);
+  });
+</script>
+</body>
+</html>
