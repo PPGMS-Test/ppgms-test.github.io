@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { Send, Pencil, RotateCcw, Eye, EyeOff, Info, ExternalLink } from 'lucide-react'
 import { STEPS } from '@/lib/steps'
@@ -14,6 +14,7 @@ import {
   buildRefundBody,
 } from '@/lib/psp-requests'
 import { generateAuthAssertion } from '@/lib/auth-assertion'
+import { cn } from '@/lib/utils'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
@@ -120,6 +121,28 @@ async function runStep(id: StepId): Promise<api.ApiResult> {
   return r
 }
 
+// 统一的字段容器：label 行固定高度，checkbox-only 字段传空 label 也能对齐到同一基线
+// className 加在这层（grid 的直接子项）上才会影响布局，加在里面的 input 上对 grid 无效
+function Field({ label, className, children }: { label?: ReactNode; className?: string; children: ReactNode }) {
+  return (
+    <label className={cn('flex flex-col gap-1.5', className)}>
+      <span className="flex h-4 items-center gap-1 text-xs text-muted">{label}</span>
+      {children}
+    </label>
+  )
+}
+
+// 卡片头部的小圆点装饰：呼应"终端/控制台"识别，仅用在承载原始数据的卡片上
+function CardDots() {
+  return (
+    <span className="flex items-center gap-1" aria-hidden="true">
+      <span className="h-1.5 w-1.5 rounded-full bg-danger/60" />
+      <span className="h-1.5 w-1.5 rounded-full bg-accent/60" />
+      <span className="h-1.5 w-1.5 rounded-full bg-ok/60" />
+    </span>
+  )
+}
+
 export function StepDetail() {
   const activeStep = useFlowStore((s) => s.activeStep)
   const status = useFlowStore((s) => s.stepStatus[s.activeStep])
@@ -214,8 +237,11 @@ export function StepDetail() {
     }
   }
 
-  const inputCls = 'rounded border border-line bg-white px-2 py-1 font-mono text-sm'
-  const readOnlyInputCls = `${inputCls} cursor-not-allowed bg-line/20 text-muted`
+  const inputCls =
+    'rounded-lg border border-line bg-surface2 px-3 py-2 font-mono text-sm text-ink outline-none transition placeholder:text-muted/60 focus:border-accent/60 focus:ring-2 focus:ring-accent/20'
+  const readOnlyInputCls = `${inputCls} cursor-not-allowed border-line/60 bg-bg/40 text-muted focus:ring-0`
+  const checkboxRowCls =
+    'flex h-[38px] items-center gap-2 rounded-lg border border-line bg-surface2/40 px-3 text-sm text-ink'
 
   return (
     <div className="flex flex-col gap-3">
@@ -223,7 +249,7 @@ export function StepDetail() {
       <Card>
         <div className="flex items-center gap-2">
           <Badge tone="ink">{step.method}</Badge>
-          <span className="font-mono text-sm">{resolvedPath}</span>
+          <span className="font-mono text-sm text-ink">{resolvedPath}</span>
           <StepTips />
         </div>
       </Card>
@@ -231,82 +257,79 @@ export function StepDetail() {
       {/* 结构化输入 */}
       <Card className="flex flex-col gap-3">
         <div className="text-xs font-semibold uppercase tracking-wider text-muted">关键参数</div>
-        <div className="grid grid-cols-2 gap-2 text-sm">
+        <div className="grid grid-cols-2 gap-3 text-sm">
           {(activeStep === 'createOrder' || activeStep === 'createOrderDelayed') && (
             <>
-              <label className="flex flex-col gap-1">金额
+              <Field label="金额">
                 <input className={inputCls} value={config.amount}
                   onChange={(e) => onField({ amount: e.target.value })} />
-              </label>
-              <label className="flex flex-col gap-1">币种
+              </Field>
+              <Field label="币种">
                 <input className={inputCls} value={config.currency}
                   onChange={(e) => onField({ currency: e.target.value })} />
-              </label>
-              <label className="col-span-2 flex flex-col gap-1">Payee Email 
+              </Field>
+              <Field label="Payee Email" className="col-span-2">
                 <input className={readOnlyInputCls} value={config.payeeEmail} disabled readOnly />
-              </label>
+              </Field>
             </>
           )}
           {activeStep === 'onboarding' && (
             <>
-              <label className="flex flex-col gap-1">Tracking ID
+              <Field label="Tracking ID">
                 <input className={inputCls} value={config.trackingId}
                   onChange={(e) => onField({ trackingId: e.target.value })} />
-              </label>
-              <label className="flex flex-col gap-1">Return URL
+              </Field>
+              <Field label="Return URL">
                 <input className={inputCls} value={config.returnUrl}
                   onChange={(e) => onField({ returnUrl: e.target.value })} />
-              </label>
+              </Field>
             </>
           )}
           {/* payer_id + Auth Assertion 开关：对所有走 /common 的步骤可用 */}
           {activeStep !== 'auth' && (
             <>
-              <label className="flex flex-col gap-1">
-                <span className="flex items-center gap-1">
-                  Payer ID (<Link to="/credentials" className="underline">Merchant</Link>)
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <button type="button" aria-label="Payer ID 说明" className="inline-flex shrink-0 items-center text-muted hover:text-ink">
-                        <Info size={13} />
-                      </button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      这是授权给到 PSP 的<b>商户(merchant)</b>的 PayPal Payer ID <br/>
-                      我这里使用如下的<b>HK</b>商户: <br/>
-                      <ul className="list-disc pl-4">
-                        <li>payer_id: <code>CDQG5AS6GD7JXB5T</code></li>
-                        <li>email: <code>psp-test-2026-hk@test.com</code></li>
-                        <li>pwd: <code>12345678</code></li>
-                      </ul>
-                    </TooltipContent>
-                  </Tooltip>
-                </span>
+              <Field
+                label={
+                  <>
+                    Payer ID (<Link to="/credentials" className="text-accent underline underline-offset-2">Merchant</Link>)
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <button type="button" aria-label="Payer ID 说明" className="inline-flex shrink-0 items-center text-muted hover:text-ink">
+                          <Info size={13} />
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        这是授权给到 PSP 的<b>商户(merchant)</b>的 PayPal Payer ID <br/>
+                        我这里使用如下的<b>HK</b>商户: <br/>
+                        <ul className="list-disc pl-4">
+                          <li>payer_id: <code>CDQG5AS6GD7JXB5T</code></li>
+                          <li>email: <code>psp-test-2026-hk@test.com</code></li>
+                          <li>pwd: <code>12345678</code></li>
+                        </ul>
+                      </TooltipContent>
+                    </Tooltip>
+                  </>
+                }
+              >
                 <input className={readOnlyInputCls} value={config.payerId} disabled readOnly />
-              </label>
-              <label className="flex flex-col gap-1">
-                {/* 与 Payer ID 的标签行等高的占位，让下面的 checkbox 行跟输入框对齐 */}
-                <span className="invisible" aria-hidden="true">占位</span>
-                <span className="flex items-center gap-2 rounded border border-transparent px-2 py-1">
-                  <input type="checkbox" checked={config.sendAuthAssertion}
+              </Field>
+              <Field>
+                <label className={checkboxRowCls}>
+                  <input type="checkbox" className="accent-[var(--accent)]" checked={config.sendAuthAssertion}
                     onChange={(e) => updateConfig({ sendAuthAssertion: e.target.checked })} />
                   带 PayPal-Auth-Assertion
-                </span>
-              </label>
-              <label className="flex flex-col gap-1">
-                <span className="flex items-center gap-1 whitespace-nowrap">
-                  BN Code（{bnCodeCountry ? `商户国家：${bnCodeCountry}` : '未知国家'}）
-                </span>
+                </label>
+              </Field>
+              <Field label={`BN Code（${bnCodeCountry ? `商户国家：${bnCodeCountry}` : '未知国家'}）`}>
                 <input className={readOnlyInputCls} value={bnCode || '(未设置)'} disabled readOnly />
-              </label>
-              <label className="flex flex-col gap-1">
-                <span className="invisible" aria-hidden="true">占位</span>
-                <span className="flex items-center gap-2 rounded border border-transparent px-2 py-1">
-                  <input type="checkbox" checked={config.sendBnCode}
+              </Field>
+              <Field>
+                <label className={checkboxRowCls}>
+                  <input type="checkbox" className="accent-[var(--accent)]" checked={config.sendBnCode}
                     onChange={(e) => updateConfig({ sendBnCode: e.target.checked })} />
                   带 PayPal-Partner-Attribution-Id
-                </span>
-              </label>
+                </label>
+              </Field>
             </>
           )}
         </div>
@@ -316,7 +339,9 @@ export function StepDetail() {
       {STEP_HAS_BODY[activeStep] && (
         <Card className="flex flex-col gap-2">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold uppercase tracking-wider text-muted">Request Body</span>
+            <span className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted">
+              <CardDots /> Request Body
+            </span>
             <div className="flex gap-2">
               <Button variant="ghost" className="px-2 py-1 text-xs"
                 onClick={() => setBodyEditing(activeStep, !editing)}>
@@ -329,12 +354,12 @@ export function StepDetail() {
           </div>
           {editing ? (
             <textarea
-              className="min-h-48 w-full rounded border border-line bg-white p-2 font-mono text-xs"
+              className="min-h-48 w-full rounded-lg border border-line bg-bg/60 p-3 font-mono text-xs text-ink outline-none focus:border-accent/60 focus:ring-2 focus:ring-accent/20"
               value={requestBody ?? ''}
               onChange={(e) => setRequestBody(activeStep, e.target.value)}
             />
           ) : (
-            <pre className="max-h-80 overflow-auto whitespace-pre-wrap break-all font-mono text-xs">
+            <pre className="max-h-80 overflow-auto whitespace-pre-wrap break-all rounded-lg border border-line bg-bg/60 p-3 font-mono text-xs text-ink/90">
               {requestBody ?? '（尚未生成 —— disburse 需先完成 Capture 拿到 capture id，可点「重新生成」）'}
             </pre>
           )}
@@ -342,9 +367,11 @@ export function StepDetail() {
       )}
 
       {/* Headers 回显 */}
-      <Card className="flex flex-col gap-1">
-        <div className="mb-1 text-xs font-semibold uppercase tracking-wider text-muted">Request Headers</div>
-        <div className="font-mono text-xs leading-relaxed">
+      <Card className="flex flex-col gap-2">
+        <span className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted">
+          <CardDots /> Request Headers
+        </span>
+        <div className="rounded-lg border border-line bg-bg/60 p-3 font-mono text-xs leading-relaxed text-ink/90">
           {activeStep === 'auth' ? (
             <div>Authorization: Basic &lt;clientId:secret 的 base64&gt;</div>
           ) : (
@@ -354,7 +381,7 @@ export function StepDetail() {
                 <button
                   type="button"
                   aria-label={showToken ? '隐藏 token' : '显示 token'}
-                  className="ml-1 inline-flex items-center align-middle text-muted hover:text-ink"
+                  className="ml-1 inline-flex items-center align-middle text-muted hover:text-accent"
                   onClick={() => setShowToken((v) => !v)}
                 >
                   {showToken ? <EyeOff size={12} /> : <Eye size={12} />}
@@ -370,26 +397,28 @@ export function StepDetail() {
       </Card>
 
       {/* 发送 */}
-      <div className="flex items-center gap-3">
-        <Button onClick={onSend} disabled={!isConfigured || status === 'running'}>
+      <div className="flex items-center gap-3 py-1">
+        <Button onClick={onSend} disabled={!isConfigured || status === 'running'} className="px-6 py-2.5">
           <Send size={16} /> 发送
         </Button>
-        {!isConfigured && <span className="text-xs text-accent">请先到「凭证」页填 client id/secret</span>}
+        {!isConfigured && <span className="text-xs text-danger">请先到「凭证」页填 client id/secret</span>}
         {status !== 'idle' && (
-          <Badge tone={status === 'success' ? 'ok' : status === 'error' ? 'accent' : 'muted'}>{status}</Badge>
+          <Badge tone={status === 'success' ? 'ok' : status === 'error' ? 'danger' : 'muted'}>{status}</Badge>
         )}
       </div>
 
       {/* Response（发送后显示在下方） */}
       {response !== undefined && (
-        <Card>
-          <div className="mb-1 text-xs font-semibold uppercase tracking-wider text-muted">Response</div>
+        <Card className="flex flex-col gap-2">
+          <span className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted">
+            <CardDots /> Response
+          </span>
           {actionUrl && (
             <a
               href={actionUrl}
               target="_blank"
               rel="noreferrer"
-              className="mb-2 flex items-center gap-1 break-all text-sm text-ink underline hover:text-accent"
+              className="flex items-center gap-1 break-all text-sm text-accent underline underline-offset-2 hover:brightness-110"
             >
               <ExternalLink size={14} className="shrink-0" />
               打开商户授权链接（action_url）
@@ -400,18 +429,18 @@ export function StepDetail() {
               href={approveLink}
               target="_blank"
               rel="noreferrer"
-              className="mb-2 flex items-center gap-1 break-all text-sm text-ink underline hover:text-accent"
+              className="flex items-center gap-1 break-all text-sm text-accent underline underline-offset-2 hover:brightness-110"
             >
               <ExternalLink size={14} className="shrink-0" />
               打开 Buyer Approve 链接（rel=approve）
             </a>
           )}
           {debugId && (
-            <div className="mb-2 break-all font-mono text-xs text-muted">
+            <div className="break-all font-mono text-xs text-muted">
               paypal-debug-id: <span className="text-ink">{debugId}</span>
             </div>
           )}
-          <pre className="max-h-96 overflow-auto whitespace-pre-wrap break-all font-mono text-xs">
+          <pre className="max-h-96 overflow-auto whitespace-pre-wrap break-all rounded-lg border border-line bg-bg/60 p-3 font-mono text-xs text-ink/90">
             {JSON.stringify(response, null, 2)}
           </pre>
         </Card>

@@ -6,15 +6,21 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
+        bg: 'var(--bg)',
         paper: 'var(--paper)',
+        surface: 'var(--surface)',
+        surface2: 'var(--surface-2)',
         ink: 'var(--ink)',
         accent: 'var(--accent)',
         ok: 'var(--ok)',
+        danger: 'var(--danger)',
         line: 'var(--line)',
         muted: 'var(--muted)',
       },
       fontFamily: {
-        mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'monospace'],
+        sans: ['Inter', 'system-ui', '-apple-system', '"PingFang SC"', '"Microsoft YaHei"', 'sans-serif'],
+        display: ['"Space Grotesk"', 'Inter', 'system-ui', 'sans-serif'],
+        mono: ['"JetBrains Mono"', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'monospace'],
       },
     },
   },

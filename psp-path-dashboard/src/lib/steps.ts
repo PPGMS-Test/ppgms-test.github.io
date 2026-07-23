@@ -400,27 +400,27 @@ export const FUND_FLOW: FundFlowSegment[] = [
   {
     label: 'Buyer',
     description: '买家账户/卡片',
-    color: 'bg-blue-100',
+    color: '#5B8DEF',
   },
   {
     label: 'PayPal GL',
     description: 'PSP 的 PayPal 账户（一般余额为 $0）',
-    color: 'bg-amber-100',
+    color: '#F0A93C',
   },
   {
     label: 'PSA',
     description: 'PSP 的 Omnibus 账户（Type 5）',
-    color: 'bg-purple-100',
+    color: '#A78BFA',
   },
   {
     label: 'PSP Bank',
     description: 'PSP 的真实银行账户（日 EOD sweep）',
-    color: 'bg-green-100',
+    color: '#34D399',
   },
   {
     label: 'Merchant',
     description: '下游商户账户',
-    color: 'bg-red-100',
+    color: '#FB923C',
   },
 ]
 

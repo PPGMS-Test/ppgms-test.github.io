@@ -3,18 +3,57 @@
 @tailwind utilities;
 
 :root {
+  /* void/ledger — dark console theme; the whole app reads as a ledger you're watching money move through */
+  --bg: #0b0f14;
+  --paper: #0b0f14;
+  --surface: #131a22;
+  --surface-2: #1b2430;
+  --line: #232d3a;
+  --ink: #e7ecf2;
+  --muted: #7c8a9c;
+  --accent: #f0a93c; /* gold — "current", money in motion: active/primary/highlight */
+  --ok: #34d399;
+  --danger: #ff6b6b;
+  --on-accent: #0b0f14; /* accent/ok/danger 都偏亮，故用深色文字保证对比度 */
+}
+
+/* 备选皮肤：暖色 paper（旧版配色），data-theme="light" 挂在 <html> 上时生效 */
+:root[data-theme='light'] {
+  --bg: #f5f0e6;
   --paper: #f5f0e6;
+  --surface: #ffffff;
+  --surface-2: #ece4d3;
+  --line: #d8cfbc;
   --ink: #2a335f;
+  --muted: #8a8371;
   --accent: #c0392b;
   --ok: #2e7d54;
-  --line: #d8cfbc;
-  --muted: #8a8371;
+  --danger: #c0392b;
+  --on-accent: #fbf7ee; /* 这套配色下 accent/ok/danger 都偏暗，改用浅色文字 */
 }
 
 html, body, #root { height: 100%; }
 body {
   margin: 0;
-  background: var(--paper);
+  background: var(--bg);
   color: var(--ink);
-  font-family: system-ui, -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  font-family: 'Inter', system-ui, -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+}
+
+* {
+  scrollbar-color: var(--line) transparent;
+  scrollbar-width: thin;
+}
+
+::selection {
+  background: var(--accent);
+  color: var(--bg);
+}
+
+code {
+  font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  background: var(--surface-2);
+  padding: 0.05em 0.35em;
+  border-radius: 4px;
+  font-size: 0.9em;
 }

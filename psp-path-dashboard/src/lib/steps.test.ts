@@ -79,9 +79,9 @@ describe('steps.ts', () => {
     expect(FUND_FLOW[4].label).toBe('Merchant')
   })
 
-  it('should have color classes for fund flow segments', () => {
+  it('should have hex colors for fund flow segments (consumed as inline style, not tailwind classes)', () => {
     FUND_FLOW.forEach((segment) => {
-      expect(segment.color).toMatch(/^bg-/)
+      expect(segment.color).toMatch(/^#[0-9A-Fa-f]{6}$/)
       expect(segment.description).toBeTruthy()
     })
   })

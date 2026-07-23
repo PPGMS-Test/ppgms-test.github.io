@@ -1,3 +1,4 @@
+import type { CSSProperties } from 'react'
 import { ArrowRight } from 'lucide-react'
 import { useFlowStore } from '@/store/flow'
 import { FUND_FLOW } from '@/lib/steps'
@@ -51,47 +52,48 @@ export function FundFlowBar() {
   const highlightedIndices = getHighlightedSegmentIndices(activeStep)
 
   return (
-    <div className="rounded-lg border border-line bg-white/40 px-4 py-3">
+    <div className="rounded-xl border border-line bg-surface/60 px-4 py-4">
       {/* 标题 */}
-      <div className="mb-3 text-xs font-semibold text-ink">
-        资金流 — 当前步骤的资金位置
+      <div className="mb-3 flex items-center gap-2 text-[10px] font-mono font-semibold uppercase tracking-[0.15em] text-muted">
+        <span className="h-1.5 w-1.5 rounded-full bg-accent shadow-[0_0_6px_var(--accent)]" />
+        资金流 · Ledger Trace
       </div>
 
       {/* 流条：段 + 箭头 */}
-      <div className="mb-3 flex items-center gap-2 overflow-x-auto pb-2">
+      <div className="mb-3 flex items-center gap-1.5 overflow-x-auto pb-1">
         {FUND_FLOW.map((segment, idx) => {
           const isHighlighted = highlightedIndices.includes(idx)
 
           return (
-            <div key={idx} className="flex items-center gap-2 shrink-0">
+            <div key={idx} className="flex shrink-0 items-center gap-1.5">
               {/* 段 */}
               <div
                 className={cn(
-                  'rounded-lg border px-3 py-2 transition-all',
-                  isHighlighted
-                    ? 'border-accent/60 shadow-sm'
-                    : 'border-line/30'
+                  'rounded-lg border px-3 py-2 transition-all duration-300',
+                  isHighlighted ? 'shadow-[0_0_14px_-6px_var(--accent-glow)]' : 'opacity-50',
                 )}
                 style={{
-                  backgroundColor: isHighlighted
-                    ? segment.color
-                    : '#f9fafb',
-                }}
+                  borderColor: isHighlighted ? segment.color : 'var(--line)',
+                  backgroundColor: isHighlighted ? `${segment.color}1f` : 'var(--surface-2)',
+                  '--accent-glow': segment.color,
+                } as CSSProperties}
               >
-                <div className="text-xs font-medium text-ink">{segment.label}</div>
-                <div className="text-xs text-muted">{segment.description}</div>
+                <div className="text-xs font-medium" style={{ color: isHighlighted ? segment.color : 'var(--ink)' }}>
+                  {segment.label}
+                </div>
+                <div className="text-[10px] text-muted">{segment.description}</div>
               </div>
 
               {/* 箭头（最后一段后没有） */}
               {idx < FUND_FLOW.length - 1 && (
                 <div className="shrink-0">
                   <ArrowRight
-                    size={16}
+                    size={14}
                     className={cn(
                       'transition-colors',
                       highlightedIndices.includes(idx) || highlightedIndices.includes(idx + 1)
                         ? 'text-accent'
-                        : 'text-line/30'
+                        : 'text-line',
                     )}
                   />
                 </div>
@@ -102,9 +104,7 @@ export function FundFlowBar() {
       </div>
 
       {/* 步骤说明 */}
-      <div className="text-xs text-muted">
-        {getStepDescription(activeStep)}
-      </div>
+      <div className="text-xs text-muted">{getStepDescription(activeStep)}</div>
     </div>
   )
 }
