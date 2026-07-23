@@ -4,76 +4,112 @@
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>PayPal Google Pay + 3DS 完整测试</title>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link
+            href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap"
+            rel="stylesheet"
+        />
         <link rel="stylesheet" href="style.css" />
-        <link rel="stylesheet" href="../shared-panel.css" />
     </head>
     <body>
-        <div class="container">
-            <!-- ── Checkout card ─────────────────────────────── -->
-            <div class="checkout-card">
-                <div class="header">
-                    <h1>SandBox 支付测试 + 3DS</h1>
-                </div>
+        <div class="counter">
+            <main class="receipt" id="receipt">
+                <div class="receipt-edge receipt-edge--top" aria-hidden="true"></div>
 
-                <div class="info-section">
-                    <div class="config-panel">
-                        <div class="config-item">
-                            <span class="config-label">Merchant ID</span>
-                            <span class="config-value">CMHAMMNAXCMGA</span>
-                        </div>
-                        <div class="config-item">
-                            <span class="config-label">Environment</span>
-                            <span class="badge-sandbox">SANDBOX</span>
-                        </div>
-                        <div class="config-item config-full">
-                            <span class="config-label">Features</span>
-                            <div class="config-chips">
-                                <span class="config-chip">googlepay</span>
-                                <span class="config-chip">shipping</span>
-                                <span class="config-chip">dynamic-price</span>
-                                <span class="config-chip">3ds</span>
-                            </div>
-                        </div>
+                <header class="receipt-head">
+                    <div class="receipt-brand">
+                        <span class="receipt-brand-glyph">⌸</span>
+                        Google PAY&nbsp;·&nbsp;Test&nbsp;
                     </div>
-                </div>
+                    <div class="receipt-subline">
+                        <span>Merchant-ID:&nbsp;#&nbsp;CMHAMMNAXCMGA</span>
+                        <span class="tag tag--sandbox">● SANDBOX</span>
+                    </div>
+                </header>
 
-                <div class="product-summary">
-                    <div class="product-item">
-                        <span class="product-name">测试商品 (Subtotal)</span>
-                        <span class="product-price">$100.00</span>
-                    </div>
-                    <div class="product-item">
-                        <span class="product-name">税费 (Tax)</span>
-                        <span class="product-price">$10.00</span>
-                    </div>
-                    <div class="total-row product-item">
-                        <span>总计 (Total)</span>
-                        <span class="product-price">$110.00</span>
-                    </div>
-                </div>
+                <div class="perf" aria-hidden="true"></div>
 
-                <div class="payment-area">
+                <section class="receipt-section">
+                    <div class="section-label">Features</div>
+                    <div class="tag-row">
+                        <span class="tag">GOOGLEPAY</span>
+                        <span class="tag">SHIPPING</span>
+                        <span class="tag">DYNAMIC-PRICE</span>
+                        <span class="tag">3DS</span>
+                    </div>
+                </section>
+
+                <div class="perf" aria-hidden="true"></div>
+
+                <section class="receipt-section">
+                    <div class="section-label">Security</div>
+                    <label class="switch-row" for="pan-only-toggle">
+                        <span class="switch-row-text">AUTH&nbsp;METHOD&nbsp;<code>PAN_ONLY</code></span>
+                        <span class="switch">
+                            <input type="checkbox" id="pan-only-toggle" class="switch-input" checked />
+                            <span class="switch-track"><span class="switch-thumb"></span></span>
+                            <span class="switch-state" id="pan-only-state">ON</span>
+                        </span>
+                    </label>
+                </section>
+
+                <div class="perf" aria-hidden="true"></div>
+
+                <section class="receipt-section">
+                    <div class="ledger">
+                        <div class="ledger-row ledger-head">
+                            <span class="ledger-qty">QTY</span>
+                            <span class="ledger-name">ITEM</span>
+                            <span class="ledger-amt">AMOUNT</span>
+                        </div>
+                        <div class="ledger-row">
+                            <span class="ledger-qty">1</span>
+                            <span class="ledger-name">测试商品 Test Product</span>
+                            <span class="ledger-amt">100.00</span>
+                        </div>
+                        <div class="ledger-row">
+                            <span class="ledger-qty"></span>
+                            <span class="ledger-name">税费 Sales Tax</span>
+                            <span class="ledger-amt">10.00</span>
+                        </div>
+                        <div class="ledger-row ledger-total">
+                            <span class="ledger-name">总计 TOTAL</span>
+                            <span class="ledger-amt">$110.00</span>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="receipt-section pay-zone">
+                    <div class="pay-zone-caption">// tap to pay</div>
                     <div id="google-pay-button-container"></div>
-                    <div id="message" class="status-message"></div>
-                </div>
-            </div>
+                    <div id="message" class="ticker"></div>
+                </section>
 
-            <!-- ── Info panels (shown after authorization) ───── -->
+                <div class="receipt-foot">SANDBOX TXN · NO REAL FUNDS MOVED</div>
+
+                <div class="receipt-edge receipt-edge--bottom" aria-hidden="true"></div>
+            </main>
+
+            <!-- ── Result printout (revealed after authorization) ───── -->
             <div id="info-panels" class="info-panels" style="display:none;">
                 <div class="info-panel" id="panel-buyer">
-                    <div class="panel-title">Buyer · Card</div>
+                    <div class="section-label">Buyer · Card</div>
                     <div id="panel-buyer-body"></div>
                 </div>
+
                 <div class="info-panel" id="panel-shipping">
-                    <div class="panel-title">Shipping</div>
+                    <div class="section-label">Shipping</div>
                     <div id="panel-shipping-body"></div>
                 </div>
+
                 <div class="info-panel" id="panel-billing">
-                    <div class="panel-title">Billing</div>
+                    <div class="section-label">Billing</div>
                     <div id="panel-billing-body"></div>
                 </div>
+
                 <div class="info-panel" id="panel-3ds">
-                    <div class="panel-title">3DS · Auth</div>
+                    <div class="section-label">3DS · Auth</div>
                     <div id="panel-3ds-body" class="tds-body">
                         <span class="tds-badge waiting">Waiting</span>
                     </div>
@@ -151,7 +187,10 @@
                             phoneNumberRequired: true,
                         };
                     }
-                    console.log("[1.1] 配置已获取 / Config received:", googlePayConfig);
+
+
+                    applyPanOnlyConfig();
+                    console.log("[1.1] 配置已获取 / Config received:", JSON.stringify(googlePayConfig, null, 2));
 
                     const client = getGooglePaymentsClient();
                     console.log("[2] 检查 isReadyToPay... / Checking isReadyToPay...");
@@ -172,6 +211,24 @@
                     showMessage("初始化失败 / Init failed: " + err.message, true);
                 }
             }
+
+            // 根据 checkbox 状态开关 allowedAuthMethods = ['PAN_ONLY']
+            function applyPanOnlyConfig() {
+                if (!allowedPaymentMethods?.[0]?.parameters) return;
+                const enabled = document.getElementById("pan-only-toggle").checked;
+                if (enabled) {
+                    allowedPaymentMethods[0].parameters.allowedAuthMethods = ["PAN_ONLY"];
+                } else {
+                    delete allowedPaymentMethods[0].parameters.allowedAuthMethods;
+                }
+                console.log(`[Config] allowedAuthMethods PAN_ONLY: ${enabled ? "启用" : "禁用"}`, allowedPaymentMethods[0].parameters);
+                const stateEl = document.getElementById("pan-only-state");
+                if (stateEl) stateEl.textContent = enabled ? "ON" : "OFF";
+            }
+
+            document
+                .getElementById("pan-only-toggle")
+                .addEventListener("change", applyPanOnlyConfig);
 
             function getGooglePaymentsClient() {
                 if (!paymentsClient) {
