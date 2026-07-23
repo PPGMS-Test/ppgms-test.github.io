@@ -52,20 +52,11 @@
     to { opacity: 1; transform: translateY(0); }
   }
 
-  .torn-edge {
-    height: 14px;
-    background:
-      linear-gradient(135deg, var(--page-bg) 50%, transparent 50.5%) 0 0,
-      linear-gradient(225deg, var(--page-bg) 50%, transparent 50.5%) 0 0;
-    background-size: 18px 18px;
-    background-color: var(--paper);
-  }
-  .torn-edge.bottom { transform: scaleY(-1); }
-
   .receipt {
     background: var(--paper);
+    border-radius: 14px;
     box-shadow: 0 24px 48px -20px var(--paper-shadow), 0 2px 0 rgba(28,27,25,0.04);
-    padding: 8px 36px 4px;
+    padding: 8px 36px 20px;
   }
 
   /* ---- header ---- */
@@ -122,10 +113,9 @@
 
   .rule {
     border: none;
-    border-top: 1px dashed var(--rule);
+    border-top: 1px solid var(--rule);
     margin: 4px 0;
   }
-  .rule.solid { border-top-style: solid; }
 
   /* ---- line item ---- */
   .line-item { padding: 20px 0 6px; }
@@ -222,12 +212,10 @@
     margin-bottom: 10px;
   }
   .tender-box {
-    border: 1.5px dashed var(--rule);
+    border: 1px solid var(--rule);
     border-radius: 10px;
     padding: 14px;
-    background: repeating-linear-gradient(
-      -45deg, rgba(28,27,25,0.015), rgba(28,27,25,0.015) 6px, transparent 6px, transparent 12px
-    );
+    background: rgba(28, 27, 25, 0.02);
   }
   #paypal-button-container { min-height: 45px; }
 
@@ -323,15 +311,6 @@
     to { opacity: 1; transform: translateY(0); }
   }
 
-  .footer-note {
-    padding: 18px 0 22px;
-    text-align: center;
-    font-family: var(--font-mono);
-    font-size: 10px;
-    letter-spacing: 0.1em;
-    color: var(--ink-faint);
-  }
-
   a, button { font-family: inherit; }
   :focus-visible {
     outline: 2px solid var(--amber);
@@ -358,7 +337,6 @@
 </head>
 <body>
   <div class="receipt-wrap">
-    <div class="torn-edge"></div>
     <div class="receipt">
 
       <header class="receipt-head">
@@ -371,7 +349,7 @@
         </div>
       </header>
 
-      <hr class="rule solid" />
+      <hr class="rule" />
 
       <div class="line-item">
         <div class="item-row">
@@ -392,7 +370,7 @@
           <span class="label">SHIPPING（PATCH 新增）</span>
           <span class="val">+ $20.00</span>
         </div>
-        <hr class="rule solid" />
+        <hr class="rule" />
         <div class="amount-row total">
           <span class="label">TOTAL DUE</span>
           <span class="total-value-wrap">
@@ -404,7 +382,7 @@
       </div>
 
       <div class="tender-slot">
-        <div class="tender-label">TENDER — 选择支付方式</div>
+        <div class="tender-label">支付方式</div>
         <div class="tender-box">
           <div id="paypal-button-container"></div>
         </div>
@@ -450,9 +428,7 @@
         <div id="logsCapture" class="log-panel"></div>
       </section>
 
-      <div class="footer-note">— END OF RECEIPT —</div>
     </div>
-    <div class="torn-edge bottom"></div>
   </div>
 
 <script>
