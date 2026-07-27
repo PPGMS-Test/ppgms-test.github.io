@@ -1,0 +1,585 @@
+<!doctype html>
+<html lang="zh-CN">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>JSv6 EUR Order Debug</title>
+
+        <script src="https://cdn.tailwindcss.com"></script>
+
+        <style>
+            body {
+                font-family: -apple-system, "Inter", sans-serif;
+            }
+            paypal-button {
+                display: block;
+                margin-top: 1.25rem;
+            }
+            #log pre {
+                font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+            }
+            #log::-webkit-scrollbar {
+                width: 6px;
+            }
+            #log::-webkit-scrollbar-thumb {
+                background: #374151;
+                border-radius: 3px;
+            }
+        </style>
+    </head>
+    <body class="bg-gray-50 text-slate-800 min-h-screen flex flex-col items-center p-6">
+        <div class="max-w-xl w-full bg-white rounded-2xl shadow-sm border border-gray-100 p-6 space-y-5">
+            <header class="space-y-3">
+                <h1 class="text-xl font-bold text-slate-900">
+                    JSv6 EUR Order Debug
+                </h1>
+                <p class="text-sm text-gray-600 leading-relaxed">
+                    探索JSv6 <code class="px-1 py-0.5 rounded bg-gray-100 text-slate-700 text-xs">EUR</code>
+                    报错的问题
+                    <br />
+                    <code class="px-1 py-0.5 rounded bg-gray-100 text-slate-700 text-xs">clientId</code>
+                    方式加载 SDK Instance, create-order / capture 直接用
+                    <code class="px-1 py-0.5 rounded bg-gray-100 text-slate-700 text-xs">fetch</code>
+                    与 PayPal sandbox API 通讯
+                </p>
+                <div class="flex gap-2 rounded-lg border-amber-400 bg-amber-50 px-3 py-2">
+
+                    <p class="text-xs text-amber-800 leading-relaxed">
+                        create-order / capture 直接fetch调用
+                        <code class="text-amber-900 font-medium">api-m.sandbox.paypal.com</code>、
+                    </p>
+                </div>
+            </header>
+
+            <section class="space-y-2">
+                <h2 class="text-xs font-semibold text-gray-400 uppercase tracking-wide">
+                    Sandbox 账号
+                </h2>
+                <div class="flex gap-4 text-sm flex-wrap">
+                    <label class="flex items-center gap-1.5 cursor-pointer">
+                        <input
+                            type="radio"
+                            name="account"
+                            value="C2"
+                            checked
+                            class="accent-blue-600"
+                        />
+                        C2 Acct
+                    </label>
+                    <label class="flex items-center gap-1.5 cursor-pointer">
+                        <input
+                            type="radio"
+                            name="account"
+                            value="US"
+                            class="accent-blue-600"
+                        />
+                        US Acct
+                    </label>
+                    <label class="flex items-center gap-1.5 cursor-pointer">
+                        <input
+                            type="radio"
+                            name="account"
+                            value="SHOPPAAS"
+                            class="accent-blue-600"
+                        />
+                        Shoppaas
+                    </label>
+                    <label class="flex items-center gap-1.5 cursor-pointer">
+                        <input
+                            type="radio"
+                            name="account"
+                            value="SHOPPAAS_AUTH_ASSERTION_ORIGIN"
+                            class="accent-blue-600"
+                        />
+                        Shoppaas + Auth Assertion + Origin
+                    </label>
+
+                    <label class="flex items-center gap-1.5 cursor-pointer">
+                        <input
+                            type="radio"
+                            name="account"
+                            value="SHOPPAAS_AUTH_ASSERTION_CMHAMMNAXCMGA"
+                            class="accent-blue-600"
+                        />
+                        Shoppaas + Auth Assertion + CMHAMMNAXCMGA
+                    </label>
+
+                    <!-- 新sandbox测试账号, us-acct-with-no-eur@test.com
+                    pwd: 12345678
+                    merchant-id: us-acct-with-no-eur@test.com
+                    Onboard completed -->
+                    <label class="flex items-center gap-1.5 cursor-pointer">
+                        <input
+                            type="radio"
+                            name="account"
+                            value="SHOPPAAS_AUTH_ASSERTION_UEVX8LK4Y7TLA"
+                            class="accent-blue-600"
+                        />
+                        Shoppaas + Auth Assertion + UEVX8LK4Y7TLA
+                    </label>
+                </div>
+                <button
+                    id="init-btn"
+                    class="w-full text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg py-2 transition-colors"
+                >
+                    用所选账号初始化 / 重新初始化
+                </button>
+            </section>
+
+            <section class="space-y-2">
+                <div class="flex items-center justify-between">
+                    <h2 class="text-xs font-semibold text-gray-400 uppercase tracking-wide">
+                        运行日志
+                    </h2>
+                    <button
+                        id="clear-log"
+                        class="text-xs text-gray-400 hover:text-gray-600 transition-colors"
+                    >
+                        清空
+                    </button>
+                </div>
+                <div
+                    id="log"
+                    class="text-xs bg-gray-900 text-gray-200 rounded-lg p-3 max-h-96 overflow-y-auto space-y-2.5"
+                ></div>
+            </section>
+
+            <paypal-button id="paypal-btn" type="pay" hidden></paypal-button>
+        </div>
+
+        <script
+            id="paypal-websdk-v6-core"
+            src="https://www.sandbox.paypal.com/web-sdk/v6/core"
+            crossorigin="anonymous"
+        ></script>
+
+        <script type="module">
+            // ------------------------------------------------------------------
+            // 以下内容原本拆分为 common/paypal-accounts.js、common/logger.js、
+            // common/paypal-rest-api.js、common/sdk-loader.js 四个模块，
+            // 为了部署为单文件测试页，统一内联在这里。
+            // ------------------------------------------------------------------
+
+            // === common/paypal-accounts.js ===
+            // 和主工程 code/store/useEnvStore.ts / code/components/panels/SdkConfigPanel.tsx 的 sandbox 预设保持一致。
+            const ACCOUNTS = {
+                C2: {
+                    label: "C2 Acct (China)",
+                    clientId:
+                        "ATW2maVlMXBh67xRprsLYttNFXVCDO7MhEUE_VId1zbwqSSfYfIAC8mtdLaLRwA4nZpTzGBZPws7Kf-Z",
+                    secret:
+                        "ELYFWy2PauSftn1lFaTkqsUd2sDu_gPrOi3cGOGj_6JyORnlG46cp16oBnLLmpBBQuhxQIKIiOIwCu_D",
+                },
+                US: {
+                    label: "US Acct (默认预设)",
+                    clientId:
+                        "Aa9Fj_yJs0Ylv2ZxdwWd-5ATa8vNqnn8ykMXksfwk5TRR0zvu1XoTZRhrAvI5YtnyaIJrFSanfQUq-9O",
+                    secret:
+                        "ELMHpqnP61kMOWIiz0NF-xKTmBXehYcgl6fv5VVJOpe_Usm57VCnjosY0tD78dAVo2CXglhQ4GVJql87",
+                },
+                SHOPPAAS: {
+                    label: "Shoppaas",
+                    clientId:
+                        "ATIwW9NdRH9Nqde8MCftI_0QbOL9APdYok0a7ircWl2-3fBHv-CoMYsfIDpcUDisqTHmHT7d0Dz9DV7V",
+                    secret:
+                        "EC-Qcp-6LdYoEw9g02iTkVTRHa49c_HLP19P2hxbSHATN3cov2_G-wmFzp5-Cx2gK3phIzrKhOhbLhPJ",
+                },
+
+                SHOPPAAS_AUTH_ASSERTION_ORIGIN: {
+                    label: "Shoppaas + Auth Assertion + Origin",
+                    clientId:
+                        "ATIwW9NdRH9Nqde8MCftI_0QbOL9APdYok0a7ircWl2-3fBHv-CoMYsfIDpcUDisqTHmHT7d0Dz9DV7V",
+                    secret:
+                        "EC-Qcp-6LdYoEw9g02iTkVTRHa49c_HLP19P2hxbSHATN3cov2_G-wmFzp5-Cx2gK3phIzrKhOhbLhPJ",
+                    authAssertion:
+                        "eyJhbGciOiJub25lIn0=.eyJpc3MiOiJBVEl3VzlOZFJIOU5xZGU4TUNmdElfMFFiT0w5QVBkWW9rMGE3aXJjV2wyLTNmQkh2LUNvTVlzZklEcGNVRGlzcVRIbUhUN2QwRHo5RFY3ViIsInBheWVyX2lkIjoiVlRUTVRZUU5GNjI4VSJ9.",
+                },
+
+                SHOPPAAS_AUTH_ASSERTION_CMHAMMNAXCMGA: {
+                    label: "Shoppaas + Auth Assertion + CMHAMMNAXCMGA",
+                    clientId:
+                        "ATIwW9NdRH9Nqde8MCftI_0QbOL9APdYok0a7ircWl2-3fBHv-CoMYsfIDpcUDisqTHmHT7d0Dz9DV7V",
+                    secret:
+                        "EC-Qcp-6LdYoEw9g02iTkVTRHa49c_HLP19P2hxbSHATN3cov2_G-wmFzp5-Cx2gK3phIzrKhOhbLhPJ",
+
+                    authAssertion: `${btoa('{"alg":"none"}')}.${btoa('{"iss":"ATIwW9NdRH9Nqde8MCftI_0QbOL9APdYok0a7ircWl2-3fBHv-CoMYsfIDpcUDisqTHmHT7d0Dz9DV7V","payer_id":"CMHAMMNAXCMGA"}')}.`,
+                },
+
+                //新sandbox测试账号, us-acct-with-no-eur@test.com
+                //pwd: 12345678
+                //merchant-id: us-acct-with-no-eur@test.com
+                // Onboard completed
+                SHOPPAAS_AUTH_ASSERTION_UEVX8LK4Y7TLA: {
+                    label: "Shoppaas + Auth Assertion + UEVX8LK4Y7TLA",
+                    clientId:
+                        "ATIwW9NdRH9Nqde8MCftI_0QbOL9APdYok0a7ircWl2-3fBHv-CoMYsfIDpcUDisqTHmHT7d0Dz9DV7V",
+                    secret:
+                        "EC-Qcp-6LdYoEw9g02iTkVTRHa49c_HLP19P2hxbSHATN3cov2_G-wmFzp5-Cx2gK3phIzrKhOhbLhPJ",
+
+                    authAssertion: `${btoa('{"alg":"none"}')}.${btoa('{"iss":"ATIwW9NdRH9Nqde8MCftI_0QbOL9APdYok0a7ircWl2-3fBHv-CoMYsfIDpcUDisqTHmHT7d0Dz9DV7V","payer_id":"UEVX8LK4Y7TLA"}')}.`,
+                },
+            };
+
+            // === common/logger.js ===
+            // 各测试页共用的日志面板：在 <div id="log"> 里追加带层级颜色的日志条目。
+            const LEVEL_STYLES = {
+                info: "text-sky-400",
+                success: "text-emerald-400",
+                error: "text-rose-400",
+            };
+
+            function createLogger(logElId = "log") {
+                const logEl = document.getElementById(logElId);
+
+                function log(label, data, level = "info") {
+                    console.log(label, data ?? "");
+                    if (!logEl) return;
+
+                    const entry = document.createElement("div");
+                    entry.className =
+                        "border-b border-gray-800 pb-2 last:border-0 last:pb-0";
+
+                    const labelEl = document.createElement("div");
+                    labelEl.className = `text-xs font-semibold ${LEVEL_STYLES[level] ?? LEVEL_STYLES.info}`;
+                    labelEl.textContent = label;
+                    entry.appendChild(labelEl);
+
+                    if (data !== undefined) {
+                        const pre = document.createElement("pre");
+                        pre.className =
+                            "mt-1 text-[11px] leading-relaxed text-gray-300 whitespace-pre-wrap break-words";
+                        pre.textContent =
+                            typeof data === "string" ? data : JSON.stringify(data, null, 2);
+                        entry.appendChild(pre);
+                    }
+
+                    logEl.appendChild(entry);
+                    logEl.scrollTop = logEl.scrollHeight;
+                }
+
+                function clear() {
+                    if (logEl) logEl.innerHTML = "";
+                }
+
+                return { log, clear };
+            }
+
+            // === common/paypal-rest-api.js ===
+            // 直接对 PayPal REST API 发请求，不经过任何后端代理。用于各测试页里 create-order / capture 的场景。
+            const PAYPAL_API_BASE_SANDBOX = "https://api-m.sandbox.paypal.com";
+
+            const accessTokenCache = {};
+
+            async function getAccessToken(
+                account,
+                { apiBase = PAYPAL_API_BASE_SANDBOX, log } = {}
+            ) {
+                const cacheKey = `${apiBase}:${account.clientId}`;
+                if (accessTokenCache[cacheKey]) return accessTokenCache[cacheKey];
+
+                const basicAuth = btoa(`${account.clientId}:${account.secret}`);
+                const res = await fetch(`${apiBase}/v1/oauth2/token`, {
+                    method: "POST",
+                    headers: {
+                        Authorization: `Basic ${basicAuth}`,
+                        "Content-Type": "application/x-www-form-urlencoded",
+                    },
+                    body: "grant_type=client_credentials",
+                });
+                const json = await res.json().catch(() => null);
+                if (!res.ok) {
+                    log?.(`[oauth] 获取 access token 失败 (HTTP ${res.status})`, json, "error");
+                    throw new Error(`获取 access token 失败: ${res.status}`);
+                }
+                log?.("[oauth] access token 获取成功", { expires_in: json.expires_in });
+                accessTokenCache[cacheKey] = json.access_token;
+                return json.access_token;
+            }
+
+            async function restCreateOrder(
+                account,
+                body,
+                { apiBase = PAYPAL_API_BASE_SANDBOX, headers = {}, log } = {}
+            ) {
+                const accessToken = await getAccessToken(account, { apiBase, log });
+                log?.("[create-order] 请求体", body);
+                if (headers["PayPal-Auth-Assertion"]) {
+                    log?.(
+                        "[create-order] 附加 paypal-auth-assertion header",
+                        headers["PayPal-Auth-Assertion"]
+                    );
+                }
+
+                const res = await fetch(`${apiBase}/v2/checkout/orders`, {
+                    method: "POST",
+                    headers: {
+                        Authorization: `Bearer ${accessToken}`,
+                        "Content-Type": "application/json",
+                        ...headers,
+                    },
+                    body: JSON.stringify(body),
+                });
+
+                const json = await res.json().catch(() => null);
+                if (!res.ok) {
+                    log?.(
+                        `[create-order] 失败 (HTTP ${res.status})`,
+                        json ?? (await res.text().catch(() => "")),
+                        "error"
+                    );
+                    throw new Error(`create-order 失败: ${res.status}`);
+                }
+
+                log?.("[create-order] 成功", json, "success");
+                const orderId = json?.id;
+                if (!orderId) throw new Error("PayPal 未返回订单 ID");
+                return { orderId, raw: json };
+            }
+
+            async function restCaptureOrder(
+                account,
+                orderId,
+                { apiBase = PAYPAL_API_BASE_SANDBOX, headers = {}, log } = {}
+            ) {
+                const accessToken = await getAccessToken(account, { apiBase, log });
+                const res = await fetch(`${apiBase}/v2/checkout/orders/${orderId}/capture`, {
+                    method: "POST",
+                    headers: {
+                        Authorization: `Bearer ${accessToken}`,
+                        "Content-Type": "application/json",
+                        ...headers,
+                    },
+                });
+
+                const json = await res.json().catch(() => null);
+                if (!res.ok) {
+                    log?.(
+                        `[capture] 失败 (HTTP ${res.status})`,
+                        json ?? (await res.text().catch(() => "")),
+                        "error"
+                    );
+                    throw new Error(`capture 失败: ${res.status}`);
+                }
+                return json;
+            }
+
+            // === common/sdk-loader.js ===
+            // 等 PayPal Web SDK v6 core script 加载完（可能已经命中缓存提前 ready）再执行回调。
+            function onPayPalSdkReady(scriptEl, callback) {
+                if (window.paypal) {
+                    callback();
+                } else {
+                    scriptEl.addEventListener("load", callback);
+                }
+            }
+
+            // ------------------------------------------------------------------
+            // 页面逻辑（原 inline script）
+            // ------------------------------------------------------------------
+
+            const { log, clear } = createLogger("log");
+            document.getElementById("clear-log").addEventListener("click", clear);
+
+            // 与用户提供的订单一致，货币改为 EUR 以复现欧元场景问题
+            function buildOrderBody() {
+                return {
+                    intent: "CAPTURE",
+                    purchase_units: [
+                        {
+                            reference_id: "default",
+                            description: "yy938921 order 26200335349135",
+                            invoice_id: "26200335349135",
+                            items: [
+                                {
+                                    name: "Personalized Memorial Cross Urn Necklace - Gift For Lover",
+                                    description: "",
+                                    sku: "",
+                                    quantity: 1,
+                                    unit_amount: {
+                                        currency_code: "EUR",
+                                        value: "25.90",
+                                    },
+                                    category: "PHYSICAL_GOODS",
+                                },
+                            ],
+                            custom_id: "shoppaas_1783059327060",
+                            amount: {
+                                currency_code: "EUR",
+                                value: "25.90",
+                                breakdown: {
+                                    item_total: {
+                                        currency_code: "EUR",
+                                        value: "25.90",
+                                    },
+                                    tax_total: {
+                                        currency_code: "EUR",
+                                        value: "0.00",
+                                    },
+                                    shipping: {
+                                        currency_code: "EUR",
+                                        value: "0.00",
+                                    },
+                                    handling: {
+                                        currency_code: "EUR",
+                                        value: 0,
+                                    },
+                                    insurance: {
+                                        currency_code: "EUR",
+                                        value: 0,
+                                    },
+                                    discount: {
+                                        currency_code: "EUR",
+                                        value: "0.00",
+                                    },
+                                },
+                            },
+                        },
+                    ],
+                    application_context: {
+                        brand_name: "yy938921",
+                        cancel_url:
+                            "https://yy938921.system-domain.devshoppaas.com/product/personalized-memorial-cross-urn-necklace-gift-for-lover.html?variants=13",
+                        return_url:
+                            "https://yy938921.system-domain.devshoppaas.com/checkout/shipping/cc9ae779e301a7482dee0d29cc4a414c?step=shipping_info&pay_type=fast_pay&order_sn=26200335349135",
+                        shipping_preference: "GET_FROM_FILE",
+                    },
+                };
+            }
+
+            function buildAuthAssertionHeaders(account) {
+                if (!account.authAssertion) return {};
+                return { "PayPal-Auth-Assertion": account.authAssertion };
+            }
+
+            async function createOrder(account) {
+                return restCreateOrder(account, buildOrderBody(), {
+                    headers: buildAuthAssertionHeaders(account),
+                    log,
+                });
+            }
+
+            async function captureOrder(account, orderId) {
+                return restCaptureOrder(account, orderId, {
+                    headers: buildAuthAssertionHeaders(account),
+                    log,
+                });
+            }
+
+            async function main(account) {
+                try {
+                    log(`[1] 使用账号 ${account.label}，创建 SDK Instance...`);
+                    const sdkInstance = await window.paypal.createInstance({
+                        clientId: account.clientId,
+                        components: [
+                            "paypal-payments",
+                            "paypal-guest-payments",
+                            "googlepay-payments",
+                            "applepay-payments",
+                        ],
+                        pageType: "checkout",
+                    });
+                    log("[2] sdkInstance created.");
+
+                    const paymentMethods = await sdkInstance.findEligibleMethods({
+                        customer: { country_code: "DE" },
+                        preferences: {
+                            payment_flow: "ONE_TIME_PAYMENT",
+                            payment_source_constraint: {
+                                constraint_type: "INCLUDE",
+                                payment_sources: [
+                                    "PAYPAL",
+                                    "PAYPAL_PAY_LATER",
+                                    "PAYPAL_CREDIT",
+                                    "VENMO",
+                                    "ADVANCED_CARDS",
+                                ],
+                            },
+                        },
+                        purchase_units: [{ amount: { currency_code: "EUR" } }],
+                    });
+                    log("[3] findEligibleMethods done.");
+
+                    const isPayPalEligible = paymentMethods.isEligible("paypal");
+                    log(`[4] isEligible("paypal")`, isPayPalEligible);
+
+                    if (!isPayPalEligible) {
+                        log("PayPal 不可用，不渲染按钮。", undefined, "error");
+                        return;
+                    }
+
+                    const paypalPaymentSession =
+                        sdkInstance.createPayPalOneTimePaymentSession({
+                            async onApprove(data) {
+                                log("onApprove", data);
+                                try {
+                                    const orderId = data.orderId ?? data.id;
+                                    const captureData = await captureOrder(
+                                        account,
+                                        orderId
+                                    );
+                                    log("capture 完成", captureData, "success");
+                                } catch (error) {
+                                    log(
+                                        "capture error",
+                                        error?.message ?? String(error),
+                                        "error"
+                                    );
+                                }
+                            },
+                            onCancel() {
+                                log("onCancel");
+                            },
+                            onError(error) {
+                                log("onError", error?.message ?? error, "error");
+                            },
+                        });
+
+                    // 每次(重新)初始化都换一个干净的按钮节点，避免旧账号的 click 监听器叠加
+                    const oldButton = document.querySelector("#paypal-btn");
+                    const paypalButton = oldButton.cloneNode(true);
+                    oldButton.replaceWith(paypalButton);
+                    paypalButton.removeAttribute("hidden");
+
+                    paypalButton.addEventListener("click", async () => {
+                        try {
+                            await paypalPaymentSession.start(
+                                { presentationMode: "auto" },
+                                createOrder(account)
+                            );
+                        } catch (error) {
+                            log("start error", error?.message ?? error, "error");
+                        }
+                    });
+
+                    log(
+                        `[5] PayPal button rendered (${account.label}).`,
+                        undefined,
+                        "success"
+                    );
+                } catch (error) {
+                    log("Error", error?.message ?? error, "error");
+                    console.error(error);
+                }
+            }
+
+            function getSelectedAccount() {
+                const value = document.querySelector(
+                    'input[name="account"]:checked'
+                ).value;
+                return ACCOUNTS[value];
+            }
+
+            function runWithSelectedAccount() {
+                document.querySelector("#paypal-btn").setAttribute("hidden", "");
+                main(getSelectedAccount());
+            }
+
+            document
+                .getElementById("init-btn")
+                .addEventListener("click", runWithSelectedAccount);
+
+            const sdkScript = document.getElementById("paypal-websdk-v6-core");
+            onPayPalSdkReady(sdkScript, runWithSelectedAccount);
+        </script>
+    </body>
+</html>

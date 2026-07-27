@@ -128,5 +128,10 @@
     "name": "__3__-create-order-get-from-file",
     "path": "__6__-API/__3__-create-order-get-from-file.html",
     "filePath": "__6__-API/__3__-create-order-get-from-file.html"
+  },
+  {
+    "name": "__4__-jsv6-eur-order-debug",
+    "path": "__6__-API/__4__-jsv6-eur-order-debug.html",
+    "filePath": "__6__-API/__4__-jsv6-eur-order-debug.html"
   }
 ]
