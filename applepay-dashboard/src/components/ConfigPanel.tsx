@@ -26,7 +26,8 @@ import { SCENARIOS } from '@/scenarios/types'
 import { useCredentialsStore } from '@/store/credentials'
 import type { ApplePayScenario } from '@/scenarios/types'
 import type { ApplePayCDNVersion } from '@/lib/paypal-sdk'
-import type { PayPalEnvironment, IntegrationMode, ApiRequestMode } from '@/store/credentials'
+import { PARTNER_PRESETS } from '@/store/credentials'
+import type { PayPalEnvironment, IntegrationMode, ApiRequestMode, PartnerPreset } from '@/store/credentials'
 
 /** 面板管理的完整配置对象，由 App.tsx 维护并通过 onChange 回传 */
 export interface PaymentConfig {
@@ -88,6 +89,49 @@ function ToggleGroup<T extends string>({
   )
 }
 
+/**
+ * 预设凭据单选组，用于三方 Partner 凭据的快速切换（含"自定义"选项）。
+ * 选中项高亮边框/背景，radio 圆点使用 accent-primary 着色替代浏览器默认样式。
+ */
+function PresetRadioGroup<T extends string>({
+  name,
+  value,
+  options,
+  onChange,
+}: {
+  name: string
+  value: T
+  options: { value: T; label: string }[]
+  onChange: (v: T) => void
+}) {
+  return (
+    <div className="space-y-1.5">
+      {options.map((opt) => (
+        <label
+          key={opt.value}
+          className={cn(
+            'flex items-center gap-2 rounded-md border px-3 py-2 text-sm cursor-pointer transition-colors',
+            value === opt.value
+              ? 'border-primary bg-primary/5'
+              : 'border-input hover:border-primary/50',
+          )}
+        >
+          <input
+            type="radio"
+            name={name}
+            checked={value === opt.value}
+            onChange={() => onChange(opt.value)}
+            className="h-3.5 w-3.5 accent-primary"
+          />
+          <span className={cn(value === opt.value ? 'text-primary font-medium' : 'text-muted-foreground')}>
+            {opt.label}
+          </span>
+        </label>
+      ))}
+    </div>
+  )
+}
+
 export function ConfigPanel({ config, onChange, onSubmit, loading }: ConfigPanelProps) {
   const set = <K extends keyof PaymentConfig>(key: K, value: PaymentConfig[K]) =>
     onChange({ ...config, [key]: value })
@@ -99,10 +143,10 @@ export function ConfigPanel({ config, onChange, onSubmit, loading }: ConfigPanel
     environment, mode, apiRequestMode, proxyPostSession,
     lastVaultId, lastCustomerId,
     clientId, clientSecret,
-    partnerClientId, partnerClientSecret, partnerMerchantId,
+    partnerClientId, partnerClientSecret, partnerMerchantId, partnerPreset,
     setEnvironment, setMode, setApiRequestMode, setProxyPostSession,
     setClientId, setClientSecret,
-    setPartnerClientId, setPartnerClientSecret, setPartnerMerchantId,
+    setPartnerClientId, setPartnerClientSecret, setPartnerMerchantId, setPartnerPreset,
     reset: resetCreds,
   } = useCredentialsStore()
 
@@ -305,12 +349,31 @@ export function ConfigPanel({ config, onChange, onSubmit, loading }: ConfigPanel
             {isPartner && (
               <>
                 <div className="space-y-1.5">
+                  <Label className="text-xs">预设测试凭证</Label>
+                  <PresetRadioGroup<PartnerPreset>
+                    name="partner-preset"
+                    value={partnerPreset}
+                    options={[
+                      ...Object.entries(PARTNER_PRESETS).map(([key, preset]) => ({
+                        value: key as PartnerPreset,
+                        label: preset.label,
+                      })),
+                      { value: 'custom' as PartnerPreset, label: '自定义' },
+                    ]}
+                    onChange={setPartnerPreset}
+                  />
+                </div>
+                <div className="space-y-1.5">
                   <Label htmlFor="cred-partner-client-id" className="text-xs">Partner Client ID</Label>
                   <Input
                     id="cred-partner-client-id"
                     value={partnerClientId}
                     onChange={(e) => setPartnerClientId(e.target.value)}
-                    className="font-mono text-xs h-8"
+                    readOnly={partnerPreset !== 'custom'}
+                    className={cn(
+                      'font-mono text-xs h-8',
+                      partnerPreset !== 'custom' && 'bg-muted/50 cursor-not-allowed',
+                    )}
                     placeholder="Partner Client ID"
                   />
                 </div>
@@ -321,7 +384,11 @@ export function ConfigPanel({ config, onChange, onSubmit, loading }: ConfigPanel
                     type="password"
                     value={partnerClientSecret}
                     onChange={(e) => setPartnerClientSecret(e.target.value)}
-                    className="font-mono text-xs h-8"
+                    readOnly={partnerPreset !== 'custom'}
+                    className={cn(
+                      'font-mono text-xs h-8',
+                      partnerPreset !== 'custom' && 'bg-muted/50 cursor-not-allowed',
+                    )}
                     placeholder="Partner Client Secret"
                   />
                 </div>
@@ -334,7 +401,11 @@ export function ConfigPanel({ config, onChange, onSubmit, loading }: ConfigPanel
                     id="cred-merchant-id"
                     value={partnerMerchantId}
                     onChange={(e) => setPartnerMerchantId(e.target.value)}
-                    className="font-mono text-xs h-8"
+                    readOnly={partnerPreset !== 'custom'}
+                    className={cn(
+                      'font-mono text-xs h-8',
+                      partnerPreset !== 'custom' && 'bg-muted/50 cursor-not-allowed',
+                    )}
                     placeholder="Merchant ID (payer_id)"
                   />
                 </div>

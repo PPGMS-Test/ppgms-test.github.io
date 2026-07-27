@@ -26,6 +26,24 @@ const SANDBOX_MERCHANT_DEFAULTS = {
 /** API 请求模式：直连 PayPal / 经由后端代理 */
 export type ApiRequestMode = 'direct' | 'proxy'
 
+/** 三方 Partner 预设凭据 key，'custom' 表示手动输入 */
+export type PartnerPreset = 'custom' | 'shoppaas-test'
+
+/** 三方 Partner 预设测试凭据集合，key 对应 PartnerPreset（'custom' 除外） */
+export const PARTNER_PRESETS: Record<Exclude<PartnerPreset, 'custom'>, {
+  label: string
+  partnerClientId: string
+  partnerClientSecret: string
+  partnerMerchantId: string
+}> = {
+  'shoppaas-test': {
+    label: 'shoppaas-test.tt@gmai.com',
+    partnerClientId: 'ATIwW9NdRH9Nqde8MCftI_0QbOL9APdYok0a7ircWl2-3fBHv-CoMYsfIDpcUDisqTHmHT7d0Dz9DV7V',
+    partnerClientSecret: 'EC-Qcp-6LdYoEw9g02iTkVTRHa49c_HLP19P2hxbSHATN3cov2_G-wmFzp5-Cx2gK3phIzrKhOhbLhPJ',
+    partnerMerchantId: 'TVARY8GX789ZA',
+  },
+}
+
 /** Zustand store 完整状态结构，包含字段和 action */
 interface CredentialsState {
   // 环境与模式
@@ -49,12 +67,16 @@ interface CredentialsState {
   partnerClientSecret: string
   /** 被授权商户的 PayPal Merchant ID（payer_id），用于生成 Auth Assertion 请求头 */
   partnerMerchantId: string
+  /** 当前选中的三方预设凭据；'custom' 表示手动输入 */
+  partnerPreset: PartnerPreset
 
   // Actions — 由 ConfigPanel 调用更新对应字段
   setEnvironment: (env: PayPalEnvironment) => void
   setMode: (mode: IntegrationMode) => void
   setApiRequestMode: (mode: ApiRequestMode) => void
   setProxyPostSession: (v: boolean) => void
+  /** 切换三方预设凭据；选中非 custom 时自动填充对应字段 */
+  setPartnerPreset: (preset: PartnerPreset) => void
   /** one-time-vault 成功后自动写入，供 recurring-vault 场景读取 */
   lastVaultId: string
   lastCustomerId: string
@@ -81,6 +103,7 @@ const INITIAL_STATE = {
   partnerClientId: 'test_partner_client_id',
   partnerClientSecret: 'test_partner_secret_key',
   partnerMerchantId: 'test_partner_merchant_id',
+  partnerPreset: 'custom' as PartnerPreset,
 }
 
 export const useCredentialsStore = create<CredentialsState>((set) => ({
@@ -103,6 +126,19 @@ export const useCredentialsStore = create<CredentialsState>((set) => ({
   setPartnerClientId: (partnerClientId) => set({ partnerClientId }),
   setPartnerClientSecret: (partnerClientSecret) => set({ partnerClientSecret }),
   setPartnerMerchantId: (partnerMerchantId) => set({ partnerMerchantId }),
+  setPartnerPreset: (partnerPreset) => {
+    if (partnerPreset === 'custom') {
+      set({ partnerPreset })
+    } else {
+      const preset = PARTNER_PRESETS[partnerPreset]
+      set({
+        partnerPreset,
+        partnerClientId: preset.partnerClientId,
+        partnerClientSecret: preset.partnerClientSecret,
+        partnerMerchantId: preset.partnerMerchantId,
+      })
+    }
+  },
   reset: () => set(INITIAL_STATE),
 }))
 
