@@ -26,8 +26,8 @@ import { SCENARIOS } from '@/scenarios/types'
 import { useCredentialsStore } from '@/store/credentials'
 import type { ApplePayScenario } from '@/scenarios/types'
 import type { ApplePayCDNVersion } from '@/lib/paypal-sdk'
-import { PARTNER_PRESETS } from '@/store/credentials'
-import type { PayPalEnvironment, IntegrationMode, ApiRequestMode, PartnerPreset } from '@/store/credentials'
+import { PARTNER_PRESETS, MERCHANT_PRESETS } from '@/store/credentials'
+import type { PayPalEnvironment, IntegrationMode, ApiRequestMode, PartnerPreset, MerchantPreset } from '@/store/credentials'
 
 /** 面板管理的完整配置对象，由 App.tsx 维护并通过 onChange 回传 */
 export interface PaymentConfig {
@@ -142,10 +142,10 @@ export function ConfigPanel({ config, onChange, onSubmit, loading }: ConfigPanel
   const {
     environment, mode, apiRequestMode, proxyPostSession,
     lastVaultId, lastCustomerId,
-    clientId, clientSecret,
+    clientId, clientSecret, merchantPreset,
     partnerClientId, partnerClientSecret, partnerMerchantId, partnerPreset,
     setEnvironment, setMode, setApiRequestMode, setProxyPostSession,
-    setClientId, setClientSecret,
+    setClientId, setClientSecret, setMerchantPreset,
     setPartnerClientId, setPartnerClientSecret, setPartnerMerchantId, setPartnerPreset,
     reset: resetCreds,
   } = useCredentialsStore()
@@ -321,13 +321,34 @@ export function ConfigPanel({ config, onChange, onSubmit, loading }: ConfigPanel
             {/* 1st-party credentials */}
             {!isPartner && (
               <>
+                {environment === 'sandbox' && (
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">预设测试凭证</Label>
+                    <PresetRadioGroup<MerchantPreset>
+                      name="merchant-preset"
+                      value={merchantPreset}
+                      options={[
+                        ...Object.entries(MERCHANT_PRESETS).map(([key, preset]) => ({
+                          value: key as MerchantPreset,
+                          label: preset.label,
+                        })),
+                        { value: 'custom' as MerchantPreset, label: '自定义' },
+                      ]}
+                      onChange={setMerchantPreset}
+                    />
+                  </div>
+                )}
                 <div className="space-y-1.5">
                   <Label htmlFor="cred-client-id" className="text-xs">Client ID</Label>
                   <Input
                     id="cred-client-id"
                     value={clientId}
                     onChange={(e) => setClientId(e.target.value)}
-                    className="font-mono text-xs h-8"
+                    readOnly={merchantPreset !== 'custom'}
+                    className={cn(
+                      'font-mono text-xs h-8',
+                      merchantPreset !== 'custom' && 'bg-muted/50 cursor-not-allowed',
+                    )}
                     placeholder="Client ID"
                   />
                 </div>
@@ -338,7 +359,11 @@ export function ConfigPanel({ config, onChange, onSubmit, loading }: ConfigPanel
                     type="password"
                     value={clientSecret}
                     onChange={(e) => setClientSecret(e.target.value)}
-                    className="font-mono text-xs h-8"
+                    readOnly={merchantPreset !== 'custom'}
+                    className={cn(
+                      'font-mono text-xs h-8',
+                      merchantPreset !== 'custom' && 'bg-muted/50 cursor-not-allowed',
+                    )}
                     placeholder="Client Secret"
                   />
                 </div>

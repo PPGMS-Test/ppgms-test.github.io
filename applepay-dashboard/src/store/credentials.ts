@@ -26,6 +26,22 @@ const SANDBOX_MERCHANT_DEFAULTS = {
 /** API 请求模式：直连 PayPal / 经由后端代理 */
 export type ApiRequestMode = 'direct' | 'proxy'
 
+/** 一方 Merchant 预设凭据 key，'custom' 表示手动输入 */
+export type MerchantPreset = 'custom' | 'test-tt'
+
+/** 一方 Merchant 预设测试凭据集合，key 对应 MerchantPreset（'custom' 除外） */
+export const MERCHANT_PRESETS: Record<Exclude<MerchantPreset, 'custom'>, {
+  label: string
+  clientId: string
+  clientSecret: string
+}> = {
+  'test-tt': {
+    label: 'test.tt@gmai.com',
+    clientId: SANDBOX_MERCHANT_DEFAULTS.clientId,
+    clientSecret: SANDBOX_MERCHANT_DEFAULTS.clientSecret,
+  },
+}
+
 /** 三方 Partner 预设凭据 key，'custom' 表示手动输入 */
 export type PartnerPreset = 'custom' | 'shoppaas-test'
 
@@ -61,6 +77,8 @@ interface CredentialsState {
   // 一方（merchant）凭据
   clientId: string
   clientSecret: string
+  /** 当前选中的一方预设凭据；'custom' 表示手动输入 */
+  merchantPreset: MerchantPreset
 
   // 三方（partner）凭据；mode==='partner' 时生效
   partnerClientId: string
@@ -75,6 +93,8 @@ interface CredentialsState {
   setMode: (mode: IntegrationMode) => void
   setApiRequestMode: (mode: ApiRequestMode) => void
   setProxyPostSession: (v: boolean) => void
+  /** 切换一方预设凭据；选中非 custom 时自动填充对应字段 */
+  setMerchantPreset: (preset: MerchantPreset) => void
   /** 切换三方预设凭据；选中非 custom 时自动填充对应字段 */
   setPartnerPreset: (preset: PartnerPreset) => void
   /** one-time-vault 成功后自动写入，供 recurring-vault 场景读取 */
@@ -99,6 +119,7 @@ const INITIAL_STATE = {
   lastCustomerId: '',
   clientId: SANDBOX_MERCHANT_DEFAULTS.clientId,
   clientSecret: SANDBOX_MERCHANT_DEFAULTS.clientSecret,
+  merchantPreset: 'test-tt' as MerchantPreset,
   // Partner defaults — placeholder values only (same as original HTML)
   partnerClientId: 'test_partner_client_id',
   partnerClientSecret: 'test_partner_secret_key',
@@ -111,10 +132,15 @@ export const useCredentialsStore = create<CredentialsState>((set) => ({
   setEnvironment: (environment) => {
     if (environment === 'production') {
       // Clear merchant credentials — no production defaults provided
-      set({ environment, clientId: '', clientSecret: '' })
+      set({ environment, clientId: '', clientSecret: '', merchantPreset: 'custom' })
     } else {
       // Restore sandbox defaults when switching back
-      set({ environment, clientId: SANDBOX_MERCHANT_DEFAULTS.clientId, clientSecret: SANDBOX_MERCHANT_DEFAULTS.clientSecret })
+      set({
+        environment,
+        clientId: SANDBOX_MERCHANT_DEFAULTS.clientId,
+        clientSecret: SANDBOX_MERCHANT_DEFAULTS.clientSecret,
+        merchantPreset: 'test-tt',
+      })
     }
   },
   setMode: (mode) => set({ mode }),
@@ -123,6 +149,14 @@ export const useCredentialsStore = create<CredentialsState>((set) => ({
   setLastVaultInfo: (lastVaultId, lastCustomerId) => set({ lastVaultId, lastCustomerId }),
   setClientId: (clientId) => set({ clientId }),
   setClientSecret: (clientSecret) => set({ clientSecret }),
+  setMerchantPreset: (merchantPreset) => {
+    if (merchantPreset === 'custom') {
+      set({ merchantPreset })
+    } else {
+      const preset = MERCHANT_PRESETS[merchantPreset]
+      set({ merchantPreset, clientId: preset.clientId, clientSecret: preset.clientSecret })
+    }
+  },
   setPartnerClientId: (partnerClientId) => set({ partnerClientId }),
   setPartnerClientSecret: (partnerClientSecret) => set({ partnerClientSecret }),
   setPartnerMerchantId: (partnerMerchantId) => set({ partnerMerchantId }),
