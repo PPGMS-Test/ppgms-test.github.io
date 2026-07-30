@@ -57,6 +57,20 @@
                 <div class="perf" aria-hidden="true"></div>
 
                 <section class="receipt-section">
+                    <div class="section-label">Buyer</div>
+                    <label class="switch-row" for="region-toggle">
+                        <span class="switch-row-text">REGION&nbsp;<code id="region-code">GB&nbsp;·&nbsp;GBP</code></span>
+                        <span class="switch">
+                            <input type="checkbox" id="region-toggle" class="switch-input" checked />
+                            <span class="switch-track"><span class="switch-thumb"></span></span>
+                            <span class="switch-state" id="region-state">GB</span>
+                        </span>
+                    </label>
+                </section>
+
+                <div class="perf" aria-hidden="true"></div>
+
+                <section class="receipt-section">
                     <div class="ledger">
                         <div class="ledger-row ledger-head">
                             <span class="ledger-qty">QTY</span>
@@ -66,22 +80,27 @@
                         <div class="ledger-row">
                             <span class="ledger-qty">1</span>
                             <span class="ledger-name">测试商品 Test Product</span>
-                            <span class="ledger-amt">100.00</span>
+                            <span class="ledger-amt" id="ledger-item-amt">100.00</span>
                         </div>
                         <div class="ledger-row">
                             <span class="ledger-qty"></span>
                             <span class="ledger-name">税费 Sales Tax</span>
-                            <span class="ledger-amt">10.00</span>
+                            <span class="ledger-amt" id="ledger-tax-amt">10.00</span>
                         </div>
                         <div class="ledger-row ledger-total">
                             <span class="ledger-name">总计 TOTAL</span>
-                            <span class="ledger-amt">$110.00</span>
+                            <span class="ledger-amt" id="ledger-total-amt">$110.00</span>
                         </div>
                     </div>
                 </section>
 
                 <section class="receipt-section pay-zone">
                     <div class="pay-zone-caption">// tap to pay</div>
+                    <div class="pay-zone-hint">
+                        请务必使用 / Only use test cards from
+                        <a href="https://developer.paypal.com/google-pay/test-cards" target="_blank" rel="noopener">developer.paypal.com/google-pay/test-cards</a>
+                        提供的卡号测试
+                    </div>
                     <div id="google-pay-button-container"></div>
                     <div id="message" class="ticker"></div>
                 </section>
@@ -121,14 +140,48 @@
             // ==========================================
             // 1. 全局配置 (Configuration)
             // ==========================================
+            const REGIONS = {
+                US: { countryCode: "US", currencyCode: "USD", symbol: "$" },
+                GB: { countryCode: "GB", currencyCode: "GBP", symbol: "£" },
+            };
+
+            const urlParams = new URLSearchParams(location.search);
+            const regionParam = urlParams.get("region");
+            const REGION = REGIONS[regionParam] ? regionParam : "GB";
+
             const CONFIG = {
                 clientId:
                     "AecNl_qaDuLKXRGAviRbvQ5773SJLW15PrxuOShudJbS3QCaBH8tTX6Wi1mJ8aByWaQx2FeRIVZ7KCg0",
                 clientSecret:
                     "EFuRYH2pDANYlrpybQulVCq6sc706zEw37ffiMKvpw4vzPJEpNk9NeORWS4l4rMtAbzLWqssRb_ny_Mj",
                 merchantId: "CMHAMMNAXCMGA",
-                currency: "USD",
+                buyerCountry: REGIONS[REGION].countryCode,
+                currency: REGIONS[REGION].currencyCode,
+                symbol: REGIONS[REGION].symbol,
             };
+
+            // 初始化 REGION 开关 UI 状态 / init region toggle UI
+            (function initRegionToggle() {
+                const toggle = document.getElementById("region-toggle");
+                const stateEl = document.getElementById("region-state");
+                const codeEl = document.getElementById("region-code");
+                toggle.checked = REGION === "GB";
+                stateEl.textContent = REGION;
+                codeEl.textContent = `${REGION} · ${CONFIG.currency}`;
+                toggle.addEventListener("change", () => {
+                    const nextRegion = toggle.checked ? "GB" : "US";
+                    const params = new URLSearchParams(location.search);
+                    params.set("region", nextRegion);
+                    location.search = params.toString();
+                });
+            })();
+
+            // 根据 REGION 刷新账单展示金额 / refresh ledger amounts for current currency
+            (function initLedgerAmounts() {
+                document.getElementById("ledger-item-amt").textContent = "100.00";
+                document.getElementById("ledger-tax-amt").textContent = "10.00";
+                document.getElementById("ledger-total-amt").textContent = `${CONFIG.symbol}110.00`;
+            })();
 
             const baseRequest = { apiVersion: 2, apiVersionMinor: 0 };
 
@@ -149,7 +202,7 @@
             function loadScripts() {
                 console.log("[Init] 开始加载 SDK... / Loading SDKs...");
                 const paypalScript = document.createElement("script");
-                paypalScript.src = `https://www.paypal.com/sdk/js?client-id=${CONFIG.clientId}&currency=${CONFIG.currency}&components=googlepay&merchant-id=${CONFIG.merchantId}&buyer-country=US`;
+                paypalScript.src = `https://www.paypal.com/sdk/js?client-id=${CONFIG.clientId}&currency=${CONFIG.currency}&components=googlepay&merchant-id=${CONFIG.merchantId}&buyer-country=${CONFIG.buyerCountry}`;
                 paypalScript.onload = () => {
                     console.log("[Init] PayPal SDK 已加载 / PayPal SDK loaded");
                     const googleScript = document.createElement("script");
@@ -278,17 +331,21 @@
             }
 
             function getGoogleTransactionInfo() {
-                return {
+                const transactionInfo = {
                     displayItems: [
                         { label: "Subtotal", type: "SUBTOTAL", price: "100.00" },
                         { label: "Tax",      type: "TAX",      price: "10.00" },
                     ],
-                    countryCode: "US",
+                    countryCode: CONFIG.buyerCountry,
                     currencyCode: CONFIG.currency,
                     totalPriceStatus: "FINAL",
                     totalPrice: "110.00",
                     totalPriceLabel: "Total",
                 };
+
+                console.log("transactionInfo", JSON.stringify(transactionInfo,null,2))
+
+                return transactionInfo;
             }
 
             // ==========================================
@@ -324,7 +381,7 @@
                 const total = (100 + 10 + ship).toFixed(2);
                 console.log(`[Calc] Option: ${optionId}, ship: $${ship}, total: $${total}`);
                 return {
-                    countryCode: "US", currencyCode: CONFIG.currency,
+                    countryCode: CONFIG.buyerCountry, currencyCode: CONFIG.currency,
                     totalPriceStatus: "FINAL", totalPrice: total, totalPriceLabel: "Total",
                     displayItems: [
                         { label: "Subtotal",        type: "SUBTOTAL",  price: "100.00" },

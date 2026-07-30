@@ -232,6 +232,25 @@ body {
     letter-spacing: .1em;
     color: var(--ink-fade);
 }
+.pay-zone-hint {
+    align-self: stretch;
+    font-size: 10.5px;
+    line-height: 1.6;
+    color: var(--warn);
+    border: 1px dashed var(--warn);
+    background: rgba(166, 106, 0, .06);
+    padding: 6px 9px;
+    margin-top: -6px;
+}
+.pay-zone-hint a {
+    color: inherit;
+    font-weight: 700;
+    text-decoration-style: dotted;
+    text-underline-offset: 2px;
+}
+.pay-zone-hint a:hover,
+.pay-zone-hint a:focus-visible { text-decoration-style: solid; }
+
 #google-pay-button-container { width: 100%; min-height: 40px; margin: 4px 0; display: flex; justify-content: center; }
 
 .ticker {
