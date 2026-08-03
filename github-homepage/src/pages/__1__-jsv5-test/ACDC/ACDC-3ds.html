@@ -1,0 +1,1277 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link
+            rel="preconnect"
+            href="https://fonts.gstatic.com"
+            crossorigin
+        />
+        <link
+            rel="stylesheet"
+            href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap"
+        />
+        <title>ACDC 3DS Test</title>
+        <style>
+            :root {
+                --paper: #eef1f5;
+                --card: #ffffff;
+                --ink: #172033;
+                --ink-soft: #5b6b85;
+                --line: #d7dee7;
+                --navy: #1e2a47;
+                --navy-2: #33456e;
+                --sandbox: #ff7a29;
+                --sandbox-dark: #e0611a;
+                --teal: #0e8b86;
+                --success: #1f9d6f;
+                --danger: #e15252;
+                --radius: 16px;
+                --font-display: "Space Grotesk", sans-serif;
+                --font-body: "IBM Plex Sans", sans-serif;
+                --font-mono: "IBM Plex Mono", monospace;
+            }
+
+            * {
+                box-sizing: border-box;
+            }
+
+            html {
+                -webkit-text-size-adjust: 100%;
+            }
+
+            body {
+                margin: 0;
+                background: var(--paper);
+                background-image: radial-gradient(
+                    circle at 1px 1px,
+                    rgba(23, 32, 51, 0.06) 1px,
+                    transparent 0
+                );
+                background-size: 22px 22px;
+                color: var(--ink);
+                font-family: var(--font-body);
+                line-height: 1.5;
+            }
+
+            .mono {
+                font-family: var(--font-mono);
+            }
+
+            .page {
+                max-width: 920px;
+                margin: 0 auto;
+                padding: 48px 24px 96px;
+            }
+
+            /* ---------- Hero ---------- */
+
+            .hero {
+                margin-bottom: 40px;
+                animation: rise 0.5s ease both;
+            }
+
+            .eyebrow {
+                margin: 0 0 10px;
+                font-family: var(--font-mono);
+                font-size: 12px;
+                font-weight: 500;
+                letter-spacing: 0.14em;
+                text-transform: uppercase;
+                color: var(--sandbox-dark);
+            }
+
+            .hero h1 {
+                margin: 0 0 12px;
+                font-family: var(--font-display);
+                font-weight: 700;
+                font-size: clamp(32px, 5vw, 44px);
+                letter-spacing: -0.01em;
+            }
+
+            .hero p {
+                margin: 0;
+                max-width: 54ch;
+                color: var(--ink-soft);
+                font-size: 15.5px;
+            }
+
+            /* ---------- Layout grids ---------- */
+
+            .grid-2 {
+                display: grid;
+                grid-template-columns: 1.1fr 0.9fr;
+                gap: 20px;
+                margin-bottom: 24px;
+            }
+
+            @media (max-width: 720px) {
+                .grid-2 {
+                    grid-template-columns: 1fr;
+                }
+            }
+
+            section {
+                margin-bottom: 24px;
+            }
+
+            /* ---------- Test card ---------- */
+
+            .test-card {
+                position: relative;
+                overflow: hidden;
+                border-radius: var(--radius);
+                padding: 28px 26px;
+                color: #eef1f5;
+                background: linear-gradient(
+                    135deg,
+                    var(--navy) 0%,
+                    var(--navy-2) 100%
+                );
+                box-shadow: 0 18px 40px -18px rgba(23, 32, 51, 0.55);
+                animation: rise 0.6s 0.05s ease both;
+            }
+
+            .test-card::after {
+                content: "";
+                position: absolute;
+                inset: 0;
+                background: radial-gradient(
+                    circle at 85% -10%,
+                    rgba(255, 255, 255, 0.14),
+                    transparent 55%
+                );
+                pointer-events: none;
+            }
+
+            .test-card__ribbon {
+                position: absolute;
+                top: 18px;
+                right: -34px;
+                transform: rotate(8deg);
+                background: var(--sandbox);
+                color: #fff;
+                font-family: var(--font-mono);
+                font-size: 11px;
+                font-weight: 600;
+                letter-spacing: 0.12em;
+                padding: 4px 40px;
+                box-shadow: 0 6px 14px -4px rgba(224, 97, 26, 0.6);
+            }
+
+            .test-card__chip {
+                width: 42px;
+                height: 32px;
+                border-radius: 6px;
+                margin-bottom: 22px;
+                background:
+                    repeating-linear-gradient(
+                        180deg,
+                        rgba(0, 0, 0, 0.2) 0 2px,
+                        transparent 2px 8px
+                    ),
+                    linear-gradient(135deg, #f3d9a4, #c9a15b);
+            }
+
+            .test-card__row {
+                margin-bottom: 18px;
+            }
+
+            .test-card__row--split {
+                display: flex;
+                gap: 32px;
+            }
+
+            .test-card__label {
+                display: block;
+                font-family: var(--font-mono);
+                font-size: 10.5px;
+                letter-spacing: 0.1em;
+                text-transform: uppercase;
+                color: rgba(238, 241, 245, 0.55);
+                margin-bottom: 6px;
+            }
+
+            .test-card__value-row {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                flex-wrap: wrap;
+            }
+
+            .test-card__value {
+                font-size: 18px;
+                letter-spacing: 0.04em;
+                font-weight: 500;
+            }
+
+            .chip-btn {
+                font-family: var(--font-body);
+                font-size: 11.5px;
+                font-weight: 500;
+                letter-spacing: 0.02em;
+                color: #eef1f5;
+                background: rgba(238, 241, 245, 0.14);
+                border: 1px solid rgba(238, 241, 245, 0.3);
+                border-radius: 999px;
+                padding: 5px 14px;
+                cursor: pointer;
+                transition: background 0.15s ease;
+            }
+
+            .chip-btn:hover {
+                background: rgba(238, 241, 245, 0.26);
+            }
+
+            .chip-btn.copied {
+                background: var(--success);
+                border-color: var(--success);
+            }
+
+            /* ---------- Notice ---------- */
+
+            .notice {
+                border-radius: var(--radius);
+                background: var(--card);
+                border: 1px solid var(--line);
+                padding: 24px;
+                display: flex;
+                flex-direction: column;
+                gap: 8px;
+                animation: rise 0.6s 0.1s ease both;
+            }
+
+            .notice__icon {
+                width: 34px;
+                height: 34px;
+                border-radius: 10px;
+                background: rgba(14, 139, 134, 0.12);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                margin-bottom: 6px;
+            }
+
+            .notice__eyebrow {
+                margin: 0;
+                font-weight: 600;
+                font-size: 14.5px;
+            }
+
+            .notice__text {
+                margin: 0;
+                font-size: 13.5px;
+                color: var(--ink-soft);
+            }
+
+            .pill-code {
+                font-family: var(--font-mono);
+                font-size: 12px;
+                background: rgba(14, 139, 134, 0.1);
+                color: var(--teal);
+                border-radius: 6px;
+                padding: 2px 6px;
+                white-space: nowrap;
+            }
+
+            /* ---------- Receipt ---------- */
+
+            .receipt {
+                position: relative;
+                background: var(--card);
+                border: 1.5px dashed rgba(23, 32, 51, 0.22);
+                border-radius: 4px;
+                padding: 26px 28px 22px;
+                animation: rise 0.6s 0.15s ease both;
+            }
+
+            .receipt::before,
+            .receipt::after {
+                content: "";
+                position: absolute;
+                left: 0;
+                right: 0;
+                height: 12px;
+                background: radial-gradient(
+                        circle,
+                        var(--paper) 6px,
+                        transparent 6.5px
+                    )
+                    0 0 / 18px 18px;
+            }
+
+            .receipt::before {
+                top: -6px;
+            }
+
+            .receipt::after {
+                bottom: -6px;
+            }
+
+            .receipt__eyebrow {
+                margin: 0 0 18px;
+                font-family: var(--font-mono);
+                font-size: 11px;
+                letter-spacing: 0.12em;
+                text-transform: uppercase;
+                color: var(--ink-soft);
+            }
+
+            .receipt__fields {
+                display: flex;
+                gap: 24px;
+                margin-bottom: 20px;
+            }
+
+            @media (max-width: 480px) {
+                .receipt__fields {
+                    flex-direction: column;
+                    gap: 16px;
+                }
+            }
+
+            .receipt__fields label {
+                flex: 1;
+                display: block;
+                font-size: 12px;
+                font-weight: 500;
+                color: var(--ink-soft);
+            }
+
+            .receipt__fields input,
+            .receipt__fields select {
+                display: block;
+                width: 100%;
+                margin-top: 6px;
+                padding: 10px 0;
+                font-family: var(--font-mono);
+                font-size: 15px;
+                color: var(--ink);
+                background: transparent;
+                border: none;
+                border-bottom: 1px solid var(--line);
+                border-radius: 0;
+            }
+
+            .receipt__fields input:focus,
+            .receipt__fields select:focus {
+                outline: none;
+                border-bottom-color: var(--sandbox);
+            }
+
+            .receipt__total {
+                display: flex;
+                justify-content: space-between;
+                align-items: baseline;
+                padding-top: 16px;
+                border-top: 1px dashed var(--line);
+                font-family: var(--font-mono);
+            }
+
+            .receipt__total > span:first-child {
+                font-family: var(--font-body);
+                font-size: 12px;
+                letter-spacing: 0.1em;
+                text-transform: uppercase;
+                color: var(--ink-soft);
+            }
+
+            .receipt__total > span:last-child {
+                font-size: 22px;
+                font-weight: 600;
+            }
+
+            /* ---------- Terminal (card entry) ---------- */
+
+            .terminal {
+                background: var(--navy);
+                border-radius: var(--radius);
+                padding: 26px 24px 24px;
+                animation: rise 0.6s 0.2s ease both;
+            }
+
+            .terminal__eyebrow {
+                margin: 0 0 18px;
+                font-family: var(--font-mono);
+                font-size: 11px;
+                letter-spacing: 0.12em;
+                text-transform: uppercase;
+                color: rgba(238, 241, 245, 0.55);
+            }
+
+            .terminal__row {
+                display: flex;
+                gap: 14px;
+            }
+
+            @media (max-width: 480px) {
+                .terminal__row {
+                    flex-direction: column;
+                }
+            }
+
+            .terminal__slot {
+                position: relative;
+                flex: 1;
+                margin-bottom: 14px;
+            }
+
+            .terminal__slot::before {
+                content: attr(data-label);
+                display: block;
+                font-family: var(--font-mono);
+                font-size: 10px;
+                letter-spacing: 0.1em;
+                text-transform: uppercase;
+                color: rgba(238, 241, 245, 0.5);
+                margin-bottom: 6px;
+            }
+
+            .terminal__slot > div {
+                min-height: 44px;
+                background: var(--card);
+                border-radius: 8px;
+                padding: 11px 12px;
+            }
+
+            .pay-btn {
+                display: block;
+                width: 100%;
+                margin-top: 6px;
+                padding: 15px 20px;
+                border: none;
+                border-radius: 999px;
+                background: linear-gradient(
+                    135deg,
+                    var(--sandbox) 0%,
+                    var(--sandbox-dark) 100%
+                );
+                color: #fff;
+                font-family: var(--font-display);
+                font-weight: 600;
+                font-size: 15px;
+                letter-spacing: 0.02em;
+                text-transform: uppercase;
+                cursor: pointer;
+                box-shadow: 0 14px 26px -12px rgba(224, 97, 26, 0.65);
+                transition:
+                    transform 0.12s ease,
+                    box-shadow 0.12s ease,
+                    opacity 0.12s ease;
+            }
+
+            .pay-btn:hover:not(:disabled) {
+                transform: translateY(-1px);
+                box-shadow: 0 18px 30px -12px rgba(224, 97, 26, 0.75);
+            }
+
+            .pay-btn:active:not(:disabled) {
+                transform: translateY(0);
+            }
+
+            .pay-btn:disabled {
+                opacity: 0.6;
+                cursor: default;
+                box-shadow: none;
+            }
+
+            .status {
+                min-height: 18px;
+                margin: 12px 2px 0;
+                font-family: var(--font-mono);
+                font-size: 12.5px;
+                color: rgba(238, 241, 245, 0.7);
+            }
+
+            .status.is-error {
+                color: #ffb3ab;
+            }
+
+            /* ---------- Success modal ---------- */
+
+            .modal-overlay {
+                position: fixed;
+                inset: 0;
+                background: rgba(23, 32, 51, 0.55);
+                backdrop-filter: blur(3px);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                padding: 24px;
+                z-index: 100;
+                animation: fade 0.18s ease both;
+            }
+
+            .modal-overlay[hidden] {
+                display: none;
+            }
+
+            .modal {
+                width: 100%;
+                max-width: 400px;
+                background: var(--card);
+                border-radius: 20px;
+                padding: 36px 32px 28px;
+                text-align: center;
+                box-shadow: 0 30px 60px -20px rgba(23, 32, 51, 0.45);
+                animation: pop 0.32s cubic-bezier(0.2, 0.8, 0.3, 1.15) both;
+            }
+
+            .stamp {
+                width: 68px;
+                height: 68px;
+                margin: 0 auto 16px;
+                border-radius: 50%;
+                background: rgba(31, 157, 111, 0.12);
+                border: 2px solid var(--success);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                transform: rotate(-8deg);
+                animation: stamp 0.4s 0.1s cubic-bezier(0.2, 0.8, 0.3, 1.1)
+                    both;
+            }
+
+            .modal__tag {
+                display: inline-block;
+                margin: 0 auto 10px;
+                font-family: var(--font-mono);
+                font-size: 11px;
+                font-weight: 500;
+                letter-spacing: 0.1em;
+                text-transform: uppercase;
+                color: var(--teal);
+                background: rgba(14, 139, 134, 0.1);
+                border-radius: 999px;
+                padding: 4px 12px;
+            }
+
+            .modal h2 {
+                margin: 0 0 18px;
+                font-family: var(--font-display);
+                font-size: 22px;
+            }
+
+            .modal__amount {
+                font-size: 28px;
+                font-weight: 600;
+                margin-bottom: 18px;
+            }
+
+            .modal__row {
+                display: flex;
+                justify-content: space-between;
+                gap: 12px;
+                padding: 12px 0;
+                border-top: 1px dashed var(--line);
+                font-size: 13px;
+                color: var(--ink-soft);
+            }
+
+            .modal__row span:last-child {
+                color: var(--ink);
+                word-break: break-all;
+                text-align: right;
+            }
+
+            .modal .pay-btn {
+                margin-top: 20px;
+            }
+
+            /* ---------- Motion ---------- */
+
+            @keyframes rise {
+                from {
+                    opacity: 0;
+                    transform: translateY(10px);
+                }
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+            }
+
+            @keyframes fade {
+                from {
+                    opacity: 0;
+                }
+                to {
+                    opacity: 1;
+                }
+            }
+
+            @keyframes pop {
+                from {
+                    opacity: 0;
+                    transform: scale(0.94);
+                }
+                to {
+                    opacity: 1;
+                    transform: scale(1);
+                }
+            }
+
+            @keyframes stamp {
+                from {
+                    opacity: 0;
+                    transform: rotate(-24deg) scale(1.3);
+                }
+                to {
+                    opacity: 1;
+                    transform: rotate(-8deg) scale(1);
+                }
+            }
+
+            @media (prefers-reduced-motion: reduce) {
+                *,
+                *::before,
+                *::after {
+                    animation: none !important;
+                    transition: none !important;
+                }
+            }
+
+            :focus-visible {
+                outline: 2px solid var(--sandbox);
+                outline-offset: 2px;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="page">
+            <header class="hero">
+                <p class="eyebrow">PayPal Sandbox &middot; ACDC Integration</p>
+                <h1>3DS Card Test</h1>
+                <p>
+                    Advanced Card Payments with a forced 3DS challenge. Copy
+                    the sandbox test card below, set an order amount, and pay
+                    to walk through the full authentication step.
+                </p>
+            </header>
+
+            <section class="grid-2">
+                <div class="test-card" aria-label="Sandbox test card">
+                    <div class="test-card__ribbon">SANDBOX</div>
+                    <div class="test-card__chip" aria-hidden="true"></div>
+                    <div class="test-card__row">
+                        <span class="test-card__label">Card number</span>
+                        <div class="test-card__value-row">
+                            <span
+                                class="test-card__value mono"
+                                id="PAYPAL_TEST_CARD_NO"
+                                data-raw="4868719841831470"
+                                >4868 7198 4183 1470</span
+                            >
+                            <button
+                                class="chip-btn"
+                                id="PAYPAL_TEST_CARD_NO_btn"
+                                type="button"
+                            >
+                                Copy
+                            </button>
+                        </div>
+                    </div>
+                    <div class="test-card__row test-card__row--split">
+                        <div>
+                            <span class="test-card__label">Expires</span>
+                            <div class="test-card__value-row">
+                                <span
+                                    class="test-card__value mono"
+                                    id="PAYPAL_TEST_CARD_DATE"
+                                    >12/2027</span
+                                >
+                                <button
+                                    class="chip-btn"
+                                    id="PAYPAL_TEST_CARD_DATE_btn"
+                                    type="button"
+                                >
+                                    Copy
+                                </button>
+                            </div>
+                        </div>
+                        <div>
+                            <span class="test-card__label">CVV</span>
+                            <div class="test-card__value-row">
+                                <span
+                                    class="test-card__value mono"
+                                    id="PAYPAL_TEST_CARD_CVV"
+                                    >123</span
+                                >
+                                <button
+                                    class="chip-btn"
+                                    id="PAYPAL_TEST_CARD_CVV_btn"
+                                    type="button"
+                                >
+                                    Copy
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="notice">
+                    <div class="notice__icon" aria-hidden="true">
+                        <svg
+                            width="18"
+                            height="18"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                        >
+                            <rect
+                                x="5"
+                                y="11"
+                                width="14"
+                                height="10"
+                                rx="2"
+                                stroke="#0e8b86"
+                                stroke-width="1.8"
+                            />
+                            <path
+                                d="M8 11V7a4 4 0 0 1 8 0v4"
+                                stroke="#0e8b86"
+                                stroke-width="1.8"
+                            />
+                        </svg>
+                    </div>
+                    <p class="notice__eyebrow">Why 3DS always fires</p>
+                    <p class="notice__text">
+                        Every order sets
+                        <span class="pill-code">verification.method =
+SCA_ALWAYS</span
+                        >, so PayPal forces the 3DS challenge regardless of
+                        the card or issuer risk score &mdash; useful for
+                        testing the full contingency flow on demand.
+                    </p>
+                </div>
+            </section>
+
+            <section class="receipt">
+                <p class="receipt__eyebrow">Order slip</p>
+                <div class="receipt__fields">
+                    <label
+                        >Amount
+                        <input
+                            type="number"
+                            id="amount-input"
+                            value="152"
+                            step="0.01"
+                            min="0"
+                        />
+                    </label>
+                    <label
+                        >Currency
+                        <select id="currency-input">
+                            <option value="USD">USD</option>
+                            <option value="EUR">EUR</option>
+                            <option value="GBP">GBP</option>
+                            <option value="AUD">AUD</option>
+                            <option value="CAD">CAD</option>
+                        </select>
+                    </label>
+                </div>
+                <div class="receipt__total">
+                    <span>Total</span>
+                    <span
+                        >$<span id="echo-amount">152.00</span>
+                        <span id="echo-currency">USD</span></span
+                    >
+                </div>
+            </section>
+
+            <section class="terminal">
+                <p class="terminal__eyebrow">Card details</p>
+                <div id="card-form">
+                    <div class="terminal__slot" data-label="Name on card">
+                        <div id="card-name-field-container"></div>
+                    </div>
+                    <div class="terminal__slot" data-label="Card number">
+                        <div id="card-number-field-container"></div>
+                    </div>
+                    <div class="terminal__row">
+                        <div class="terminal__slot" data-label="Expiry">
+                            <div id="card-expiry-field-container"></div>
+                        </div>
+                        <div class="terminal__slot" data-label="CVV">
+                            <div id="card-cvv-field-container"></div>
+                        </div>
+                    </div>
+                </div>
+                <button
+                    id="multi-card-field-button"
+                    type="button"
+                    class="pay-btn"
+                >
+                    Confirm &amp; pay
+                </button>
+                <p class="status" id="status-text" role="status" aria-live="polite"></p>
+            </section>
+        </div>
+
+        <div class="modal-overlay" id="success-overlay" hidden>
+            <div
+                class="modal"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="modal-title"
+            >
+                <div class="stamp" aria-hidden="true">
+                    <svg
+                        width="30"
+                        height="30"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                    >
+                        <path
+                            d="M4 12.5l5 5L20 7"
+                            stroke="#1f9d6f"
+                            stroke-width="2.4"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                        />
+                    </svg>
+                </div>
+                <p class="modal__tag">3DS verified</p>
+                <h2 id="modal-title">Payment approved</h2>
+                <div class="modal__amount mono" id="modal-amount">
+                    $152.00 USD
+                </div>
+                <div class="modal__row">
+                    <span>Transaction ID</span>
+                    <span class="mono" id="modal-txn"></span>
+                </div>
+                <button class="pay-btn" id="modal-close" type="button">
+                    Done
+                </button>
+            </div>
+        </div>
+
+        <script>
+            /**
+             * Global variable and constants area
+             */
+            var access_token;
+            var id_token;
+
+            // US client
+            const clientID =
+                "AaB-X2CM2jf9k-DU-sWSaNbpfKnHeRLHa84MppXHdBpv36uWUqGui9ldOk6SeET9Os5Hc4J5puUTetXo";
+            const secretKey =
+                "EAwyCjl9UrSmRqV4h6E_xoZdt3CVdJof6P9_1c8IY-jUca_m7g9oCAuMiw5vJ-MyhJzopPiRwbTaqUYy";
+
+            /**
+             * Read the amount/currency the user chose and update the echo panel
+             */
+            function getOrderAmountInputs() {
+                const amountInput = document.getElementById("amount-input");
+                const currencyInput =
+                    document.getElementById("currency-input");
+                const amount = parseFloat(amountInput.value || "0").toFixed(
+                    2
+                );
+                const currency = currencyInput.value;
+                return { amount, currency };
+            }
+
+            function updateEchoPanel() {
+                const { amount, currency } = getOrderAmountInputs();
+                document.getElementById("echo-amount").innerText = amount;
+                document.getElementById("echo-currency").innerText =
+                    currency;
+            }
+
+            function buildCreateOrderRequestBody() {
+                const { amount, currency } = getOrderAmountInputs();
+                return {
+                    intent: "CAPTURE",
+                    payment_source: {
+                        card: {
+                            //*****************************
+                            // Billing address is here
+                            name: "Fritz von Berlichingen",
+                            address: {
+                                address_line_1: "Albert-Einstein-Ring 2-6 ",
+                                address_line_2: "PayPal",
+                                admin_area_2: "Kleinmachnow",
+                                admin_area_1: "Brandenburg",
+                                postal_code: "14532",
+                                country_code: "DE",
+                            },
+
+                            experience_context: {
+                                payment_method_preference:
+                                    "IMMEDIATE_PAYMENT_REQUIRED",
+                                brand_name: "EXAMPLE INC",
+                                locale: "en-US",
+                                landing_page: "LOGIN",
+                                shipping_preference: "SET_PROVIDED_ADDRESS",
+                                user_action: "PAY_NOW",
+                                // ********************************************
+                                //This param is required!
+                                return_url: "https://example.com/returnUrl",
+                                // ********************************************
+                                cancel_url: "https://example.com/cancelUrl",
+                            },
+                            attributes: {
+                                vault: {
+                                    store_in_vault: "ON_SUCCESS",
+                                    usage_type: "MERCHANT",
+                                },
+                                // ********************************************
+                                // Forces the 3DS challenge on every attempt
+                                verification: {
+                                    method: "SCA_ALWAYS",
+                                },
+                                // ********************************************
+                                customer: {
+                                    email_address: "test@xpocget.com",
+                                },
+                            },
+                        },
+                    },
+                    purchase_units: [
+                        {
+                            // ********************************************
+                            //This param is required!
+                            description: "This is description for item",
+                            // ********************************************
+                            amount: {
+                                currency_code: currency,
+                                value: amount,
+                            },
+                            //*****************************
+                            // Shipping address is here
+                            shipping: {
+                                type: "SHIPPING",
+                                method: "DHL",
+                                name: {
+                                    full_name: "Fritz von Berlichingen",
+                                },
+                                address: {
+                                    address_line_1: "Albert-Einstein-Ring 2-6",
+                                    address_line_2: "PayPal",
+                                    postal_code: "14532",
+                                    admin_area_2: "Kleinmachnow",
+                                    country_code: "US",
+                                    admin_area_1: "Brandenburg",
+                                },
+                            },
+                        },
+                    ],
+                };
+            }
+
+            /**
+             * Generate PayPal request ID in request header
+             */
+            const generateRandomPayPalRequestID = () => {
+                let PayPal_Request_Id = (Math.random() * 100000000).toString(
+                    36
+                );
+                PayPal_Request_Id = Date.now().toString(32);
+                return PayPal_Request_Id;
+            };
+
+            /**
+             * Generate PayPal Auth Assertion in request header
+             */
+            const generatePayPalAuthAssertion = (clientID, merchantID) => {
+                let PayPal_Auth_Assertion;
+                let to_encode = {
+                    iss: clientID,
+                    payer_id: merchantID,
+                };
+
+                let to_encode_str = JSON.stringify(to_encode);
+                let encoded_str = btoa(to_encode_str);
+                PayPal_Auth_Assertion = `eyJhbGciOiJub25lIn0=.${encoded_str}.`;
+                return PayPal_Auth_Assertion;
+            };
+
+            async function createOrderCallback() {
+                updateEchoPanel();
+                setStatus("Creating order…");
+                let orderID = await fetch(
+                    "https://api.sandbox.paypal.com/v2/checkout/orders",
+                    {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "Paypal-Auth-Assertion":
+                                generatePayPalAuthAssertion(
+                                    clientID,
+                                    //Replace your own Merchant ID here
+                                    "CMHAMMNAXCMGA"
+                                ),
+                            Authorization: `Bearer ${access_token}`,
+                            "PayPal-Request-Id":
+                                generateRandomPayPalRequestID(),
+                        },
+
+                        body: JSON.stringify(buildCreateOrderRequestBody()),
+                    }
+                )
+                    .then((data) => data.json())
+                    .then((jsonData) => {
+                        return jsonData.id;
+                    });
+                setStatus("Waiting for 3DS challenge…");
+                return orderID;
+            }
+
+            const approveCallBack = async (data) => {
+                console.log(JSON.stringify(data, null, "  "));
+                setStatus("Capturing payment…");
+                let result = await fetch(
+                    `https://api.sandbox.paypal.com/v2/checkout/orders/${data.orderID}/capture`,
+                    {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "Paypal-Auth-Assertion":
+                                generatePayPalAuthAssertion(
+                                    clientID,
+                                    //Replace your own Merchant ID here
+                                    "CMHAMMNAXCMGA"
+                                ),
+                            Authorization: `Bearer ${access_token}`,
+                            "PayPal-Request-Id":
+                                generateRandomPayPalRequestID(),
+                        },
+                    }
+                );
+                let orderData = await result.json();
+                console.log(JSON.stringify(orderData, null, "  "));
+                let transactionObject =
+                    orderData?.purchase_units?.[0]?.payments?.captures?.[0] ||
+                    orderData?.purchase_units?.[0]?.payments
+                        ?.authorizations?.[0];
+                const { amount, currency } = getOrderAmountInputs();
+                setStatus("");
+                showSuccessModal({
+                    transactionID: transactionObject?.id ?? "unknown",
+                    amount,
+                    currency,
+                });
+                setPayButtonBusy(false);
+            };
+
+            /**
+             * Success modal
+             */
+            function showSuccessModal({ transactionID, amount, currency }) {
+                document.getElementById(
+                    "modal-amount"
+                ).textContent = `$${amount} ${currency}`;
+                document.getElementById("modal-txn").textContent =
+                    transactionID;
+                document
+                    .getElementById("success-overlay")
+                    .removeAttribute("hidden");
+            }
+
+            function hideSuccessModal() {
+                document
+                    .getElementById("success-overlay")
+                    .setAttribute("hidden", "");
+            }
+
+            function setStatus(message, isError) {
+                const el = document.getElementById("status-text");
+                el.textContent = message;
+                el.classList.toggle("is-error", Boolean(isError));
+            }
+
+            function setPayButtonBusy(isBusy) {
+                document.getElementById("multi-card-field-button").disabled =
+                    isBusy;
+            }
+
+            async function initPage() {
+                const auth = btoa(`${clientID}:${secretKey}`);
+                fetch("https://api.sandbox.paypal.com/v1/oauth2/token", {
+                    method: "POST",
+                    headers: {
+                        Authorization: `Basic ${auth}`,
+                        "Paypal-Auth-Assertion": generatePayPalAuthAssertion(
+                            clientID,
+                            "CMHAMMNAXCMGA"
+                        ),
+                    },
+
+                    body: new URLSearchParams({
+                        grant_type: "client_credentials",
+                    }),
+                })
+                    .then((data) => data.json())
+                    .then((jsonData) => {
+                        access_token = jsonData.access_token;
+                        id_token = jsonData.id_token;
+                        const script = document.createElement("script");
+                        script.type = "text/javascript";
+                        script.src = `https://www.paypal.com/sdk/js?client-id=${clientID}&buyer-country=US&components=card-fields`;
+                        script.crossorigin = "anonymous";
+                        script.onload = async function () {
+                            await initPayPalCard();
+                        };
+                        document.head.appendChild(script);
+
+                        return {
+                            access_token: jsonData.access_token,
+                            id_token: jsonData.id_token,
+                        };
+                    });
+            }
+
+            async function initPayPalCard() {
+                const cardField = window.paypal.CardFields({
+                    style: {
+                        input: {
+                            "font-size": "15px",
+                            "font-family": "IBM Plex Mono, monospace",
+                            color: "#172033",
+                        },
+                        ".invalid": {
+                            color: "#e15252",
+                        },
+                    },
+                    createOrder: createOrderCallback,
+                    onApprove: approveCallBack,
+                    onCancel: (data) => {
+                        console.log("Cancelled", data);
+                        setStatus("3DS challenge cancelled.", true);
+                        setPayButtonBusy(false);
+                    },
+                    onError: (data) => {
+                        console.log("Error", data);
+                        setStatus("Something went wrong. See console.", true);
+                        setPayButtonBusy(false);
+                    },
+                });
+
+                let nameField;
+                let numberField;
+                let cvvField;
+                let expiryField;
+
+                // Render each field after checking for eligibility
+                if (cardField.isEligible()) {
+                    nameField = cardField.NameField({});
+                    nameField.render("#card-name-field-container");
+
+                    numberField = cardField.NumberField();
+                    numberField.render("#card-number-field-container");
+
+                    cvvField = cardField.CVVField();
+                    cvvField.render("#card-cvv-field-container");
+
+                    expiryField = cardField.ExpiryField();
+                    expiryField.render("#card-expiry-field-container");
+
+                    // Add click listener to submit button and call the submit function on the CardField component
+                    document
+                        .getElementById("multi-card-field-button")
+                        .addEventListener("click", () => {
+                            setPayButtonBusy(true);
+                            setStatus("Verifying card details…");
+                            cardField.submit().catch((error) => {
+                                console.log(error);
+                                setStatus(
+                                    "Something went wrong. See console.",
+                                    true
+                                );
+                                setPayButtonBusy(false);
+                            });
+                        });
+                } else {
+                    // Hides card fields if the merchant isn't eligible
+                    document.querySelector("#card-form").style =
+                        "display: none";
+                }
+            }
+
+            // ###################################################
+            async function copyToClipboard(value, button) {
+                try {
+                    await navigator.clipboard.writeText(value);
+                    if (button) {
+                        button.textContent = "Copied";
+                        button.classList.add("copied");
+                        setTimeout(() => {
+                            button.textContent = "Copy";
+                            button.classList.remove("copied");
+                        }, 1200);
+                    }
+                } catch (error) {
+                    console.error(error.message);
+                }
+            }
+
+            function addCopyListener() {
+                document
+                    .getElementById("PAYPAL_TEST_CARD_NO_btn")
+                    .addEventListener("click", (e) => {
+                        const raw = document.getElementById(
+                            "PAYPAL_TEST_CARD_NO"
+                        ).dataset.raw;
+                        copyToClipboard(raw, e.currentTarget);
+                    });
+                document
+                    .getElementById("PAYPAL_TEST_CARD_DATE_btn")
+                    .addEventListener("click", (e) => {
+                        const value = document.getElementById(
+                            "PAYPAL_TEST_CARD_DATE"
+                        ).textContent;
+                        copyToClipboard(value, e.currentTarget);
+                    });
+                document
+                    .getElementById("PAYPAL_TEST_CARD_CVV_btn")
+                    .addEventListener("click", (e) => {
+                        const value = document.getElementById(
+                            "PAYPAL_TEST_CARD_CVV"
+                        ).textContent;
+                        copyToClipboard(value, e.currentTarget);
+                    });
+            }
+
+            function addAmountListeners() {
+                document
+                    .getElementById("amount-input")
+                    .addEventListener("input", updateEchoPanel);
+                document
+                    .getElementById("currency-input")
+                    .addEventListener("change", updateEchoPanel);
+            }
+
+            function addModalListeners() {
+                document
+                    .getElementById("modal-close")
+                    .addEventListener("click", hideSuccessModal);
+                document
+                    .getElementById("success-overlay")
+                    .addEventListener("click", (e) => {
+                        if (e.target.id === "success-overlay") {
+                            hideSuccessModal();
+                        }
+                    });
+                document.addEventListener("keydown", (e) => {
+                    if (
+                        e.key === "Escape" &&
+                        !document
+                            .getElementById("success-overlay")
+                            .hasAttribute("hidden")
+                    ) {
+                        hideSuccessModal();
+                    }
+                });
+            }
+
+            addCopyListener();
+            addAmountListeners();
+            addModalListeners();
+            updateEchoPanel();
+            initPage();
+        </script>
+    </body>
+</html>
