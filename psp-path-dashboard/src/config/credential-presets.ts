@@ -13,6 +13,13 @@ export interface BnCodeOption {
   country: string
 }
 
+export interface LoginInfo {
+  /** sandbox 账号邮箱（登录 developer.paypal.com 用），密码不在此展示，见旁边代码注释 */
+  sandboxEmail: string
+  /** SFTP 账号 user，密码不在此展示，见旁边代码注释 */
+  sftpUser: string
+}
+
 export interface CredentialPreset {
   id: string
   label: string
@@ -21,6 +28,8 @@ export interface CredentialPreset {
   bnCodes: BnCodeOption[]
   payerId: string
   payeeEmail: string
+  /** 可选：该套凭证对应的 sandbox / SFTP 登录信息，仅在管理页展示账号，密码只放代码注释里 */
+  loginInfo?: LoginInfo
 }
 
 export const CREDENTIAL_PRESETS: CredentialPreset[] = [
@@ -50,6 +59,12 @@ export const CREDENTIAL_PRESETS: CredentialPreset[] = [
     payerId: 'AES9BQ3KZHL6L',
     //pwd; 12345678
     payeeEmail: 'psp-test-sg-merchant-01@test.com',
+    loginInfo: {
+      // pwd: 12345678
+      sandboxEmail: 'psp-psa-hk02@test.com',
+      // pwd: 12345678
+      sftpUser: 'sftpmS_psp-test-hk02@test.com',
+    },
   },
 ]
 

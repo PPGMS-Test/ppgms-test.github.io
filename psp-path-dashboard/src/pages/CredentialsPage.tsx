@@ -56,6 +56,17 @@ export function CredentialsPage() {
             {preset.label}
           </label>
         ))}
+        {activePreset.loginInfo && (
+          <div className="mt-1 flex flex-col gap-1 rounded-lg border border-line/60 bg-surface2/60 px-3 py-2 text-xs text-muted">
+            <span className="font-semibold text-ink">登录信息（{activePreset.label}，密码见代码注释）</span>
+            <span>
+              Sandbox 账号：<code className="text-ink">{activePreset.loginInfo.sandboxEmail}</code>
+            </span>
+            <span>
+              SFTP 账号：<code className="text-ink">{activePreset.loginInfo.sftpUser}</code>
+            </span>
+          </div>
+        )}
       </Card>
 
       <Card className="flex flex-col gap-4">
