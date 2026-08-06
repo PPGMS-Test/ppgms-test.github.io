@@ -52,6 +52,14 @@
                             <span class="switch-state" id="pan-only-state">ON</span>
                         </span>
                     </label>
+                    <label class="switch-row" for="sca-always-toggle" style="margin-top: 10px;">
+                        <span class="switch-row-text">VERIFICATION&nbsp;<code>SCA_ALWAYS</code></span>
+                        <span class="switch">
+                            <input type="checkbox" id="sca-always-toggle" class="switch-input" checked />
+                            <span class="switch-track"><span class="switch-thumb"></span></span>
+                            <span class="switch-state" id="sca-always-state">ON</span>
+                        </span>
+                    </label>
                 </section>
 
                 <div class="perf" aria-hidden="true"></div>
@@ -282,6 +290,13 @@
             document
                 .getElementById("pan-only-toggle")
                 .addEventListener("change", applyPanOnlyConfig);
+
+            // SCA_ALWAYS 开关 — 仅切换 UI 文案，实际值在 createOrder 时读取
+            document
+                .getElementById("sca-always-toggle")
+                .addEventListener("change", (e) => {
+                    document.getElementById("sca-always-state").textContent = e.target.checked ? "ON" : "OFF";
+                });
 
             function getGooglePaymentsClient() {
                 if (!paymentsClient) {
@@ -552,19 +567,31 @@
             }
 
             async function createOrder(accessToken) {
+                const scaMethod = document.getElementById("sca-always-toggle").checked
+                    ? "SCA_ALWAYS"
+                    : "SCA_WHEN_REQUIRED";
+                const body = {
+                    intent: "CAPTURE",
+                    purchase_units: [{
+                        amount: { currency_code: CONFIG.currency, value: "110.00" },
+                        payee: { merchant_id: CONFIG.merchantId },
+                    }],
+                    payment_source: {
+                        google_pay: {
+                            attributes: {
+                                verification: { method: scaMethod },
+                            },
+                        },
+                    },
+                };
+                console.log(`[Process] POST /v2/checkout/orders - request (verification.method=${scaMethod})`, JSON.stringify(body, null, 2));
                 const res = await fetch("https://api.sandbox.paypal.com/v2/checkout/orders", {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",
                         Authorization: `Bearer ${accessToken}`,
                     },
-                    body: JSON.stringify({
-                        intent: "CAPTURE",
-                        purchase_units: [{
-                            amount: { currency_code: CONFIG.currency, value: "110.00" },
-                            payee: { merchant_id: CONFIG.merchantId },
-                        }],
-                    }),
+                    body: JSON.stringify(body),
                 });
                 const data = await res.json();
                 if (!res.ok) {
