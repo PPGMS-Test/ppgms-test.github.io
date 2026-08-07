@@ -157,7 +157,7 @@
             function loadScripts() {
                 console.log("[Init] 开始加载 SDK... / Loading SDKs...");
                 const paypalScript = document.createElement("script");
-                paypalScript.src = `https://www.paypal.com/sdk/js?client-id=${CONFIG.clientId}&currency=${CONFIG.currency}&components=googlepay&buyer-country=${CONFIG.buyerCountry}`;
+                paypalScript.src = `https://www.paypal.com/sdk/js?client-id=${CONFIG.clientId}&currency=${CONFIG.currency}&components=googlepay`;
                 paypalScript.onload = () => {
                     console.log("[Init] PayPal SDK 已加载 / PayPal SDK loaded");
                     const googleScript = document.createElement("script");
