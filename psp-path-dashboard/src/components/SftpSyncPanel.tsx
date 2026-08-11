@@ -16,25 +16,36 @@ function usePolling(requestId: string | null, active: boolean, onDone: (ok: bool
     if (!active || !requestId) return
     startedAt.current = Date.now()
     setElapsedSec(0)
+    let done = false
 
     const interval = setInterval(async () => {
+      if (done) return
       const elapsed = Date.now() - startedAt.current
       setElapsedSec(Math.floor(elapsed / 1000))
 
       if (elapsed > POLL_TIMEOUT_MS) {
+        done = true
         clearInterval(interval)
         onDone(false)
         return
       }
 
       const result = await getSftpSyncStatus(requestId)
+      if (done) return
       if (result.status === 'completed') {
+        done = true
         clearInterval(interval)
         onDone(result.conclusion === 'success')
       }
     }, POLL_INTERVAL_MS)
 
-    return () => clearInterval(interval)
+    return () => {
+      done = true
+      clearInterval(interval)
+    }
+    // onDone 有意排除在依赖外：避免父组件每次渲染都重启轮询定时器。
+    // 之所以安全，是因为每次触发都会产生全新的 requestId（见 startListing/startDownloading），
+    // requestId 变化会让这个 effect 重新执行，从而绑定到新的 onDone 闭包——不存在"用旧闭包轮询新请求"的风险。
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [requestId, active])
 
@@ -45,6 +56,7 @@ export function SftpSyncPanel() {
   const store = useSftpSyncStore()
   const isListingPolling = store.phase === 'listing'
   const isDownloadingPolling = store.phase === 'downloading'
+  const [isTriggering, setIsTriggering] = useState(false)
 
   const listingElapsed = usePolling(store.requestId, isListingPolling, async (ok) => {
     if (!ok) {
@@ -73,20 +85,34 @@ export function SftpSyncPanel() {
   })
 
   async function handleBrowse() {
-    const result = await triggerSftpSync('list')
-    if (result.requestId) {
-      store.startListing(result.requestId)
-    } else {
-      store.setError(result.error ?? '触发同步失败')
+    setIsTriggering(true)
+    try {
+      const result = await triggerSftpSync('list')
+      if (result.requestId) {
+        store.startListing(result.requestId)
+      } else {
+        store.setError(result.error ?? '触发同步失败')
+      }
+    } catch {
+      store.setError('触发同步失败，请检查网络连接')
+    } finally {
+      setIsTriggering(false)
     }
   }
 
   async function handleSelectFile(fileName: string) {
-    const result = await triggerSftpSync('download', fileName)
-    if (result.requestId) {
-      store.startDownloading(result.requestId, fileName)
-    } else {
-      store.setError(result.error ?? '触发同步失败')
+    setIsTriggering(true)
+    try {
+      const result = await triggerSftpSync('download', fileName)
+      if (result.requestId) {
+        store.startDownloading(result.requestId, fileName)
+      } else {
+        store.setError(result.error ?? '触发同步失败')
+      }
+    } catch {
+      store.setError('触发同步失败，请检查网络连接')
+    } finally {
+      setIsTriggering(false)
     }
   }
 
@@ -98,7 +124,8 @@ export function SftpSyncPanel() {
         <button
           type="button"
           onClick={handleBrowse}
-          className="flex w-fit items-center gap-2 rounded-full border border-line px-4 py-2 text-ink transition hover:border-accent/50 hover:bg-surface2"
+          disabled={isTriggering}
+          className="flex w-fit items-center gap-2 rounded-full border border-line px-4 py-2 text-ink transition hover:border-accent/50 hover:bg-surface2 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <FolderOpen size={16} /> 浏览 SFTP 目录
         </button>
@@ -118,7 +145,8 @@ export function SftpSyncPanel() {
               <button
                 type="button"
                 onClick={() => handleSelectFile(file.name)}
-                className="flex w-full items-center justify-between rounded-lg border border-line px-3 py-2 text-left text-ink transition hover:border-accent/50 hover:bg-surface2"
+                disabled={isTriggering}
+                className="flex w-full items-center justify-between rounded-lg border border-line px-3 py-2 text-left text-ink transition hover:border-accent/50 hover:bg-surface2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <span>{file.name}</span>
                 <span className="font-mono text-xs text-muted">{file.size} bytes</span>
