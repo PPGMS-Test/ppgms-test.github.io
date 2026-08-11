@@ -12,6 +12,7 @@
 - 公司网络已确认封锁 `*.workers.dev` 和 `*.vercel.app` 域名，因此无法使用 Vercel Serverless Function（真正的 Node.js runtime）作为退路。
 - `github.com` / `api.github.com` / `raw.githubusercontent.com` 在公司网络下必然可访问（本仓库的日常 git 操作和 GitHub Pages 部署依赖它们）。
 - 本仓库（`ppgms-test.github.io`）是 **public** 仓库，但用户已确认对账数据是 sandbox 测试数据，可以接受落到仓库里。
+- 本项目定位是展示用 demo，用户已确认 SFTP 账号密码可以直接硬编码在代码中（不使用 GitHub Secrets）。GitHub PAT 例外——它拥有触发本仓库 workflow 的写权限，仍需存为 Cloudflare Pages 加密环境变量，不硬编码、不提交进仓库。
 
 ### 结论
 
@@ -34,7 +35,7 @@ psp-path-dashboard 轮询 run 状态 → 完成后
 直接从 raw.githubusercontent.com 读取 sftp-data 分支上的产物（公开仓库，无需认证）
 ```
 
-分层原则：GitHub PAT 只存在服务端（Cloudflare 环境变量），从不下发到浏览器；SFTP 凭证只存在 GitHub Actions Secrets。前端与后端之间不传递任何 SFTP/GitHub 凭证。
+分层原则：GitHub PAT 只存在服务端（Cloudflare 加密环境变量），从不下发到浏览器。SFTP 账号密码直接硬编码在 `scripts/sftp-sync.mjs` 源码中（demo 项目 + sandbox 数据，用户已确认接受）。前端与后端之间不传递任何 SFTP/GitHub 凭证。
 
 ## 组件详情
 
@@ -47,7 +48,7 @@ psp-path-dashboard 轮询 run 状态 → 完成后
 - `run-name: sftp-sync-${{ inputs.client_request_id }}`，使轮询方能精确匹配到自己触发的那次 run，避免多次点击时张冠李戴
 - `concurrency: { group: sftp-sync, cancel-in-progress: false }`，防止并发写坏产物分支
 - 权限：`contents: write`（提交产物到 `sftp-data` 分支需要）
-- 凭证以加密 Secrets 存储：`SFTP_HOST`、`SFTP_PORT`、`SFTP_USERNAME`、`SFTP_PASSWORD`、`SFTP_REMOTE_DIR`（账号密码认证，非私钥）
+- SFTP 连接参数（host、port、username、password、remote_dir）直接硬编码在 `scripts/sftp-sync.mjs` 中，不使用 GitHub Secrets。本项目是展示用 demo，且数据是 sandbox 测试数据，用户已确认接受此简化（代价：这些凭证会随源码在 public 仓库中公开可见）
 - 核心逻辑封装在 `scripts/sftp-sync.mjs`，用 `ssh2-sftp-client`：
   - `list` 模式：连接、列出 `SFTP_REMOTE_DIR` 下的文件，写出 `listing.json`（包含文件名、大小、修改时间）
   - `download` 模式：下载 `remote_path` 指定的文件，原样落盘为对应文件名
@@ -81,7 +82,7 @@ psp-path-dashboard 轮询 run 状态 → 完成后
 
 ## 数据流小结
 
-用户点击 → 一次 list 往返（~15-40s）→ 看到文件列表 → 点击某文件 → 一次 download 往返（~15-40s）→ 页面内表格展示 + 下载按钮。全程无需常驻服务器、无需访问被封的域名，敏感凭证只存在于 GitHub Secrets 和 Cloudflare 加密环境变量中，不经过浏览器。
+用户点击 → 一次 list 往返（~15-40s）→ 看到文件列表 → 点击某文件 → 一次 download 往返（~15-40s）→ 页面内表格展示 + 下载按钮。全程无需常驻服务器、无需访问被封的域名；GitHub PAT 存在 Cloudflare 加密环境变量中不经过浏览器，SFTP 账号密码硬编码在源码中（demo + sandbox 数据场景下用户已接受）。
 
 ## 错误处理
 
