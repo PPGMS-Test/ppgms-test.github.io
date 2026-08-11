@@ -5,6 +5,7 @@ export const SFTP_CONFIG = {
   port: 22,
   username: 'REPLACE_WITH_ACTUAL_USERNAME',
   password: 'REPLACE_WITH_ACTUAL_PASSWORD',
+  readyTimeout: 15000,
 }
 
 export const SFTP_REMOTE_DIR = 'REPLACE_WITH_ACTUAL_REMOTE_DIR'
