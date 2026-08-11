@@ -17,6 +17,9 @@ export async function POST(req: Request) {
   if (action === 'download' && !remotePath) {
     return corsJson({ error: 'remotePath is required for download action' }, 400)
   }
+  if (action === 'download' && remotePath!.split('/').includes('..')) {
+    return corsJson({ error: 'remotePath must not contain ".." path segments' }, 400)
+  }
 
   const pat = process.env.GITHUB_PAT
   if (!pat) {
