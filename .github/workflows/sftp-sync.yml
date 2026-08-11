@@ -9,7 +9,7 @@ on:
         type: choice
         options: [list, download]
       remote_path:
-        description: 'Full remote file path (required for download)'
+        description: 'File name within the configured SFTP_REMOTE_DIR (required for download, e.g. "2026-08-11.csv")'
         required: false
         type: string
       client_request_id:
