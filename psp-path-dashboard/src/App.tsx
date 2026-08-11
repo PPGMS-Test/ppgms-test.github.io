@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { HashRouter, Route, Routes } from 'react-router-dom'
 import { PlaygroundPage } from '@/pages/PlaygroundPage'
 import { CredentialsPage } from '@/pages/CredentialsPage'
+import { SftpSyncPage } from '@/pages/SftpSyncPage'
 import { TooltipProvider } from '@/components/ui/Tooltip'
 import { useThemeStore } from '@/store/theme'
 
@@ -18,6 +19,7 @@ export default function App() {
         <Routes>
           <Route path="/" element={<PlaygroundPage />} />
           <Route path="/credentials" element={<CredentialsPage />} />
+          <Route path="/sftp-sync" element={<SftpSyncPage />} />
         </Routes>
       </HashRouter>
     </TooltipProvider>

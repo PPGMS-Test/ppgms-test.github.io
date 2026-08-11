@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { KeyRound, Moon, Sun, Workflow } from 'lucide-react'
+import { KeyRound, Moon, Sun, Workflow, FileSpreadsheet } from 'lucide-react'
 import { useCredentialsStore } from '@/store/credentials'
 import { useActivePresetStore } from '@/store/active-preset'
 import { useThemeStore } from '@/store/theme'
@@ -39,6 +39,12 @@ export function TopBar() {
         >
           {theme === 'dark' ? <Sun size={14} /> : <Moon size={14} />}
         </button>
+        <Link
+          to="/sftp-sync"
+          className="flex items-center gap-1.5 rounded-full border border-line px-3.5 py-1.5 text-ink transition hover:border-accent/50 hover:bg-surface2"
+        >
+          <FileSpreadsheet size={14} /> 对账同步
+        </Link>
         <Link
           to="/credentials"
           className="flex items-center gap-1.5 rounded-full border border-line px-3.5 py-1.5 text-ink transition hover:border-accent/50 hover:bg-surface2"
