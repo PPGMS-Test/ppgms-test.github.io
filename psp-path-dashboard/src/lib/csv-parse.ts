@@ -68,6 +68,7 @@ export function parseCsv(input: string): ParsedCsv {
     pushRow()
   }
 
+  // 已知局限：无法区分"末尾换行产生的幽灵空行"和"真实的单列空值行/中间空行"，两者都会被这里过滤掉
   const nonEmptyRows = rows.filter((r) => !(r.length === 1 && r[0] === ''))
   if (nonEmptyRows.length === 0) {
     return { headers: [], rows: [] }
