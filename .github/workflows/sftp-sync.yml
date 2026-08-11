@@ -1,0 +1,74 @@
+name: SFTP Sync
+
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: 'list or download'
+        required: true
+        type: choice
+        options: [list, download]
+      remote_path:
+        description: 'Full remote file path (required for download)'
+        required: false
+        type: string
+      client_request_id:
+        description: 'Unique id supplied by the caller, used to correlate polling'
+        required: true
+        type: string
+
+run-name: sftp-sync-${{ inputs.client_request_id }}
+
+concurrency:
+  group: sftp-sync
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout master (for script source)
+        uses: actions/checkout@v4
+        with:
+          ref: master
+          path: source
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install script dependencies
+        working-directory: source/scripts/sftp-sync
+        run: npm install
+
+      - name: Run SFTP sync
+        working-directory: source/scripts/sftp-sync
+        env:
+          SFTP_ACTION: ${{ inputs.action }}
+          SFTP_REMOTE_PATH: ${{ inputs.remote_path }}
+          SFTP_OUTPUT_DIR: ${{ github.workspace }}/output
+        run: node index.mjs
+
+      - name: Checkout sftp-data branch
+        uses: actions/checkout@v4
+        with:
+          ref: sftp-data
+          path: data-branch
+
+      - name: Copy output into data branch
+        run: |
+          mkdir -p data-branch/sftp-data
+          cp -r output/. data-branch/sftp-data/
+
+      - name: Commit and push result
+        working-directory: data-branch
+        run: |
+          git config user.name "sftp-sync-bot"
+          git config user.email "sftp-sync-bot@users.noreply.github.com"
+          git add sftp-data
+          git diff --cached --quiet && echo "no changes" || git commit -m "sftp-sync: ${{ inputs.action }} (${{ inputs.client_request_id }})"
+          git push origin sftp-data

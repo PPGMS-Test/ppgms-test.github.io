@@ -1,0 +1,40 @@
+import SftpClient from 'ssh2-sftp-client'
+import { writeFileSync, mkdirSync } from 'node:fs'
+import { SFTP_CONFIG, SFTP_REMOTE_DIR } from './config.mjs'
+
+const ACTION = process.env.SFTP_ACTION // 'list' | 'download'
+const REMOTE_PATH = process.env.SFTP_REMOTE_PATH // download 模式下的完整远程文件路径
+const OUTPUT_DIR = process.env.SFTP_OUTPUT_DIR ?? './output'
+
+async function run() {
+  mkdirSync(OUTPUT_DIR, { recursive: true })
+  const sftp = new SftpClient()
+
+  try {
+    await sftp.connect(SFTP_CONFIG)
+
+    if (ACTION === 'list') {
+      const entries = await sftp.list(SFTP_REMOTE_DIR)
+      const listing = entries
+        .filter((e) => e.type === '-') // 只列普通文件，排除目录
+        .map((e) => ({ name: e.name, size: e.size, modifyTime: e.modifyTime }))
+      writeFileSync(`${OUTPUT_DIR}/listing.json`, JSON.stringify({ files: listing }, null, 2))
+      console.log(`listed ${listing.length} files from ${SFTP_REMOTE_DIR}`)
+    } else if (ACTION === 'download') {
+      if (!REMOTE_PATH) throw new Error('SFTP_REMOTE_PATH is required for download action')
+      const fileName = REMOTE_PATH.split('/').pop()
+      const buffer = await sftp.get(REMOTE_PATH)
+      writeFileSync(`${OUTPUT_DIR}/${fileName}`, buffer)
+      console.log(`downloaded ${REMOTE_PATH} -> ${OUTPUT_DIR}/${fileName}`)
+    } else {
+      throw new Error(`unknown SFTP_ACTION: ${ACTION}`)
+    }
+  } finally {
+    await sftp.end()
+  }
+}
+
+run().catch((err) => {
+  console.error('sftp-sync failed:', err)
+  process.exit(1)
+})
