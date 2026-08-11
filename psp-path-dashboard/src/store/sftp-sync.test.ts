@@ -42,6 +42,27 @@ describe('useSftpSyncStore', () => {
     expect(state.csvContent).toBe('name,amount\nAlice,100')
   })
 
+  it('startListing 清除上一轮遗留的 files 和 csvContent', () => {
+    useSftpSyncStore.getState().startDownloading('req-2', 'a.csv')
+    useSftpSyncStore.getState().setDownloaded('name,amount\nAlice,100')
+    useSftpSyncStore.getState().startListing('req-3')
+    const state = useSftpSyncStore.getState()
+    expect(state.files).toEqual([])
+    expect(state.csvContent).toBeNull()
+    expect(state.downloadingFileName).toBeNull()
+  })
+
+  it('startDownloading 清除上一轮遗留的 csvContent 但保留 files', () => {
+    useSftpSyncStore.getState().startListing('req-1')
+    useSftpSyncStore.getState().setListing([{ name: 'a.csv', size: 10, modifyTime: 0 }])
+    useSftpSyncStore.getState().startDownloading('req-2', 'a.csv')
+    useSftpSyncStore.getState().setDownloaded('name,amount\nAlice,100')
+    useSftpSyncStore.getState().startDownloading('req-3', 'b.csv')
+    const state = useSftpSyncStore.getState()
+    expect(state.csvContent).toBeNull()
+    expect(state.files).toEqual([{ name: 'a.csv', size: 10, modifyTime: 0 }])
+  })
+
   it('setError 把 phase 设为 error 并记录错误信息', () => {
     useSftpSyncStore.getState().startListing('req-1')
     useSftpSyncStore.getState().setError('连接超时')

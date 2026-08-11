@@ -29,10 +29,24 @@ const initialState = {
 
 export const useSftpSyncStore = create<SftpSyncState>()((set) => ({
   ...initialState,
-  startListing: (requestId) => set({ phase: 'listing', requestId, error: null }),
+  startListing: (requestId) =>
+    set({
+      phase: 'listing',
+      requestId,
+      error: null,
+      files: [],
+      csvContent: null,
+      downloadingFileName: null,
+    }),
   setListing: (files) => set({ phase: 'browsing', files }),
   startDownloading: (requestId, fileName) =>
-    set({ phase: 'downloading', requestId, downloadingFileName: fileName, error: null }),
+    set({
+      phase: 'downloading',
+      requestId,
+      downloadingFileName: fileName,
+      error: null,
+      csvContent: null,
+    }),
   setDownloaded: (content) => set({ phase: 'ready', csvContent: content }),
   setError: (message) => set({ phase: 'error', error: message }),
   reset: () => set({ ...initialState }),
