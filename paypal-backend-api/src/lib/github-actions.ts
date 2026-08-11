@@ -26,6 +26,7 @@ export async function dispatchSftpWorkflow({ pat, action, remotePath, clientRequ
         client_request_id: clientRequestId,
       },
     }),
+    signal: AbortSignal.timeout(10_000),
   })
   if (!res.ok) {
     throw new Error(`Failed to dispatch workflow: ${res.status}`)
@@ -38,11 +39,12 @@ export interface RunStatus {
 }
 
 export async function findRunByName(pat: string, runName: string): Promise<RunStatus | null> {
-  const res = await fetch(`${API_BASE}/actions/runs?event=workflow_dispatch&per_page=20`, {
+  const res = await fetch(`${API_BASE}/actions/workflows/${WORKFLOW_FILE}/runs?event=workflow_dispatch&per_page=20`, {
     headers: {
       Authorization: `Bearer ${pat}`,
       Accept: 'application/vnd.github+json',
     },
+    signal: AbortSignal.timeout(10_000),
   })
   if (!res.ok) {
     throw new Error(`Failed to list workflow runs: ${res.status}`)

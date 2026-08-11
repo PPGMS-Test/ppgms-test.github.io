@@ -53,7 +53,7 @@ describe('dispatchSftpWorkflow', () => {
 
 describe('findRunByName', () => {
   it('在 runs 列表里按 name 精确匹配，返回 status/conclusion', async () => {
-    mockFetchOnce(200, {
+    const spy = mockFetchOnce(200, {
       workflow_runs: [
         { name: 'sftp-sync-other', status: 'completed', conclusion: 'success' },
         { name: 'sftp-sync-req-1', status: 'in_progress', conclusion: null },
@@ -61,11 +61,19 @@ describe('findRunByName', () => {
     })
     const result = await findRunByName('ghp_test', 'sftp-sync-req-1')
     expect(result).toEqual({ status: 'in_progress', conclusion: null })
+    const [url] = spy.mock.calls[0]
+    expect(url).toBe(
+      'https://api.github.com/repos/PPGMS-Test/ppgms-test.github.io/actions/workflows/sftp-sync.yml/runs?event=workflow_dispatch&per_page=20',
+    )
   })
 
   it('找不到匹配的 run 时返回 null（run 可能还没出现在列表里）', async () => {
-    mockFetchOnce(200, { workflow_runs: [] })
+    const spy = mockFetchOnce(200, { workflow_runs: [] })
     const result = await findRunByName('ghp_test', 'sftp-sync-req-404')
     expect(result).toBeNull()
+    const [url] = spy.mock.calls[0]
+    expect(url).toBe(
+      'https://api.github.com/repos/PPGMS-Test/ppgms-test.github.io/actions/workflows/sftp-sync.yml/runs?event=workflow_dispatch&per_page=20',
+    )
   })
 })
