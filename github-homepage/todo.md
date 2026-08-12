@@ -1,5 +1,14 @@
 # Todo
-
+- [x] PSP path SFTP study ⏫ ✅ 2026-08
+- [x] Apple Pay 3rd party test demo 重构 ⏫ ✅ 2026-08
+- [x] Google Pay 3ds test demo 重构 ⏫ ✅ 2026-07
+- [x] ACDC 3ds: how to trigger simple page ⏫ ✅ 2026-08
+- [x] PayLater, ECS with patch ⏫ ✅ 2026-07
+- [x] JSv6 3rd party ⏫ ✅ 2026-07
+- [x] PSP path study ⏫ ✅ 2026-07-09
+- [x] BOPIS & AS2 研究 ⏫ ✅ 2026-07-06
+- [x] Google Pay 3ds test  ⏫ ✅ 2026-06-25
+- [x] Android Mobile SDK app switch研究 ⏫ ✅ 2026-06
 - [ ] ecs playground的开发 ⏫ 
 - [x] ecs flow 是否可以获取电话号码 ⏫ ✅ 2026-06-24
 - [x] PayPal Create Order时候添加商户acct测的Error Code的说明table ⏫ ✅ 2026-06-24
@@ -18,7 +27,8 @@
 - [x] Apple Pay Test Page 重构,用以测试recurring情况 ⏫ ✅ 2026-05-12
 - [x] Vault PlayGround 重构 🔼 ✅ 2026-05-12
 - [ ] JSv6 Fastlane scenario 🔼
-- [ ] JSv6 为什么不做eligible check就不能做paylater? 🔼
+- [x] JSv6 为什么不做eligible check就不能做paylater? 🔼 ✅ 2026-07-30
+  - 和 hongjie 讨论过这个问题. 他们会track.
 - [x] JSv6 Vault First Time scenario ⏫ ✅ 2026-05-12
 - [x] JSv6 ACDC 3DS scenario/ Add get Order API before Capture ⏫ ✅ 2026-06-02
 - [x] JSv6 ACDC 3DS scenario 似乎在React中不生效 ⏫ ✅ 2026-06-10
@@ -36,7 +46,8 @@
 - [x] Applet Study for Wukong 🔽 ✅ 2026-05-19 
 - [x] App Switch到底能不能跳转的问题研究(录了视频) 🔼 ✅ 2026-05-07
 - [x] App Switch 增加沙箱环境中, China Merchant Test Scenario 🔼 ✅ 2026-06-05
-- [ ] App Switch 在mobile SDK中是否能生效 🔼 
+- [x] App Switch 在mobile SDK中是否能生效 🔼 ✅ 2026-08-11
+  - reviewed. 之前的demo中上不生效的, 但是似乎这个情况也比较复杂, 可能🈶多种解决方案
 - [x] jsv6 test page. BCDC inline scenario 去掉email address以防触发fastlane流程 🔼 ✅ 2026-04-30
 - [x] 完善 PayPal SDK v6 vs v5 开发tech对比文档 🔼 ✅ 2026-04-27
 - [x] Vault Test Scenario, 验证了permit_multiple_payment_tokens的可行性 🔼 ✅ 2026-06-01
