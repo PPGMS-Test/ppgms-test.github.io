@@ -59,11 +59,21 @@ jobs:
           SFTP_OUTPUT_DIR: ${{ github.workspace }}/output
         run: node index.mjs
 
-      - name: Checkout sftp-data branch
+      - name: Checkout repo (base for data branch)
         uses: actions/checkout@v4
         with:
-          ref: sftp-data
           path: data-branch
+
+      - name: Switch to sftp-data branch (create if missing)
+        working-directory: data-branch
+        run: |
+          if git fetch origin sftp-data; then
+            git checkout -B sftp-data origin/sftp-data
+          else
+            echo "sftp-data branch not found on origin, creating a fresh orphan branch"
+            git checkout --orphan sftp-data
+            git rm -rf . || true
+          fi
 
       - name: Copy output into data branch
         run: |
