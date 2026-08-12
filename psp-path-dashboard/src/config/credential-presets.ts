@@ -43,6 +43,12 @@ export const CREDENTIAL_PRESETS: CredentialPreset[] = [
     bnCodes: [{ code: 'HKPSP', country: 'HK' }],
     payerId: 'CAWH8CFWQKULW',
     payeeEmail: 'psp-test-2026-hk@test.com',
+    loginInfo: {
+      // sandboxEmail 暂用 payeeEmail 占位，待确认真实 developer.paypal.com 登录邮箱后替换
+      sandboxEmail: 'psp-test-2026-hk@test.com',
+      // pwd: Filma132800@
+      sftpUser: 'sftpw7_HKPSPPP.com',
+    },
   },
   //email-addr: psp-test-hk02@test.com
   //pwd: 12345678
