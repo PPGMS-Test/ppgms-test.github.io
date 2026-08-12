@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { FolderOpen, Download, RotateCcw, AlertCircle } from 'lucide-react'
 import { useSftpSyncStore } from '@/store/sftp-sync'
+import { useActivePresetStore } from '@/store/active-preset'
+import { getPresetById } from '@/config/credential-presets'
 import { triggerSftpSync, getSftpSyncStatus, fetchListing, fetchDownloadedFile, rawFileUrl } from '@/lib/sftp-api'
 import { parseCsv } from '@/lib/csv-parse'
 import { cn } from '@/lib/utils'
@@ -54,6 +56,9 @@ function usePolling(requestId: string | null, active: boolean, onDone: (ok: bool
 
 export function SftpSyncPanel() {
   const store = useSftpSyncStore()
+  const activePresetId = useActivePresetStore((s) => s.activePresetId)
+  const activePreset = getPresetById(activePresetId)
+  const sftpUser = activePreset.loginInfo?.sftpUser
   const isListingPolling = store.phase === 'listing'
   const isDownloadingPolling = store.phase === 'downloading'
   const [isTriggering, setIsTriggering] = useState(false)
@@ -87,7 +92,7 @@ export function SftpSyncPanel() {
   async function handleBrowse() {
     setIsTriggering(true)
     try {
-      const result = await triggerSftpSync('list')
+      const result = await triggerSftpSync('list', activePresetId)
       if (result.requestId) {
         store.startListing(result.requestId)
       } else {
@@ -103,7 +108,7 @@ export function SftpSyncPanel() {
   async function handleSelectFile(fileName: string) {
     setIsTriggering(true)
     try {
-      const result = await triggerSftpSync('download', fileName)
+      const result = await triggerSftpSync('download', activePresetId, fileName)
       if (result.requestId) {
         store.startDownloading(result.requestId, fileName)
       } else {
@@ -120,7 +125,16 @@ export function SftpSyncPanel() {
 
   return (
     <div className="flex flex-col gap-4">
-      {store.phase === 'idle' && (
+      {store.phase === 'idle' && !sftpUser && (
+        <div className="flex items-center gap-3 rounded-lg border border-line bg-surface2/60 px-4 py-3 text-sm text-muted">
+          <AlertCircle size={16} />
+          <span>
+            当前凭证「{activePreset.label}」未配置 SFTP 账号，请先在凭证管理页切换到已配置 SFTP 的凭证。
+          </span>
+        </div>
+      )}
+
+      {store.phase === 'idle' && sftpUser && (
         <button
           type="button"
           onClick={handleBrowse}
