@@ -7,10 +7,17 @@ interface DispatchParams {
   pat: string
   action: 'list' | 'download'
   remotePath?: string
+  credentialId: string
   clientRequestId: string
 }
 
-export async function dispatchSftpWorkflow({ pat, action, remotePath, clientRequestId }: DispatchParams): Promise<void> {
+export async function dispatchSftpWorkflow({
+  pat,
+  action,
+  remotePath,
+  credentialId,
+  clientRequestId,
+}: DispatchParams): Promise<void> {
   const res = await fetch(`${API_BASE}/actions/workflows/${WORKFLOW_FILE}/dispatches`, {
     method: 'POST',
     headers: {
@@ -23,6 +30,7 @@ export async function dispatchSftpWorkflow({ pat, action, remotePath, clientRequ
       inputs: {
         action,
         remote_path: remotePath ?? '',
+        credential_id: credentialId,
         client_request_id: clientRequestId,
       },
     }),

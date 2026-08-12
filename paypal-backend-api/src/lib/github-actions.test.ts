@@ -14,9 +14,9 @@ function mockFetchOnce(status = 200, json: unknown = {}) {
 afterEach(() => vi.unstubAllGlobals())
 
 describe('dispatchSftpWorkflow', () => {
-  it('POST 到 dispatches 端点，带 action/remote_path/client_request_id', async () => {
+  it('POST 到 dispatches 端点，带 action/remote_path/credential_id/client_request_id', async () => {
     const spy = mockFetchOnce(204)
-    await dispatchSftpWorkflow({ pat: 'ghp_test', action: 'list', clientRequestId: 'req-1' })
+    await dispatchSftpWorkflow({ pat: 'ghp_test', action: 'list', credentialId: 'hkpsp', clientRequestId: 'req-1' })
 
     const [url, init] = spy.mock.calls[0]
     expect(url).toBe(
@@ -27,7 +27,12 @@ describe('dispatchSftpWorkflow', () => {
     expect((options.headers as Record<string, string>).Authorization).toBe('Bearer ghp_test')
     const body = JSON.parse(options.body as string)
     expect(body.ref).toBe('master')
-    expect(body.inputs).toEqual({ action: 'list', remote_path: '', client_request_id: 'req-1' })
+    expect(body.inputs).toEqual({
+      action: 'list',
+      remote_path: '',
+      credential_id: 'hkpsp',
+      client_request_id: 'req-1',
+    })
   })
 
   it('download 模式带 remote_path', async () => {
@@ -36,6 +41,7 @@ describe('dispatchSftpWorkflow', () => {
       pat: 'ghp_test',
       action: 'download',
       remotePath: '/recon/2026-08-11.csv',
+      credentialId: 'hkpsp',
       clientRequestId: 'req-2',
     })
     const [, init] = spy.mock.calls[0]
@@ -46,7 +52,7 @@ describe('dispatchSftpWorkflow', () => {
   it('GitHub API 返回非 2xx 时抛错', async () => {
     mockFetchOnce(422, { message: 'bad request' })
     await expect(
-      dispatchSftpWorkflow({ pat: 'ghp_test', action: 'list', clientRequestId: 'req-3' }),
+      dispatchSftpWorkflow({ pat: 'ghp_test', action: 'list', credentialId: 'hkpsp', clientRequestId: 'req-3' }),
     ).rejects.toThrow('Failed to dispatch workflow: 422')
   })
 })
