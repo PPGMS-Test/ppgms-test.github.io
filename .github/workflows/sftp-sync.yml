@@ -12,6 +12,10 @@ on:
         description: 'File name within the configured SFTP_REMOTE_DIR (required for download, e.g. "2026-08-11.csv")'
         required: false
         type: string
+      credential_id:
+        description: 'Credential preset id, must match a key in scripts/sftp-sync/credentials.mjs (e.g. "hkpsp")'
+        required: true
+        type: string
       client_request_id:
         description: 'Unique id supplied by the caller, used to correlate polling'
         required: true
@@ -51,6 +55,7 @@ jobs:
         env:
           SFTP_ACTION: ${{ inputs.action }}
           SFTP_REMOTE_PATH: ${{ inputs.remote_path }}
+          SFTP_CREDENTIAL_ID: ${{ inputs.credential_id }}
           SFTP_OUTPUT_DIR: ${{ github.workspace }}/output
         run: node index.mjs
 

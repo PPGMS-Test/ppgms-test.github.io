@@ -8,11 +8,15 @@ export interface TriggerResult {
   error?: string
 }
 
-export async function triggerSftpSync(action: 'list' | 'download', remotePath?: string): Promise<TriggerResult> {
+export async function triggerSftpSync(
+  action: 'list' | 'download',
+  credentialId: string,
+  remotePath?: string,
+): Promise<TriggerResult> {
   const res = await fetch(`${PROXY_BASE}/api/sftp/trigger`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ action, remotePath }),
+    body: JSON.stringify({ action, remotePath, credentialId }),
   })
   return (await res.json().catch(() => ({}))) as TriggerResult
 }
