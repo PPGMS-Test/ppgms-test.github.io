@@ -27,6 +27,7 @@
 - [x] Apple Pay Test Page 重构,用以测试recurring情况 ⏫ ✅ 2026-05-12
 - [x] Vault PlayGround 重构 🔼 ✅ 2026-05-12
 - [ ] JSv6 Fastlane scenario 🔼
+  - fastlane很可能不做了
 - [x] JSv6 为什么不做eligible check就不能做paylater? 🔼 ✅ 2026-07-30
   - 和 hongjie 讨论过这个问题. 他们会track.
 - [x] JSv6 Vault First Time scenario ⏫ ✅ 2026-05-12

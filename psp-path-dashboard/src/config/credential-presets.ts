@@ -62,8 +62,8 @@ export const CREDENTIAL_PRESETS: CredentialPreset[] = [
     loginInfo: {
       // pwd: 12345678
       sandboxEmail: 'psp-psa-hk02@test.com',
-      // pwd: 12345678
-      sftpUser: 'sftpmS_psp-test-hk02@test.com',
+      // pwd: Pp@test1357
+      sftpUser: 'sftpjg_psp-test-hk02@test.com',
     },
   },
 ]
