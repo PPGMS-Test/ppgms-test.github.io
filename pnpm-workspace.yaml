@@ -4,6 +4,7 @@ packages:
   - applepay-dashboard
   - bopis-dashboard
   - psp-path-dashboard
+  - payment-link-demo
 allowBuilds:
   '@scarf/scarf': true
   '@tree-sitter-grammars/tree-sitter-yaml': true
