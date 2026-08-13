@@ -59,15 +59,25 @@ function redact(headers: Record<string, string>): Record<string, string> {
   return clone
 }
 
+/** 对象转格式化 JSON 字符串便于 console 查看；字符串/原始值原样返回 */
+function pretty(value: unknown): string {
+  if (typeof value === 'string') return value
+  try {
+    return JSON.stringify(value, null, 2)
+  } catch {
+    return String(value)
+  }
+}
+
 /** 分步打印每次调用的 method/url/headers/body/status/response */
 export const withLogging: Enhancer = (next) => async (req) => {
   const tag = `[API][${req.label}]`
   console.log(`${tag}[1] ${req.method} ${req.url}`)
-  console.log(`${tag}[2] headers`, redact(req.headers))
-  if (req.body !== undefined) console.log(`${tag}[3] body`, req.body)
+  console.log(`${tag}[2] headers`, pretty(redact(req.headers)))
+  if (req.body !== undefined) console.log(`${tag}[3] body`, pretty(req.body))
   const res = await next(req)
-  if (res.ok) console.log(`${tag}[4] HTTP ${res.status} ✓`, res.data)
-  else console.error(`${tag}[4] HTTP ${res.status} ✗`, res.data)
+  if (res.ok) console.log(`${tag}[4] HTTP ${res.status} ✓`, pretty(res.data))
+  else console.error(`${tag}[4] HTTP ${res.status} ✗`, pretty(res.data))
   return res
 }
 
