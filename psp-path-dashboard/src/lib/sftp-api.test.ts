@@ -3,6 +3,8 @@ import {
   rawFileUrl,
   fetchCachedListing,
   fetchDownloadedFile,
+  fetchDownloadedFileAfterSync,
+  fetchListingAfterSync,
   sortFilesByNameDesc,
   todayUtc,
   type FileEntry,
@@ -81,5 +83,54 @@ describe('fetchDownloadedFile', () => {
   it('404 → 抛错', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false, status: 404 }))
     await expect(fetchDownloadedFile('hkpsp', 'x.csv')).rejects.toThrow()
+  })
+})
+
+describe('fetchListingAfterSync / fetchDownloadedFileAfterSync（容忍 raw.githubusercontent.com 传播延迟）', () => {
+  afterEach(() => {
+    vi.restoreAllMocks()
+    vi.useRealTimers()
+  })
+
+  it('fetchListingAfterSync：前几次 404，退避重试后成功', async () => {
+    vi.useFakeTimers()
+    const today = todayUtc()
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce({ ok: false, status: 404 })
+      .mockResolvedValueOnce({ ok: false, status: 404 })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ generatedAt: today, credentialId: 'hkpsp', files: [{ name: 'a.csv', size: 1, modifyTime: 2 }] }),
+      })
+    vi.stubGlobal('fetch', fetchMock)
+
+    const promise = fetchListingAfterSync('hkpsp')
+    await vi.runAllTimersAsync()
+    const listing = await promise
+
+    expect(listing.files).toEqual([{ name: 'a.csv', size: 1, modifyTime: 2 }])
+    expect(fetchMock).toHaveBeenCalledTimes(3)
+  })
+
+  it('fetchDownloadedFileAfterSync：一直 404，重试用尽后抛出最后一次的错误', async () => {
+    vi.useFakeTimers()
+    const fetchMock = vi.fn().mockResolvedValue({ ok: false, status: 404 })
+    vi.stubGlobal('fetch', fetchMock)
+
+    const promise = fetchDownloadedFileAfterSync('hkpsp', 'x.csv')
+    const assertion = expect(promise).rejects.toThrow('Failed to fetch file: 404')
+    await vi.runAllTimersAsync()
+    await assertion
+
+    expect(fetchMock).toHaveBeenCalledTimes(3) // 首次 + 2 次退避重试
+  })
+
+  it('fetchDownloadedFileAfterSync：第一次就成功不会等待重试', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true, text: async () => 'a,b\n1,2' })
+    vi.stubGlobal('fetch', fetchMock)
+
+    expect(await fetchDownloadedFileAfterSync('hkpsp', 'x.csv')).toBe('a,b\n1,2')
+    expect(fetchMock).toHaveBeenCalledTimes(1)
   })
 })

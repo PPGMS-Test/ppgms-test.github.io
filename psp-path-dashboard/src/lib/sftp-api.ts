@@ -85,3 +85,40 @@ export async function fetchDownloadedFile(credentialId: string, fileName: string
   if (!res.ok) throw new Error(`Failed to fetch file: ${res.status}`)
   return res.text()
 }
+
+function delay(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms))
+}
+
+// GitHub Action 刚提交完，raw.githubusercontent.com 的后端偶尔有几秒复制延迟才能读到新内容——
+// 这与 CDN 缓存无关（?t= 已经保证每次都是不同 URL），是 GitHub 自身的传播延迟。
+// 所以 Action 一报成功就立刻读取，偶发还是会 404；这里在读取失败时按退避间隔重试几次再放弃。
+const RAW_FETCH_RETRY_DELAYS_MS = [1500, 3000]
+
+async function withRawFetchRetry<T>(fn: () => Promise<T>): Promise<T> {
+  let lastErr: unknown
+  try {
+    return await fn()
+  } catch (err) {
+    lastErr = err
+  }
+  for (const wait of RAW_FETCH_RETRY_DELAYS_MS) {
+    await delay(wait)
+    try {
+      return await fn()
+    } catch (err) {
+      lastErr = err
+    }
+  }
+  throw lastErr
+}
+
+/** Action 完成后立即读取 listing.json，容忍 raw.githubusercontent.com 的短暂传播延迟 */
+export async function fetchListingAfterSync(credentialId: string): Promise<Listing> {
+  return withRawFetchRetry(() => fetchListing(credentialId))
+}
+
+/** Action 完成后立即读取下载的文件内容，容忍 raw.githubusercontent.com 的短暂传播延迟 */
+export async function fetchDownloadedFileAfterSync(credentialId: string, fileName: string): Promise<string> {
+  return withRawFetchRetry(() => fetchDownloadedFile(credentialId, fileName))
+}

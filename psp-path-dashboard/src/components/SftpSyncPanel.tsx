@@ -1,9 +1,17 @@
 import { useEffect, useRef, useState } from 'react'
-import { FolderOpen, RotateCcw, AlertCircle } from 'lucide-react'
+import { ArrowLeft, FolderOpen, RotateCcw, AlertCircle } from 'lucide-react'
 import { useSftpSyncStore } from '@/store/sftp-sync'
 import { useActivePresetStore } from '@/store/active-preset'
 import { getPresetById } from '@/config/credential-presets'
-import { triggerSftpSync, getSftpSyncStatus, fetchListing, fetchCachedListing, fetchDownloadedFile, rawFileUrl } from '@/lib/sftp-api'
+import {
+  triggerSftpSync,
+  getSftpSyncStatus,
+  fetchListingAfterSync,
+  fetchCachedListing,
+  fetchDownloadedFile,
+  fetchDownloadedFileAfterSync,
+  rawFileUrl,
+} from '@/lib/sftp-api'
 import { parseReconReport } from '@/lib/recon-report'
 import { SyncLoading } from '@/components/SyncLoading'
 import { SftpFileList } from '@/components/SftpFileList'
@@ -71,7 +79,7 @@ export function SftpSyncPanel() {
       return
     }
     try {
-      const listing = await fetchListing(activePresetId)
+      const listing = await fetchListingAfterSync(activePresetId)
       store.setListing(listing.files)
     } catch {
       store.setError('拉取目录列表失败')
@@ -84,7 +92,7 @@ export function SftpSyncPanel() {
       return
     }
     try {
-      const content = await fetchDownloadedFile(activePresetId, store.downloadingFileName ?? '')
+      const content = await fetchDownloadedFileAfterSync(activePresetId, store.downloadingFileName ?? '')
       store.setDownloaded(content)
     } catch {
       store.setError('拉取文件内容失败')
@@ -134,6 +142,16 @@ export function SftpSyncPanel() {
       store.setError('触发同步失败，请检查网络连接')
     } finally {
       setIsTriggering(false)
+    }
+  }
+
+  // 错误页「重试」：按错误发生的上下文重试对应的那一步，而不是整个重置
+  // （downloadingFileName 在下载/展示阶段的错误里仍保留，可用来判断是重试下载还是重试浏览）
+  function handleRetry() {
+    if (store.downloadingFileName) {
+      handleSelectFile(store.downloadingFileName)
+    } else {
+      handleBrowse(true)
     }
   }
 
@@ -194,13 +212,24 @@ export function SftpSyncPanel() {
         <div className="flex items-center gap-3 rounded-lg border border-danger/50 bg-danger/10 px-4 py-3 text-danger">
           <AlertCircle size={16} />
           <span>{store.error}</span>
-          <button
-            type="button"
-            onClick={() => store.reset()}
-            className="ml-auto flex items-center gap-1.5 rounded-full border border-line px-3 py-1 text-ink transition hover:border-accent/50 hover:bg-surface2"
-          >
-            <RotateCcw size={14} /> 重试
-          </button>
+          <div className="ml-auto flex items-center gap-2">
+            {store.files.length > 0 && (
+              <button
+                type="button"
+                onClick={() => store.backToList()}
+                className="flex items-center gap-1.5 rounded-full border border-line px-3 py-1 text-ink transition hover:border-accent/50 hover:bg-surface2"
+              >
+                <ArrowLeft size={14} /> 返回列表
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={handleRetry}
+              className="flex items-center gap-1.5 rounded-full border border-line px-3 py-1 text-ink transition hover:border-accent/50 hover:bg-surface2"
+            >
+              <RotateCcw size={14} /> 重试
+            </button>
+          </div>
         </div>
       )}
     </div>
