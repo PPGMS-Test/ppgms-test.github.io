@@ -55,6 +55,35 @@ describe('dispatchSftpWorkflow', () => {
       dispatchSftpWorkflow({ pat: 'ghp_test', action: 'list', credentialId: 'hkpsp', clientRequestId: 'req-3' }),
     ).rejects.toThrow('Failed to dispatch workflow: 422')
   })
+
+  it('第一次请求网络抖动/超时被拒绝时，自动重试一次并成功', async () => {
+    const spy = vi
+      .fn()
+      .mockRejectedValueOnce(new Error('timeout'))
+      .mockResolvedValueOnce({ ok: true, status: 204, json: () => Promise.resolve({}) } as Response)
+    vi.stubGlobal('fetch', spy)
+
+    await dispatchSftpWorkflow({ pat: 'ghp_test', action: 'list', credentialId: 'hkpsp', clientRequestId: 'req-4' })
+    expect(spy).toHaveBeenCalledTimes(2)
+  })
+
+  it('重试后仍然失败则抛出重试后的错误', async () => {
+    const spy = vi.fn().mockRejectedValueOnce(new Error('timeout 1')).mockRejectedValueOnce(new Error('timeout 2'))
+    vi.stubGlobal('fetch', spy)
+
+    await expect(
+      dispatchSftpWorkflow({ pat: 'ghp_test', action: 'list', credentialId: 'hkpsp', clientRequestId: 'req-5' }),
+    ).rejects.toThrow('timeout 2')
+    expect(spy).toHaveBeenCalledTimes(2)
+  })
+
+  it('拿到非 2xx 响应时不重试（应用层错误，重试没有意义）', async () => {
+    const spy = mockFetchOnce(422, { message: 'bad request' })
+    await expect(
+      dispatchSftpWorkflow({ pat: 'ghp_test', action: 'list', credentialId: 'hkpsp', clientRequestId: 'req-6' }),
+    ).rejects.toThrow('Failed to dispatch workflow: 422')
+    expect(spy).toHaveBeenCalledTimes(1)
+  })
 })
 
 describe('findRunByName', () => {
@@ -81,5 +110,21 @@ describe('findRunByName', () => {
     expect(url).toBe(
       'https://api.github.com/repos/PPGMS-Test/ppgms-test.github.io/actions/workflows/sftp-sync.yml/runs?event=workflow_dispatch&per_page=20',
     )
+  })
+
+  it('第一次请求网络抖动/超时被拒绝时，自动重试一次并成功', async () => {
+    const spy = vi
+      .fn()
+      .mockRejectedValueOnce(new Error('timeout'))
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: () => Promise.resolve({ workflow_runs: [{ name: 'sftp-sync-req-1', status: 'completed', conclusion: 'success' }] }),
+      } as Response)
+    vi.stubGlobal('fetch', spy)
+
+    const result = await findRunByName('ghp_test', 'sftp-sync-req-1')
+    expect(result).toEqual({ status: 'completed', conclusion: 'success' })
+    expect(spy).toHaveBeenCalledTimes(2)
   })
 })
