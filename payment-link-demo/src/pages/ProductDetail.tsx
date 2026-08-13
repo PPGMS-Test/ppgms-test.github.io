@@ -49,7 +49,6 @@ export default function ProductDetail() {
               currency={latest.currency}
               payUrl={latest.payUrl}
               status={latest.status}
-              tone="light"
             />
           ) : (
             <p className="rounded-xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground">

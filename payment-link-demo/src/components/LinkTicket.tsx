@@ -9,8 +9,6 @@ interface LinkTicketProps {
   currency: string
   payUrl: string
   status: LinkStatus
-  /** 深色（merchant）或浅色（buyer）语境 */
-  tone?: 'dark' | 'light'
   className?: string
   children?: React.ReactNode
 }
