@@ -1,5 +1,5 @@
 import { Fragment, useMemo, useState } from 'react'
-import { Download, Search, Inbox, ReceiptText } from 'lucide-react'
+import { ArrowLeft, Download, Search, Inbox, ReceiptText } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { isNumericColumn, type ReconReport } from '@/lib/recon-report'
 
@@ -7,6 +7,7 @@ interface ReconReportViewProps {
   report: ReconReport
   fileName: string
   downloadUrl: string
+  onBack: () => void
 }
 
 // 单次渲染的行数上限，超出用搜索缩小范围（避免上千 DOM 行卡顿；不静默截断，会明确提示）
@@ -26,7 +27,7 @@ function Stat({ label, value }: { label: string; value: string | number }) {
  * 下方账本表格（吸顶表头 + 冻结首列 + 搜索 + 点行展开完整字段）。
  * 空交易日给友好空态；非 recon 文件退化为普通表格。
  */
-export function ReconReportView({ report, fileName, downloadUrl }: ReconReportViewProps) {
+export function ReconReportView({ report, fileName, downloadUrl, onBack }: ReconReportViewProps) {
   const { meta, columns, rows } = report
   const [query, setQuery] = useState('')
   const [expanded, setExpanded] = useState<number | null>(null)
@@ -43,6 +44,13 @@ export function ReconReportView({ report, fileName, downloadUrl }: ReconReportVi
 
   return (
     <div className="flex flex-col gap-4">
+      <button
+        type="button"
+        onClick={onBack}
+        className="flex w-fit items-center gap-1.5 text-sm text-muted transition hover:text-ink"
+      >
+        <ArrowLeft size={14} /> 返回列表
+      </button>
       {/* 回执卡片 */}
       <div className="rounded-xl border border-line bg-surface p-5">
         <div className="flex flex-wrap items-start justify-between gap-3">

@@ -15,6 +15,7 @@ interface SftpSyncState {
   startDownloading: (requestId: string, fileName: string) => void
   setDownloaded: (content: string) => void
   setDownloadedFile: (fileName: string, content: string) => void
+  backToList: () => void
   setError: (message: string) => void
   reset: () => void
 }
@@ -54,6 +55,15 @@ export const useSftpSyncStore = create<SftpSyncState>()((set) => ({
       phase: 'ready',
       downloadingFileName: fileName,
       csvContent: content,
+      requestId: null,
+      error: null,
+    }),
+  // 从「ready」返回「browsing」：保留 files（已经拉过的目录列表），只清掉与具体文件相关的状态
+  backToList: () =>
+    set({
+      phase: 'browsing',
+      downloadingFileName: null,
+      csvContent: null,
       requestId: null,
       error: null,
     }),

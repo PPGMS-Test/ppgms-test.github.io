@@ -186,6 +186,7 @@ export function SftpSyncPanel() {
           report={parsed}
           fileName={store.downloadingFileName ?? ''}
           downloadUrl={rawFileUrl(activePresetId, store.downloadingFileName ?? '')}
+          onBack={() => store.backToList()}
         />
       )}
 

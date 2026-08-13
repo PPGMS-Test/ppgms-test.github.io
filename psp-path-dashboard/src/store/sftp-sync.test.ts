@@ -96,3 +96,21 @@ describe('useSftpSyncStore.setDownloadedFile', () => {
     expect(s.error).toBeNull()
   })
 })
+
+describe('useSftpSyncStore.backToList', () => {
+  it('从 ready 返回 browsing，保留已拉取的 files，清空当前文件相关状态', () => {
+    useSftpSyncStore.getState().startListing('req-1')
+    useSftpSyncStore.getState().setListing([{ name: 'a.csv', size: 10, modifyTime: 0 }])
+    useSftpSyncStore.getState().startDownloading('req-2', 'a.csv')
+    useSftpSyncStore.getState().setDownloaded('name,amount\nAlice,100')
+
+    useSftpSyncStore.getState().backToList()
+    const s = useSftpSyncStore.getState()
+    expect(s.phase).toBe('browsing')
+    expect(s.files).toEqual([{ name: 'a.csv', size: 10, modifyTime: 0 }])
+    expect(s.downloadingFileName).toBeNull()
+    expect(s.csvContent).toBeNull()
+    expect(s.requestId).toBeNull()
+    expect(s.error).toBeNull()
+  })
+})
