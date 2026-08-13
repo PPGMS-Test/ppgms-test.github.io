@@ -13,6 +13,11 @@ interface Props {
   onClose: () => void
 }
 
+/** crypto.randomUUID 在非安全上下文（LAN 明文 HTTP）会抛错，降级到时间戳+随机数 */
+function makeId() {
+  return globalThis.crypto?.randomUUID?.() ?? `link-${Date.now()}-${Math.floor(Math.random() * 1e6)}`
+}
+
 export function CreateLinkDialog({ product, onClose }: Props) {
   const { client } = useCredentialsStore()
   const addLink = usePaymentLinksStore((s) => s.add)
@@ -34,7 +39,7 @@ export function CreateLinkDialog({ product, onClose }: Props) {
       const payUrl = extractPayUrl(res)
       if (!payUrl) throw new Error('Link created but no pay URL was returned.')
       addLink({
-        id: crypto.randomUUID(),
+        id: makeId(),
         productId: product.id,
         resourceId: res.id,
         payUrl,

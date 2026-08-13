@@ -55,6 +55,7 @@ export const baseFetch: RequestFn = async (req) => {
 function redact(headers: Record<string, string>): Record<string, string> {
   const clone = { ...headers }
   if (clone.Authorization) clone.Authorization = clone.Authorization.replace(/(Basic |Bearer ).+/, '$1***')
+  if (clone['PayPal-Auth-Assertion']) clone['PayPal-Auth-Assertion'] = clone['PayPal-Auth-Assertion'].slice(0, 12) + '…'
   return clone
 }
 
