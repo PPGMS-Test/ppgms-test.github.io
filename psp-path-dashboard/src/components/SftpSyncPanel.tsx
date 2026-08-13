@@ -6,10 +6,10 @@ import { getPresetById } from '@/config/credential-presets'
 import {
   triggerSftpSync,
   getSftpSyncStatus,
-  fetchListingAfterSync,
+  fetchListing,
   fetchCachedListing,
+  fetchCachedFileNames,
   fetchDownloadedFile,
-  fetchDownloadedFileAfterSync,
   rawFileUrl,
 } from '@/lib/sftp-api'
 import { parseReconReport } from '@/lib/recon-report'
@@ -87,8 +87,9 @@ export function SftpSyncPanel() {
       return
     }
     try {
-      const listing = await fetchListingAfterSync(activePresetId)
+      const listing = await fetchListing(activePresetId)
       store.setListing(listing.files)
+      store.setCachedFileNames(await fetchCachedFileNames(activePresetId))
     } catch {
       store.setError('拉取目录列表失败')
     }
@@ -100,7 +101,7 @@ export function SftpSyncPanel() {
       return
     }
     try {
-      const content = await fetchDownloadedFileAfterSync(activePresetId, store.downloadingFileName ?? '')
+      const content = await fetchDownloadedFile(activePresetId, store.downloadingFileName ?? '')
       store.setDownloaded(content)
     } catch {
       store.setError('拉取文件内容失败')
@@ -114,6 +115,7 @@ export function SftpSyncPanel() {
         const cached = await fetchCachedListing(activePresetId)
         if (cached) {
           store.setListing(cached)
+          store.setCachedFileNames(await fetchCachedFileNames(activePresetId))
           return
         }
       }
@@ -201,6 +203,7 @@ export function SftpSyncPanel() {
       {store.phase === 'browsing' && (
         <SftpFileList
           files={store.files}
+          cachedNames={store.cachedFileNames}
           onSelect={handleSelectFile}
           onRefresh={() => handleBrowse(true)}
           disabled={isTriggering}

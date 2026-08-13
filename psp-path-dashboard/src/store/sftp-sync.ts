@@ -7,11 +7,13 @@ interface SftpSyncState {
   phase: SftpSyncPhase
   requestId: string | null
   files: FileEntry[]
+  cachedFileNames: string[]
   downloadingFileName: string | null
   csvContent: string | null
   error: string | null
   startListing: (requestId: string) => void
   setListing: (files: FileEntry[]) => void
+  setCachedFileNames: (names: string[]) => void
   startDownloading: (requestId: string, fileName: string) => void
   setDownloaded: (content: string) => void
   setDownloadedFile: (fileName: string, content: string) => void
@@ -24,6 +26,7 @@ const initialState = {
   phase: 'idle' as SftpSyncPhase,
   requestId: null,
   files: [],
+  cachedFileNames: [],
   downloadingFileName: null,
   csvContent: null,
   error: null,
@@ -37,10 +40,12 @@ export const useSftpSyncStore = create<SftpSyncState>()((set) => ({
       requestId,
       error: null,
       files: [],
+      cachedFileNames: [],
       csvContent: null,
       downloadingFileName: null,
     }),
   setListing: (files) => set({ phase: 'browsing', files }),
+  setCachedFileNames: (names) => set({ cachedFileNames: names }),
   startDownloading: (requestId, fileName) =>
     set({
       phase: 'downloading',

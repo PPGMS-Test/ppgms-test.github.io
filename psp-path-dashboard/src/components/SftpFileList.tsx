@@ -5,14 +5,17 @@ import { describeReconFileName, formatFileSize } from '@/lib/recon-report'
 
 interface SftpFileListProps {
   files: FileEntry[]
+  cachedNames: string[]
   onSelect: (fileName: string) => void
   onRefresh: () => void
   disabled: boolean
 }
 
-/** 对账文件列表：每个文件一张可扫读的卡片（图标 + 文件名 + 日期/账户/大小 + 进入箭头）。 */
-export function SftpFileList({ files, onSelect, onRefresh, disabled }: SftpFileListProps) {
+/** 对账文件列表：每个文件一张可扫读的卡片（图标 + 文件名 + 日期/账户/大小 + 进入箭头）。
+ *  已下载到 sftp-data 分支、点开即秒开的文件，文件名前带一个蓝点标记。 */
+export function SftpFileList({ files, cachedNames, onSelect, onRefresh, disabled }: SftpFileListProps) {
   const sorted = sortFilesByNameDesc(files)
+  const cached = new Set(cachedNames)
 
   return (
     <div className="flex flex-col gap-3">
@@ -38,6 +41,7 @@ export function SftpFileList({ files, onSelect, onRefresh, disabled }: SftpFileL
         <ul className="flex flex-col gap-2">
           {sorted.map((file) => {
             const meta = describeReconFileName(file.name)
+            const isCached = cached.has(file.name)
             return (
               <li key={file.name}>
                 <button
@@ -50,7 +54,15 @@ export function SftpFileList({ files, onSelect, onRefresh, disabled }: SftpFileL
                     <FileText size={18} />
                   </span>
                   <span className="flex min-w-0 flex-1 flex-col">
-                    <span className="truncate font-mono text-sm text-ink">{file.name}</span>
+                    <span className="flex items-center gap-2">
+                      {isCached && (
+                        <span
+                          title="已缓存，点开即秒开"
+                          className="h-2 w-2 shrink-0 rounded-full bg-sky-400 shadow-[0_0_0_3px_rgba(56,189,248,0.15)]"
+                        />
+                      )}
+                      <span className="truncate font-mono text-sm text-ink">{file.name}</span>
+                    </span>
                     <span className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-muted">
                       {meta.dateLabel && <span>{meta.dateLabel}</span>}
                       {meta.account && (

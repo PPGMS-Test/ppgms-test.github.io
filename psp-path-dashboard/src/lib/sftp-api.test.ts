@@ -2,16 +2,15 @@ import { describe, it, expect, vi, afterEach } from 'vitest'
 import {
   rawFileUrl,
   fetchCachedListing,
+  fetchCachedFileNames,
   fetchDownloadedFile,
-  fetchDownloadedFileAfterSync,
-  fetchListingAfterSync,
   sortFilesByNameDesc,
   todayUtc,
   type FileEntry,
 } from './sftp-api'
 
 describe('rawFileUrl', () => {
-  it('URL 带 credentialId 段', () => {
+  it('下载直链带 credentialId 段（仅用于 <a href> 下载）', () => {
     expect(rawFileUrl('hkpsp', '2026-08-11.csv')).toBe(
       'https://raw.githubusercontent.com/PPGMS-Test/ppgms-test.github.io/sftp-data/sftp-data/hkpsp/2026-08-11.csv',
     )
@@ -31,23 +30,23 @@ describe('sortFilesByNameDesc', () => {
   })
 })
 
-describe('fetchCachedListing', () => {
+describe('fetchCachedListing（读取走后端 /api/sftp/file，强一致）', () => {
   afterEach(() => vi.restoreAllMocks())
 
-  it('generatedAt 是今天 → 返回 files', async () => {
+  it('命中后端 /api/sftp/file?fileName=listing.json 且 generatedAt 是今天 → 返回 files', async () => {
     const today = todayUtc()
-    vi.stubGlobal(
-      'fetch',
-      vi.fn().mockResolvedValue({
-        ok: true,
-        json: async () => ({
-          generatedAt: today,
-          credentialId: 'hkpsp',
-          files: [{ name: 'a.csv', size: 1, modifyTime: 2 }],
-        }),
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        generatedAt: today,
+        credentialId: 'hkpsp',
+        files: [{ name: 'a.csv', size: 1, modifyTime: 2 }],
       }),
-    )
+    })
+    vi.stubGlobal('fetch', fetchMock)
+
     expect(await fetchCachedListing('hkpsp')).toEqual([{ name: 'a.csv', size: 1, modifyTime: 2 }])
+    expect(fetchMock.mock.calls[0][0]).toContain('/api/sftp/file?credentialId=hkpsp&fileName=listing.json')
   })
 
   it('generatedAt 非今天 → 返回 null（陈旧）', async () => {
@@ -72,12 +71,14 @@ describe('fetchCachedListing', () => {
   })
 })
 
-describe('fetchDownloadedFile', () => {
+describe('fetchDownloadedFile（读取走后端 /api/sftp/file，强一致）', () => {
   afterEach(() => vi.restoreAllMocks())
 
-  it('200 → 返回文本内容', async () => {
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, text: async () => 'a,b\n1,2' }))
+  it('200 → 返回文本内容，且请求命中后端 file 端点', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true, text: async () => 'a,b\n1,2' })
+    vi.stubGlobal('fetch', fetchMock)
     expect(await fetchDownloadedFile('hkpsp', 'x.csv')).toBe('a,b\n1,2')
+    expect(fetchMock.mock.calls[0][0]).toContain('/api/sftp/file?credentialId=hkpsp&fileName=x.csv')
   })
 
   it('404 → 抛错', async () => {
@@ -86,51 +87,23 @@ describe('fetchDownloadedFile', () => {
   })
 })
 
-describe('fetchListingAfterSync / fetchDownloadedFileAfterSync（容忍 raw.githubusercontent.com 传播延迟）', () => {
-  afterEach(() => {
-    vi.restoreAllMocks()
-    vi.useRealTimers()
+describe('fetchCachedFileNames（后端目录列表，用于蓝点）', () => {
+  afterEach(() => vi.restoreAllMocks())
+
+  it('命中 /api/sftp/dir → 返回文件名数组', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ files: ['a.csv', 'b.csv'] }) })
+    vi.stubGlobal('fetch', fetchMock)
+    expect(await fetchCachedFileNames('hkpsp')).toEqual(['a.csv', 'b.csv'])
+    expect(fetchMock.mock.calls[0][0]).toContain('/api/sftp/dir?credentialId=hkpsp')
   })
 
-  it('fetchListingAfterSync：前几次 404，退避重试后成功', async () => {
-    vi.useFakeTimers()
-    const today = todayUtc()
-    const fetchMock = vi
-      .fn()
-      .mockResolvedValueOnce({ ok: false, status: 404 })
-      .mockResolvedValueOnce({ ok: false, status: 404 })
-      .mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({ generatedAt: today, credentialId: 'hkpsp', files: [{ name: 'a.csv', size: 1, modifyTime: 2 }] }),
-      })
-    vi.stubGlobal('fetch', fetchMock)
-
-    const promise = fetchListingAfterSync('hkpsp')
-    await vi.runAllTimersAsync()
-    const listing = await promise
-
-    expect(listing.files).toEqual([{ name: 'a.csv', size: 1, modifyTime: 2 }])
-    expect(fetchMock).toHaveBeenCalledTimes(3)
+  it('非 2xx → 返回空数组（不影响列表展示）', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false, status: 502 }))
+    expect(await fetchCachedFileNames('hkpsp')).toEqual([])
   })
 
-  it('fetchDownloadedFileAfterSync：一直 404，重试用尽后抛出最后一次的错误', async () => {
-    vi.useFakeTimers()
-    const fetchMock = vi.fn().mockResolvedValue({ ok: false, status: 404 })
-    vi.stubGlobal('fetch', fetchMock)
-
-    const promise = fetchDownloadedFileAfterSync('hkpsp', 'x.csv')
-    const assertion = expect(promise).rejects.toThrow('Failed to fetch file: 404')
-    await vi.runAllTimersAsync()
-    await assertion
-
-    expect(fetchMock).toHaveBeenCalledTimes(3) // 首次 + 2 次退避重试
-  })
-
-  it('fetchDownloadedFileAfterSync：第一次就成功不会等待重试', async () => {
-    const fetchMock = vi.fn().mockResolvedValue({ ok: true, text: async () => 'a,b\n1,2' })
-    vi.stubGlobal('fetch', fetchMock)
-
-    expect(await fetchDownloadedFileAfterSync('hkpsp', 'x.csv')).toBe('a,b\n1,2')
-    expect(fetchMock).toHaveBeenCalledTimes(1)
+  it('网络异常 → 返回空数组', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('network')))
+    expect(await fetchCachedFileNames('hkpsp')).toEqual([])
   })
 })

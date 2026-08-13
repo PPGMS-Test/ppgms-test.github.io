@@ -1,5 +1,8 @@
-// 与 paypal-backend-api 的 /api/sftp/* 交互，以及最终从 raw.githubusercontent.com 拉取产物。
+// 与 paypal-backend-api 的 /api/sftp/* 交互。
 // 产物在 sftp-data 分支里按 credentialId 分子目录：sftp-data/<credentialId>/{listing.json,<file>}
+// 读取一律走后端 /api/sftp/file|dir（后端用 GitHub Contents API，读写强一致），
+// 不再走 raw.githubusercontent.com——raw 是 CDN、与 Git 后端最终一致，同步后立刻读会因传播延迟而失败。
+// raw 仅保留用于「下载 CSV」的 <a href>（用户点下载时文件早已传播，直链下载体验更好、也不占后端带宽）。
 const PROXY_BASE = import.meta.env.VITE_PROXY_BASE || 'https://ppgms-test-github-io.pages.dev'
 const RAW_BASE = 'https://raw.githubusercontent.com/PPGMS-Test/ppgms-test.github.io/sftp-data/sftp-data'
 
@@ -54,13 +57,16 @@ export function sortFilesByNameDesc(files: FileEntry[]): FileEntry[] {
   return [...files].sort((a, b) => b.name.localeCompare(a.name))
 }
 
+/** 「下载 CSV」直链，仅用于 <a href> 下载；读取内容请走 fetchDownloadedFile（后端强一致） */
 export function rawFileUrl(credentialId: string, fileName: string): string {
   return `${RAW_BASE}/${encodeURIComponent(credentialId)}/${encodeURIComponent(fileName)}`
 }
 
-/** 拉取指定凭证的 listing.json（cache-busting 避免 CDN 旧内容）；404/网络失败抛错 */
+/** 拉取指定凭证的 listing.json（后端 Contents API，强一致）；404/网络失败抛错 */
 export async function fetchListing(credentialId: string): Promise<Listing> {
-  const res = await fetch(`${rawFileUrl(credentialId, 'listing.json')}?t=${Date.now()}`)
+  const res = await fetch(
+    `${PROXY_BASE}/api/sftp/file?credentialId=${encodeURIComponent(credentialId)}&fileName=listing.json`,
+  )
   if (!res.ok) throw new Error(`Failed to fetch listing: ${res.status}`)
   return (await res.json()) as Listing
 }
@@ -79,46 +85,26 @@ export async function fetchCachedListing(credentialId: string): Promise<FileEntr
   }
 }
 
-/** 拉取指定凭证下某文件的原始文本内容；404/网络失败抛错（调用方 catch 后走 action） */
+/** 拉取指定凭证下某文件的原始文本内容（后端 Contents API，强一致）；404/网络失败抛错（调用方 catch 后走 action） */
 export async function fetchDownloadedFile(credentialId: string, fileName: string): Promise<string> {
-  const res = await fetch(`${rawFileUrl(credentialId, fileName)}?t=${Date.now()}`)
+  const res = await fetch(
+    `${PROXY_BASE}/api/sftp/file?credentialId=${encodeURIComponent(credentialId)}&fileName=${encodeURIComponent(fileName)}`,
+  )
   if (!res.ok) throw new Error(`Failed to fetch file: ${res.status}`)
   return res.text()
 }
 
-function delay(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms))
-}
-
-// GitHub Action 刚提交完，raw.githubusercontent.com 的后端偶尔有几秒复制延迟才能读到新内容——
-// 这与 CDN 缓存无关（?t= 已经保证每次都是不同 URL），是 GitHub 自身的传播延迟。
-// 所以 Action 一报成功就立刻读取，偶发还是会 404；这里在读取失败时按退避间隔重试几次再放弃。
-const RAW_FETCH_RETRY_DELAYS_MS = [1500, 3000]
-
-async function withRawFetchRetry<T>(fn: () => Promise<T>): Promise<T> {
-  let lastErr: unknown
+/**
+ * 列出该凭证已下载到 sftp-data 分支的文件名集合（后端 Contents API 目录列表，强一致）。
+ * 用于给「已缓存、点开即秒开」的文件标蓝点。任何失败都返回空集合（不影响列表展示）。
+ */
+export async function fetchCachedFileNames(credentialId: string): Promise<string[]> {
   try {
-    return await fn()
-  } catch (err) {
-    lastErr = err
+    const res = await fetch(`${PROXY_BASE}/api/sftp/dir?credentialId=${encodeURIComponent(credentialId)}`)
+    if (!res.ok) return []
+    const data = (await res.json()) as { files?: string[] }
+    return data.files ?? []
+  } catch {
+    return []
   }
-  for (const wait of RAW_FETCH_RETRY_DELAYS_MS) {
-    await delay(wait)
-    try {
-      return await fn()
-    } catch (err) {
-      lastErr = err
-    }
-  }
-  throw lastErr
-}
-
-/** Action 完成后立即读取 listing.json，容忍 raw.githubusercontent.com 的短暂传播延迟 */
-export async function fetchListingAfterSync(credentialId: string): Promise<Listing> {
-  return withRawFetchRetry(() => fetchListing(credentialId))
-}
-
-/** Action 完成后立即读取下载的文件内容，容忍 raw.githubusercontent.com 的短暂传播延迟 */
-export async function fetchDownloadedFileAfterSync(credentialId: string, fileName: string): Promise<string> {
-  return withRawFetchRetry(() => fetchDownloadedFile(credentialId, fileName))
 }
