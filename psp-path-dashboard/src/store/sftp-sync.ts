@@ -14,6 +14,7 @@ interface SftpSyncState {
   setListing: (files: FileEntry[]) => void
   startDownloading: (requestId: string, fileName: string) => void
   setDownloaded: (content: string) => void
+  setDownloadedFile: (fileName: string, content: string) => void
   setError: (message: string) => void
   reset: () => void
 }
@@ -48,6 +49,14 @@ export const useSftpSyncStore = create<SftpSyncState>()((set) => ({
       csvContent: null,
     }),
   setDownloaded: (content) => set({ phase: 'ready', csvContent: content }),
+  setDownloadedFile: (fileName, content) =>
+    set({
+      phase: 'ready',
+      downloadingFileName: fileName,
+      csvContent: content,
+      requestId: null,
+      error: null,
+    }),
   setError: (message) => set({ phase: 'error', error: message }),
   reset: () => set({ ...initialState }),
 }))
