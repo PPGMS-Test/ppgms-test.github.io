@@ -73,6 +73,14 @@ export function SftpSyncPanel() {
   const isDownloadingPolling = store.phase === 'downloading'
   const [isTriggering, setIsTriggering] = useState(false)
 
+  // useSftpSyncStore 是全局单例：凭证管理页切换 activePresetId 时本组件不会卸载，
+  // 若不重置，会残留上一个凭证的浏览/下载状态——轻则显示旧数据，重则点旧列表里的
+  // 文件名去拉新凭证的路径（凭证间日期文件名很可能撞名，拉到的内容会文不对题）。
+  useEffect(() => {
+    store.reset()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activePresetId])
+
   const listingElapsed = usePolling(store.requestId, isListingPolling, async (ok) => {
     if (!ok) {
       store.setError('同步超时或失败，请重试')
