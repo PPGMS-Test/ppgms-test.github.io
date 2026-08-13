@@ -1,3 +1,4 @@
+import { useMemo } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
 import { iconFor } from '@/lib/icon-map'
@@ -8,7 +9,13 @@ import { usePaymentLinksStore } from '@/store/payment-links'
 export default function ProductDetail() {
   const { productId } = useParams()
   const product = useProductsStore((s) => (productId ? s.byId(productId) : undefined))
-  const links = usePaymentLinksStore((s) => (productId ? s.byProduct(productId) : []))
+  // Subscribe to the stable `links` array, then derive — calling byProduct()
+  // inside the selector returns a fresh array each render and loops zustand v5.
+  const allLinks = usePaymentLinksStore((s) => s.links)
+  const links = useMemo(
+    () => (productId ? allLinks.filter((l) => l.productId === productId) : []),
+    [allLinks, productId],
+  )
   const latest = links[0]
 
   if (!product) {
