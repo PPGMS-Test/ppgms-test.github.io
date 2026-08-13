@@ -114,3 +114,25 @@ describe('useSftpSyncStore.backToList', () => {
     expect(s.error).toBeNull()
   })
 })
+
+describe('下载完成后乐观并入 cachedFileNames（返回列表即见蓝点）', () => {
+  it('setDownloaded 把当前 downloadingFileName 并入 cachedFileNames，backToList 后仍在', () => {
+    useSftpSyncStore.getState().startListing('req-1')
+    useSftpSyncStore.getState().setListing([{ name: 'new.csv', size: 10, modifyTime: 0 }])
+    // 浏览时该文件尚未缓存
+    useSftpSyncStore.getState().setCachedFileNames([])
+    useSftpSyncStore.getState().startDownloading('req-2', 'new.csv')
+    useSftpSyncStore.getState().setDownloaded('a,b\n1,2')
+
+    useSftpSyncStore.getState().backToList()
+    expect(useSftpSyncStore.getState().cachedFileNames).toContain('new.csv')
+  })
+
+  it('setDownloadedFile（缓存命中）也并入，且不重复', () => {
+    useSftpSyncStore.getState().setCachedFileNames(['x.csv'])
+    useSftpSyncStore.getState().setDownloadedFile('x.csv', 'a,b\n1,2')
+    expect(useSftpSyncStore.getState().cachedFileNames).toEqual(['x.csv']) // 去重
+    useSftpSyncStore.getState().setDownloadedFile('y.csv', 'a,b\n3,4')
+    expect(useSftpSyncStore.getState().cachedFileNames).toEqual(['x.csv', 'y.csv'])
+  })
+})
