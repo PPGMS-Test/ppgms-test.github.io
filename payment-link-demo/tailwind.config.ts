@@ -28,6 +28,8 @@ const config: Config = {
         border: 'hsl(var(--border))',
         input: 'hsl(var(--input))',
         ring: 'hsl(var(--ring))',
+        /** Per-context brand accent (cobalt on merchant, amber on buyer) */
+        brand: 'hsl(var(--brand))',
         // Brand tokens (spec §8.5)
         signal: '#0057FF',
         verified: '#00B589',

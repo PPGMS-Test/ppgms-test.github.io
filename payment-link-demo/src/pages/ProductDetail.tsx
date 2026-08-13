@@ -21,8 +21,8 @@ export default function ProductDetail() {
 
   if (!product) {
     return (
-      <div className="min-h-screen bg-background p-10 text-center text-muted-foreground">
-        Product not found. <Link className="text-signal" to="/store">Back to shop</Link>
+      <div data-context="buyer" className="min-h-screen bg-background p-10 text-center text-muted-foreground">
+        Product not found. <Link className="text-brand" to="/store">Back to shop</Link>
       </div>
     )
   }
@@ -30,7 +30,7 @@ export default function ProductDetail() {
   const Icon = iconFor(product.icon)
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div data-context="buyer" className="min-h-screen bg-background text-foreground">
       <header className="border-b border-border">
         <div className="mx-auto flex max-w-3xl items-center justify-between px-6 py-4">
           <Link to="/store" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
@@ -42,7 +42,7 @@ export default function ProductDetail() {
 
       <main className="mx-auto max-w-3xl px-6 py-10">
         <div className="flex items-start gap-5">
-          <div className="rounded-2xl border border-border bg-card p-6"><Icon className="h-12 w-12 text-signal" /></div>
+          <div className="rounded-2xl border border-border bg-card p-6"><Icon className="h-12 w-12 text-brand" /></div>
           <div>
             <h1 className="font-display text-3xl font-bold">{product.name}</h1>
             <p className="mt-1 text-muted-foreground">{product.blurb}</p>

@@ -14,24 +14,24 @@ export default function Landing() {
       </header>
 
       <main className="mx-auto grid max-w-5xl gap-6 px-6 py-16 md:grid-cols-2">
-        <section className="rounded-2xl border border-border bg-card p-8">
-          <LayoutDashboard className="h-8 w-8 text-signal" />
+        <section data-context="merchant" className="rounded-2xl border border-border bg-card p-8">
+          <LayoutDashboard className="h-8 w-8 text-brand" />
           <h2 className="mt-4 font-display text-2xl font-bold">You create.</h2>
           <p className="mt-2 text-muted-foreground">
             As a partner, mint a payment link for any product on the merchant's behalf, then manage it.
           </p>
-          <Link to="/merchant" className="mt-6 inline-flex items-center gap-2 font-medium text-signal">
+          <Link to="/merchant" className="mt-6 inline-flex items-center gap-2 font-medium text-brand">
             Open merchant console <ArrowRight className="h-4 w-4" />
           </Link>
         </section>
 
-        <section className="rounded-2xl border border-border bg-card p-8">
-          <Store className="h-8 w-8 text-verified" />
+        <section data-context="buyer" className="rounded-2xl border border-border bg-card p-8">
+          <Store className="h-8 w-8 text-brand" />
           <h2 className="mt-4 font-display text-2xl font-bold">They pay.</h2>
           <p className="mt-2 text-muted-foreground">
             Buyers browse the shop and check out through the hosted PayPal link — wallet, cards, Pay Later.
           </p>
-          <Link to="/store" className="mt-6 inline-flex items-center gap-2 font-medium text-verified">
+          <Link to="/store" className="mt-6 inline-flex items-center gap-2 font-medium text-brand">
             Enter the shop <ArrowRight className="h-4 w-4" />
           </Link>
         </section>
