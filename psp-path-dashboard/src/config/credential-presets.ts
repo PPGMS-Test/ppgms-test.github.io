@@ -66,7 +66,12 @@ export const CREDENTIAL_PRESETS: CredentialPreset[] = [
     //pwd; 12345678
     payeeEmail: 'psp-test-sg-merchant-01@test.com',
     loginInfo: {
-      // pwd: 12345678
+      /**
+       * Account Info:
+       * payer-id: RCT7R9B9HZQ6G
+       * pwd:12345678
+       * acct-id: 5331923488206050620
+       */
       sandboxEmail: 'psp-psa-hk02@test.com',
       // pwd: Pp@test1357
       sftpUser: 'sftpjg_psp-test-hk02@test.com',
