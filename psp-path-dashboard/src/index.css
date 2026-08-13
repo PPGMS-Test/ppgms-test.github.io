@@ -57,3 +57,9 @@ code {
   border-radius: 4px;
   font-size: 0.9em;
 }
+
+/* 对账同步 loading：不确定进度的「账本纸带」滑动动画 */
+@keyframes ledger-slide {
+  0% { transform: translateX(-120%); }
+  100% { transform: translateX(420%); }
+}

@@ -1,11 +1,13 @@
 import { useEffect, useRef, useState } from 'react'
-import { FolderOpen, Download, RotateCcw, AlertCircle } from 'lucide-react'
+import { FolderOpen, RotateCcw, AlertCircle } from 'lucide-react'
 import { useSftpSyncStore } from '@/store/sftp-sync'
 import { useActivePresetStore } from '@/store/active-preset'
 import { getPresetById } from '@/config/credential-presets'
-import { triggerSftpSync, getSftpSyncStatus, fetchListing, fetchCachedListing, fetchDownloadedFile, sortFilesByNameDesc, rawFileUrl } from '@/lib/sftp-api'
-import { parseCsv } from '@/lib/csv-parse'
-import { cn } from '@/lib/utils'
+import { triggerSftpSync, getSftpSyncStatus, fetchListing, fetchCachedListing, fetchDownloadedFile, rawFileUrl } from '@/lib/sftp-api'
+import { parseReconReport } from '@/lib/recon-report'
+import { SyncLoading } from '@/components/SyncLoading'
+import { SftpFileList } from '@/components/SftpFileList'
+import { ReconReportView } from '@/components/ReconReportView'
 
 const POLL_INTERVAL_MS = 2000
 const POLL_TIMEOUT_MS = 120_000
@@ -135,7 +137,10 @@ export function SftpSyncPanel() {
     }
   }
 
-  const parsed = store.csvContent ? parseCsv(store.csvContent) : null
+  const parsed =
+    store.csvContent !== null && store.downloadingFileName
+      ? parseReconReport(store.csvContent, store.downloadingFileName)
+      : null
 
   return (
     <div className="flex flex-col gap-4">
@@ -160,74 +165,28 @@ export function SftpSyncPanel() {
       )}
 
       {(isListingPolling || isDownloadingPolling) && (
-        <div className="flex items-center gap-2 text-sm text-muted">
-          <span className="h-3 w-3 animate-spin rounded-full border-2 border-accent border-t-transparent" />
-          同步中…（{isListingPolling ? listingElapsed : downloadElapsed}s）
-        </div>
+        <SyncLoading
+          context={isListingPolling ? 'list' : 'download'}
+          elapsedSec={isListingPolling ? listingElapsed : downloadElapsed}
+          fileName={store.downloadingFileName}
+        />
       )}
 
       {store.phase === 'browsing' && (
-        <div className="flex flex-col gap-3">
-          <button
-            type="button"
-            onClick={() => handleBrowse(true)}
-            disabled={isTriggering}
-            className="flex w-fit items-center gap-2 rounded-full border border-line px-4 py-2 text-ink transition hover:border-accent/50 hover:bg-surface2 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <RotateCcw size={16} /> 刷新
-          </button>
-          <ul className="flex flex-col gap-2">
-            {sortFilesByNameDesc(store.files).map((file) => (
-              <li key={file.name}>
-                <button
-                  type="button"
-                  onClick={() => handleSelectFile(file.name)}
-                  disabled={isTriggering}
-                  className="flex w-full items-center justify-between rounded-lg border border-line px-3 py-2 text-left text-ink transition hover:border-accent/50 hover:bg-surface2 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <span>{file.name}</span>
-                  <span className="font-mono text-xs text-muted">{file.size} bytes</span>
-                </button>
-              </li>
-            ))}
-          </ul>
-        </div>
+        <SftpFileList
+          files={store.files}
+          onSelect={handleSelectFile}
+          onRefresh={() => handleBrowse(true)}
+          disabled={isTriggering}
+        />
       )}
 
       {store.phase === 'ready' && parsed && (
-        <div className="flex flex-col gap-3">
-          <a
-            href={rawFileUrl(activePresetId, store.downloadingFileName ?? '')}
-            download={store.downloadingFileName ?? undefined}
-            className="flex w-fit items-center gap-2 rounded-full border border-line px-4 py-2 text-ink transition hover:border-accent/50 hover:bg-surface2"
-          >
-            <Download size={16} /> 下载 {store.downloadingFileName}
-          </a>
-          <div className="overflow-x-auto rounded-lg border border-line">
-            <table className="w-full text-left text-sm">
-              <thead className="bg-surface2">
-                <tr>
-                  {parsed.headers.map((h) => (
-                    <th key={h} className="px-3 py-2 font-mono text-xs uppercase text-muted">
-                      {h}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {parsed.rows.map((row, i) => (
-                  <tr key={i} className={cn(i % 2 === 0 ? 'bg-transparent' : 'bg-surface2/40')}>
-                    {row.map((cell, j) => (
-                      <td key={j} className="px-3 py-2 text-ink">
-                        {cell}
-                      </td>
-                    ))}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
+        <ReconReportView
+          report={parsed}
+          fileName={store.downloadingFileName ?? ''}
+          downloadUrl={rawFileUrl(activePresetId, store.downloadingFileName ?? '')}
+        />
       )}
 
       {store.phase === 'error' && (

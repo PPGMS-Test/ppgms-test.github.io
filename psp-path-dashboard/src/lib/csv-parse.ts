@@ -3,8 +3,11 @@ export interface ParsedCsv {
   rows: string[][]
 }
 
-/** 极简 RFC4180 风格 CSV 解析：支持带引号字段、转义引号（""）、逗号、CRLF/LF 换行 */
-export function parseCsv(input: string): ParsedCsv {
+/**
+ * 极简 RFC4180 风格 CSV 分词：返回所有行（不区分表头）。
+ * 支持带引号字段、转义引号（""）、逗号、CRLF/LF 换行。
+ */
+export function parseCsvRows(input: string): string[][] {
   const rows: string[][] = []
   let row: string[] = []
   let field = ''
@@ -69,10 +72,15 @@ export function parseCsv(input: string): ParsedCsv {
   }
 
   // 已知局限：无法区分"末尾换行产生的幽灵空行"和"真实的单列空值行/中间空行"，两者都会被这里过滤掉
-  const nonEmptyRows = rows.filter((r) => !(r.length === 1 && r[0] === ''))
-  if (nonEmptyRows.length === 0) {
+  return rows.filter((r) => !(r.length === 1 && r[0] === ''))
+}
+
+/** 把首行当表头，其余当数据行。 */
+export function parseCsv(input: string): ParsedCsv {
+  const rows = parseCsvRows(input)
+  if (rows.length === 0) {
     return { headers: [], rows: [] }
   }
-  const [headers, ...dataRows] = nonEmptyRows
+  const [headers, ...dataRows] = rows
   return { headers, rows: dataRows }
 }
