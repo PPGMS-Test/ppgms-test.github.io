@@ -1,0 +1,60 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Buyer storefront = light "paper" theme */
+    --background: 222 33% 97%;      /* #F4F6FB paper */
+    --foreground: 213 63% 11%;      /* #0B1A2F ink */
+    --card: 0 0% 100%;
+    --card-foreground: 213 63% 11%;
+    --primary: 222 100% 50%;        /* #0057FF signal */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 222 33% 92%;
+    --secondary-foreground: 213 63% 11%;
+    --muted: 222 20% 90%;
+    --muted-foreground: 214 18% 43%; /* #5B6B82 slate */
+    --accent: 222 33% 92%;
+    --accent-foreground: 213 63% 11%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 222 20% 86%;
+    --input: 222 20% 86%;
+    --ring: 222 100% 50%;
+    --radius: 0.75rem;
+  }
+
+  .dark {
+    /* Merchant console = dark "control room" theme */
+    --background: 213 63% 11%;      /* #0B1A2F ink */
+    --foreground: 222 33% 97%;
+    --card: 213 45% 15%;
+    --card-foreground: 222 33% 97%;
+    --primary: 222 100% 60%;        /* brighter signal on dark */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 213 40% 20%;
+    --secondary-foreground: 222 33% 97%;
+    --muted: 213 35% 22%;
+    --muted-foreground: 214 20% 66%;
+    --accent: 213 40% 22%;
+    --accent-foreground: 222 33% 97%;
+    --destructive: 0 72% 55%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 213 35% 24%;
+    --input: 213 35% 24%;
+    --ring: 222 100% 60%;
+  }
+
+  * { @apply border-border; }
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}
