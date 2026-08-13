@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -7,17 +7,12 @@ import { CreateLinkDialog } from '@/components/CreateLinkDialog'
 import { LinksList } from '@/components/LinksList'
 import { CredentialsPanel } from '@/components/CredentialsPanel'
 import { EnvBadge } from '@/components/EnvBadge'
+import { ThemeToggle } from '@/components/ThemeToggle'
 import { useProductsStore, type Product } from '@/store/products'
 
 export default function MerchantConsole() {
   const products = useProductsStore((s) => s.products)
   const [active, setActive] = useState<Product | null>(null)
-
-  // Merchant console uses the dark "control room" theme
-  useEffect(() => {
-    document.documentElement.classList.add('dark')
-    return () => document.documentElement.classList.remove('dark')
-  }, [])
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -26,7 +21,10 @@ export default function MerchantConsole() {
           <Link to="/" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
             <ArrowLeft className="h-4 w-4" /> paylink
           </Link>
-          <EnvBadge />
+          <div className="flex items-center gap-3">
+            <EnvBadge />
+            <ThemeToggle />
+          </div>
         </div>
       </header>
 

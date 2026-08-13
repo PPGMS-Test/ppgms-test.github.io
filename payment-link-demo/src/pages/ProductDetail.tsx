@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
 import { iconFor } from '@/lib/icon-map'
 import { LinkTicket } from '@/components/LinkTicket'
+import { ThemeToggle } from '@/components/ThemeToggle'
 import { useProductsStore } from '@/store/products'
 import { usePaymentLinksStore } from '@/store/payment-links'
 
@@ -31,10 +32,11 @@ export default function ProductDetail() {
   return (
     <div className="min-h-screen bg-background text-foreground">
       <header className="border-b border-border">
-        <div className="mx-auto max-w-3xl px-6 py-4">
+        <div className="mx-auto flex max-w-3xl items-center justify-between px-6 py-4">
           <Link to="/store" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
             <ArrowLeft className="h-4 w-4" /> Back to shop
           </Link>
+          <ThemeToggle />
         </div>
       </header>
 

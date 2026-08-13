@@ -1,12 +1,16 @@
 import { Link } from 'react-router-dom'
 import { Store, LayoutDashboard, ArrowRight } from 'lucide-react'
+import { ThemeToggle } from '@/components/ThemeToggle'
 
 export default function Landing() {
   return (
     <div className="min-h-screen bg-background">
       <header className="mx-auto flex max-w-5xl items-center justify-between px-6 py-6">
         <span className="font-display text-lg font-bold">paylink<span className="text-signal">.</span></span>
-        <span className="font-mono text-xs text-muted-foreground">PayPal Payment Links · Partner demo</span>
+        <div className="flex items-center gap-3">
+          <span className="hidden font-mono text-xs text-muted-foreground sm:inline">PayPal Payment Links · Partner demo</span>
+          <ThemeToggle />
+        </div>
       </header>
 
       <main className="mx-auto grid max-w-5xl gap-6 px-6 py-16 md:grid-cols-2">
