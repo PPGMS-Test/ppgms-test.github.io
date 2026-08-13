@@ -3,7 +3,7 @@ import { FolderOpen, Download, RotateCcw, AlertCircle } from 'lucide-react'
 import { useSftpSyncStore } from '@/store/sftp-sync'
 import { useActivePresetStore } from '@/store/active-preset'
 import { getPresetById } from '@/config/credential-presets'
-import { triggerSftpSync, getSftpSyncStatus, fetchListing, fetchDownloadedFile, rawFileUrl } from '@/lib/sftp-api'
+import { triggerSftpSync, getSftpSyncStatus, fetchListing, fetchCachedListing, fetchDownloadedFile, sortFilesByNameDesc, rawFileUrl } from '@/lib/sftp-api'
 import { parseCsv } from '@/lib/csv-parse'
 import { cn } from '@/lib/utils'
 
@@ -69,8 +69,8 @@ export function SftpSyncPanel() {
       return
     }
     try {
-      const files = await fetchListing()
-      store.setListing(files)
+      const listing = await fetchListing(activePresetId)
+      store.setListing(listing.files)
     } catch {
       store.setError('拉取目录列表失败')
     }
@@ -82,16 +82,23 @@ export function SftpSyncPanel() {
       return
     }
     try {
-      const content = await fetchDownloadedFile(store.downloadingFileName ?? '')
+      const content = await fetchDownloadedFile(activePresetId, store.downloadingFileName ?? '')
       store.setDownloaded(content)
     } catch {
       store.setError('拉取文件内容失败')
     }
   })
 
-  async function handleBrowse() {
+  async function handleBrowse(forceRefresh = false) {
     setIsTriggering(true)
     try {
+      if (!forceRefresh) {
+        const cached = await fetchCachedListing(activePresetId)
+        if (cached) {
+          store.setListing(cached)
+          return
+        }
+      }
       const result = await triggerSftpSync('list', activePresetId)
       if (result.requestId) {
         store.startListing(result.requestId)
@@ -108,6 +115,13 @@ export function SftpSyncPanel() {
   async function handleSelectFile(fileName: string) {
     setIsTriggering(true)
     try {
+      try {
+        const content = await fetchDownloadedFile(activePresetId, fileName)
+        store.setDownloadedFile(fileName, content) // 缓存命中：一步到 ready
+        return
+      } catch {
+        // 缓存 miss，落到下面走 download action
+      }
       const result = await triggerSftpSync('download', activePresetId, fileName)
       if (result.requestId) {
         store.startDownloading(result.requestId, fileName)
@@ -137,7 +151,7 @@ export function SftpSyncPanel() {
       {store.phase === 'idle' && sftpUser && (
         <button
           type="button"
-          onClick={handleBrowse}
+          onClick={() => handleBrowse()}
           disabled={isTriggering}
           className="flex w-fit items-center gap-2 rounded-full border border-line px-4 py-2 text-ink transition hover:border-accent/50 hover:bg-surface2 disabled:opacity-50 disabled:cursor-not-allowed"
         >
@@ -153,27 +167,37 @@ export function SftpSyncPanel() {
       )}
 
       {store.phase === 'browsing' && (
-        <ul className="flex flex-col gap-2">
-          {store.files.map((file) => (
-            <li key={file.name}>
-              <button
-                type="button"
-                onClick={() => handleSelectFile(file.name)}
-                disabled={isTriggering}
-                className="flex w-full items-center justify-between rounded-lg border border-line px-3 py-2 text-left text-ink transition hover:border-accent/50 hover:bg-surface2 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <span>{file.name}</span>
-                <span className="font-mono text-xs text-muted">{file.size} bytes</span>
-              </button>
-            </li>
-          ))}
-        </ul>
+        <div className="flex flex-col gap-3">
+          <button
+            type="button"
+            onClick={() => handleBrowse(true)}
+            disabled={isTriggering}
+            className="flex w-fit items-center gap-2 rounded-full border border-line px-4 py-2 text-ink transition hover:border-accent/50 hover:bg-surface2 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <RotateCcw size={16} /> 刷新
+          </button>
+          <ul className="flex flex-col gap-2">
+            {sortFilesByNameDesc(store.files).map((file) => (
+              <li key={file.name}>
+                <button
+                  type="button"
+                  onClick={() => handleSelectFile(file.name)}
+                  disabled={isTriggering}
+                  className="flex w-full items-center justify-between rounded-lg border border-line px-3 py-2 text-left text-ink transition hover:border-accent/50 hover:bg-surface2 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <span>{file.name}</span>
+                  <span className="font-mono text-xs text-muted">{file.size} bytes</span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
       )}
 
       {store.phase === 'ready' && parsed && (
         <div className="flex flex-col gap-3">
           <a
-            href={rawFileUrl(store.downloadingFileName ?? '')}
+            href={rawFileUrl(activePresetId, store.downloadingFileName ?? '')}
             download={store.downloadingFileName ?? undefined}
             className="flex w-fit items-center gap-2 rounded-full border border-line px-4 py-2 text-ink transition hover:border-accent/50 hover:bg-surface2"
           >

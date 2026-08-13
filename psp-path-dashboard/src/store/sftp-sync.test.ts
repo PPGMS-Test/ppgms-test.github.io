@@ -82,3 +82,17 @@ describe('useSftpSyncStore', () => {
     expect(state.files).toEqual([])
   })
 })
+
+describe('useSftpSyncStore.setDownloadedFile', () => {
+  it('缓存命中：一步进入 ready，带上文件名与内容，且清空进行中的 requestId（不触发轮询）', () => {
+    // 先制造一个进行中的 requestId，验证 setDownloadedFile 确实把它清空
+    useSftpSyncStore.getState().startDownloading('req-x', 'old.csv')
+    useSftpSyncStore.getState().setDownloadedFile('2026-08-11.csv', 'a,b\n1,2')
+    const s = useSftpSyncStore.getState()
+    expect(s.phase).toBe('ready')
+    expect(s.downloadingFileName).toBe('2026-08-11.csv')
+    expect(s.csvContent).toBe('a,b\n1,2')
+    expect(s.requestId).toBeNull()
+    expect(s.error).toBeNull()
+  })
+})
