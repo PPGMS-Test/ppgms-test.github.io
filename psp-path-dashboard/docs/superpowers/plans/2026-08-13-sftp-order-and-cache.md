@@ -47,18 +47,21 @@
 
 ### Task 1: 脚本层——按凭证分子目录 + listing 元数据
 
+> **重要(依赖隔离)**:`scripts/sftp-sync/` 本地**没有** `node_modules`(`ssh2-sftp-client` 只在 CI 里 `npm install`)。所以纯函数必须放在一个**不 import `ssh2-sftp-client`** 的独立模块 `listing.mjs` 里,测试只 import 它;`index.mjs` 从 `listing.mjs` 复用。否则 `node --test` 会因 import `ssh2-sftp-client` 失败。
+
 **Files:**
+- Create: `scripts/sftp-sync/listing.mjs`
 - Modify: `scripts/sftp-sync/index.mjs`
-- Test: `scripts/sftp-sync/index.test.mjs`
+- Test: `scripts/sftp-sync/listing.test.mjs`
 
 - [ ] **Step 1: 写失败测试**
 
-Create `scripts/sftp-sync/index.test.mjs`:
+Create `scripts/sftp-sync/listing.test.mjs`:
 
 ```js
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { buildListingPayload, todayUtc } from './index.mjs'
+import { buildListingPayload, todayUtc } from './listing.mjs'
 
 test('todayUtc 返回 UTC 的 YYYY-MM-DD', () => {
   assert.equal(todayUtc(new Date('2026-08-13T23:30:00Z')), '2026-08-13')
@@ -79,17 +82,14 @@ test('buildListingPayload 过滤目录并附带元数据', () => {
 - [ ] **Step 2: 跑测试确认失败**
 
 Run: `node --test scripts/sftp-sync/`
-Expected: FAIL —— `buildListingPayload`/`todayUtc` 未从 `index.mjs` 导出(import 报错或断言失败)。
+Expected: FAIL —— `listing.mjs` 不存在(import 报错)。
 
-- [ ] **Step 3: 改写 `index.mjs`**
+- [ ] **Step 3a: 新建 `listing.mjs`(纯函数,无第三方依赖)**
 
-把 `scripts/sftp-sync/index.mjs` 整体替换为:
+Create `scripts/sftp-sync/listing.mjs`:
 
 ```js
-import SftpClient from 'ssh2-sftp-client'
-import { writeFileSync, mkdirSync } from 'node:fs'
-import { fileURLToPath } from 'node:url'
-import { SFTP_CREDENTIALS } from './credentials.mjs'
+// 纯函数模块：不 import ssh2-sftp-client，便于用 node:test 在无 node_modules 环境下测试
 
 /** 返回 UTC 的 YYYY-MM-DD */
 export function todayUtc(now = new Date()) {
@@ -103,6 +103,18 @@ export function buildListingPayload(entries, credentialId, dateStr) {
     .map((e) => ({ name: e.name, size: e.size, modifyTime: e.modifyTime }))
   return { generatedAt: dateStr, credentialId, files }
 }
+```
+
+- [ ] **Step 3b: 改写 `index.mjs`**
+
+把 `scripts/sftp-sync/index.mjs` 整体替换为:
+
+```js
+import SftpClient from 'ssh2-sftp-client'
+import { writeFileSync, mkdirSync } from 'node:fs'
+import { fileURLToPath } from 'node:url'
+import { SFTP_CREDENTIALS } from './credentials.mjs'
+import { buildListingPayload, todayUtc } from './listing.mjs'
 
 async function run() {
   const ACTION = process.env.SFTP_ACTION // 'list' | 'download'
@@ -168,7 +180,7 @@ Expected: PASS —— 2 个测试通过。
 - [ ] **Step 5: 提交**
 
 ```bash
-git add scripts/sftp-sync/index.mjs scripts/sftp-sync/index.test.mjs
+git add scripts/sftp-sync/index.mjs scripts/sftp-sync/listing.mjs scripts/sftp-sync/listing.test.mjs
 git commit -m "$(cat <<'EOF'
 feat[<YYYY-MM-DD>](scripts/sftp-sync): 产物按凭证分子目录并给 listing 加当天元数据
 
@@ -176,8 +188,9 @@ feat[<YYYY-MM-DD>](scripts/sftp-sync): 产物按凭证分子目录并给 listing
 为「按凭证隔离缓存」和「当天缓存判定」打基础：产物写入 credentialId 子目录，listing.json 增加 generatedAt/credentialId。
 
 ## 主要改动
-- scripts/sftp-sync/index.mjs: 抽出纯函数 todayUtc/buildListingPayload；写入 output/<credentialId>/ 子目录；run() 仅在直接执行时触发，便于测试 import
-- scripts/sftp-sync/index.test.mjs: node:test 覆盖两个纯函数
+- scripts/sftp-sync/listing.mjs: 抽出纯函数 todayUtc/buildListingPayload（不依赖 ssh2-sftp-client，便于测试）
+- scripts/sftp-sync/index.mjs: 从 listing.mjs 复用纯函数；写入 output/<credentialId>/ 子目录；run() 仅在直接执行时触发
+- scripts/sftp-sync/listing.test.mjs: node:test 覆盖两个纯函数
 
 ## 为什么这么改
 按凭证分目录让不同凭证的产物天然隔离，前端换凭证即缓存 miss，无需在内容里比对；generatedAt 用 UTC 与前端判定口径一致。
