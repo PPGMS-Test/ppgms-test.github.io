@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { createPayPalClient } from './client'
 import { createPayPalConfig } from '@/config/paypal.config'
 import type { PartnerCredential } from '@/config/credentials.config'
+import { ApiError } from './types'
 
 const credential: PartnerCredential = {
   id: 'x', label: 'x', environment: 'sandbox',
@@ -62,5 +63,36 @@ describe('createPayPalClient', () => {
     await client.getLink('PR-9')
     expect(calls[1].url).toBe('https://api-m.sandbox.paypal.com/v1/checkout/payment-resources/PR-9')
     expect(calls[1].init.method).toBe('GET')
+  })
+
+  it('reuses the cached token across two calls (oauth fetched only once)', async () => {
+    const calls = mockFetchSequence([
+      { status: 200, body: { access_token: 'TOK', expires_in: 3600 } },
+      { status: 200, body: { items: [] } },
+      { status: 200, body: { items: [] } },
+    ])
+    const client = createPayPalClient({ config: createPayPalConfig('sandbox'), credential })
+    await client.listLinks()
+    await client.listLinks()
+
+    const oauthUrl = 'https://api-m.sandbox.paypal.com/v1/oauth2/token'
+    const oauthCalls = calls.filter((c) => c.url === oauthUrl)
+    expect(oauthCalls).toHaveLength(1)
+    // two business GETs happened
+    expect(calls.filter((c) => c.url.endsWith('/payment-resources'))).toHaveLength(2)
+  })
+
+  it('rejects with ApiError carrying .status on a non-2xx business response', async () => {
+    mockFetchSequence([
+      { status: 200, body: { access_token: 'TOK', expires_in: 3600 } },
+      { status: 403, body: { message: 'denied' } },
+    ])
+    const client = createPayPalClient({ config: createPayPalConfig('sandbox'), credential })
+    await expect(
+      client.createLink({ name: 'Tote', amount: { currency_code: 'USD', value: '160.00' } }),
+    ).rejects.toMatchObject({ status: 403 })
+    await expect(
+      client.createLink({ name: 'Tote', amount: { currency_code: 'USD', value: '160.00' } }),
+    ).rejects.toBeInstanceOf(ApiError)
   })
 })
