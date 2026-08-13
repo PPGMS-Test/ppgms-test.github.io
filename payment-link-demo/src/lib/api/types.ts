@@ -8,6 +8,10 @@ export interface CreateLinkInput {
   name: string
   description?: string
   amount: Money
+  /** 买家支付成功后 PayPal 重定向回的站内地址 */
+  returnUrl?: string
+  /** 买家取消支付后 PayPal 重定向回的站内地址 */
+  cancelUrl?: string
 }
 
 export type UpdateLinkInput = Partial<CreateLinkInput>

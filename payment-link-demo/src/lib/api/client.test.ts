@@ -43,6 +43,29 @@ describe('createPayPalClient', () => {
     expect(headers['PayPal-Partner-Attribution-Id']).toBeTruthy()
   })
 
+  it('createLink maps returnUrl/cancelUrl into application_context in the body', async () => {
+    const calls = mockFetchSequence([
+      { status: 200, body: { access_token: 'TOK', expires_in: 3600 } },
+      { status: 201, body: { id: 'PR-2', links: [{ rel: 'pay', href: 'https://pp/pay/PR-2' }] } },
+    ])
+    const client = createPayPalClient({ config: createPayPalConfig('sandbox'), credential })
+    await client.createLink({
+      name: 'Tote',
+      amount: { currency_code: 'USD', value: '160.00' },
+      returnUrl: 'https://shop.test/#/return?link=abc&status=paid',
+      cancelUrl: 'https://shop.test/#/return?link=abc&status=cancelled',
+    })
+    const body = JSON.parse(calls[1].init.body as string)
+    expect(body.application_context).toEqual({
+      return_url: 'https://shop.test/#/return?link=abc&status=paid',
+      cancel_url: 'https://shop.test/#/return?link=abc&status=cancelled',
+    })
+    // camelCase input keys must NOT leak to the top-level body
+    expect(body.returnUrl).toBeUndefined()
+    expect(body.cancelUrl).toBeUndefined()
+    expect(body.name).toBe('Tote')
+  })
+
   it('listLinks GETs the collection endpoint', async () => {
     const calls = mockFetchSequence([
       { status: 200, body: { access_token: 'TOK', expires_in: 3600 } },

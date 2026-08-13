@@ -18,6 +18,19 @@ function makeId() {
   return globalThis.crypto?.randomUUID?.() ?? `link-${Date.now()}-${Math.floor(Math.random() * 1e6)}`
 }
 
+/**
+ * 构造回流地址：买家在 PayPal 托管页支付成功/取消后，重定向回站内 /return 页。
+ * 用 HashRouter，形如 http://host/base/#/return?link=<id>&status=paid。
+ * recordId 提前生成并写进 URL，回流时据此定位本地记录并标记 paid。
+ */
+function buildReturnUrls(recordId: string) {
+  const base = `${window.location.origin}${window.location.pathname}`
+  return {
+    returnUrl: `${base}#/return?link=${recordId}&status=paid`,
+    cancelUrl: `${base}#/return?link=${recordId}&status=cancelled`,
+  }
+}
+
 export function CreateLinkDialog({ product, onClose }: Props) {
   const { client } = useCredentialsStore()
   const addLink = usePaymentLinksStore((s) => s.add)
@@ -31,15 +44,20 @@ export function CreateLinkDialog({ product, onClose }: Props) {
     setError(null)
     try {
       const value = amount || product.price
+      // 先生成本地记录 id，写进 return_url，付款成功回流时据此标记 paid
+      const recordId = makeId()
+      const { returnUrl, cancelUrl } = buildReturnUrls(recordId)
       const res = await client.createLink({
         name: product.name,
         description: product.description,
         amount: { currency_code: product.currency, value },
+        returnUrl,
+        cancelUrl,
       })
       const payUrl = extractPayUrl(res)
       if (!payUrl) throw new Error('Link created but no pay URL was returned.')
       addLink({
-        id: makeId(),
+        id: recordId,
         productId: product.id,
         resourceId: res.id,
         payUrl,

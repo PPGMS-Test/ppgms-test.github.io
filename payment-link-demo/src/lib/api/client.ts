@@ -85,6 +85,23 @@ export function createPayPalClient({ config, credential }: PayPalClientDeps) {
     return res.data as T
   }
 
+  /**
+   * 把前端的 CreateLinkInput 映射成 PLB 请求体：
+   * returnUrl/cancelUrl 收进 application_context（PayPal 惯例字段；
+   * PLB 为 draft 接口，真实字段名以实际联调为准，改这里即可）。
+   */
+  function buildResourceBody(input: CreateLinkInput | UpdateLinkInput): Record<string, unknown> {
+    const { returnUrl, cancelUrl, ...rest } = input
+    const body: Record<string, unknown> = { ...rest }
+    if (returnUrl || cancelUrl) {
+      body.application_context = {
+        ...(returnUrl ? { return_url: returnUrl } : {}),
+        ...(cancelUrl ? { cancel_url: cancelUrl } : {}),
+      }
+    }
+    return body
+  }
+
   return {
     oauthToken,
 
@@ -94,7 +111,7 @@ export function createPayPalClient({ config, credential }: PayPalClientDeps) {
         method: 'POST',
         path: config.endpoints.paymentResources,
         url: resourceUrl(),
-        body: input,
+        body: buildResourceBody(input),
       }),
 
     listLinks: () =>
@@ -119,7 +136,7 @@ export function createPayPalClient({ config, credential }: PayPalClientDeps) {
         method: 'PUT',
         path: config.endpoints.paymentResources,
         url: resourceUrl(id),
-        body: input,
+        body: buildResourceBody(input),
       }),
 
     deleteLink: (id: string) =>

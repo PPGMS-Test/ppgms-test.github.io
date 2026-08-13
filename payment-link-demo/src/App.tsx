@@ -4,6 +4,7 @@ import Landing from './pages/Landing'
 import MerchantConsole from './pages/MerchantConsole'
 import Storefront from './pages/Storefront'
 import ProductDetail from './pages/ProductDetail'
+import ReturnPage from './pages/ReturnPage'
 import { useThemeStore } from './store/theme'
 
 export default function App() {
@@ -20,6 +21,7 @@ export default function App() {
       <Route path="/merchant" element={<MerchantConsole />} />
       <Route path="/store" element={<Storefront />} />
       <Route path="/store/:productId" element={<ProductDetail />} />
+      <Route path="/return" element={<ReturnPage />} />
     </Routes>
   )
 }
