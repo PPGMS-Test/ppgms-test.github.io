@@ -6,8 +6,13 @@ import { ApiError } from './types'
 import type { CreatePaymentResourceInput } from './types'
 
 const credential: PartnerCredential = {
-  id: 'x', label: 'x', environment: 'sandbox',
+  id: 'x', label: 'x', environment: 'sandbox', mode: 'third-party',
   partnerClientId: 'CID', partnerClientSecret: 'SEC', partnerMerchantId: 'MID',
+}
+
+const firstPartyCredential: PartnerCredential = {
+  id: 'fp', label: 'fp', environment: 'sandbox', mode: 'first-party',
+  partnerClientId: 'CID', partnerClientSecret: 'SEC',
 }
 
 const minimalInput: CreatePaymentResourceInput = {
@@ -46,6 +51,22 @@ describe('createPayPalClient', () => {
     expect(headers['PayPal-Auth-Assertion']).toMatch(/^eyJhbGciOiJub25lIn0=\./)
     expect(headers['PayPal-Partner-Attribution-Id']).toBeTruthy()
     // 幂等键必须随每个 POST 一起发出
+    expect(headers['PayPal-Request-Id']).toBeTruthy()
+  })
+
+  it('first-party mode omits PayPal-Auth-Assertion and BN attribution header', async () => {
+    const calls = mockFetchSequence([
+      { status: 200, body: { access_token: 'TOK', expires_in: 3600 } },
+      { status: 201, body: { id: 'PLB-FP', payment_link: 'https://pp/ncp/payment/PLB-FP' } },
+    ])
+    const client = createPayPalClient({ config: createPayPalConfig('sandbox'), credential: firstPartyCredential })
+    await client.createLink(minimalInput)
+    const headers = calls[1].init.headers as Record<string, string>
+    expect(headers.Authorization).toBe('Bearer TOK')
+    // 一方模式：不带 auth-assertion / 不带 partner 归因头
+    expect(headers['PayPal-Auth-Assertion']).toBeUndefined()
+    expect(headers['PayPal-Partner-Attribution-Id']).toBeUndefined()
+    // 幂等键仍然要发
     expect(headers['PayPal-Request-Id']).toBeTruthy()
   })
 

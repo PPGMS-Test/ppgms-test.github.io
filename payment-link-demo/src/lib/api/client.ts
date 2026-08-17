@@ -74,19 +74,24 @@ export function createPayPalClient({ config, credential }: PayPalClientDeps) {
     return data.access_token
   }
 
-  // 业务管线：注入 Bearer + Auth-Assertion + BN + JSON content-type
+  // 业务管线鉴权头：
+  //   - first-party：只发 Bearer + JSON（商户自有凭证，无需 auth-assertion）
+  //   - third-party：额外注入 PayPal-Auth-Assertion(iss=partner, payer_id=merchant) + BN Code
   async function authHeaders(): Promise<Record<string, string>> {
     const token = await oauthToken()
-    return {
+    const headers: Record<string, string> = {
       Authorization: `Bearer ${token}`,
       Accept: 'application/json',
       'Content-Type': 'application/json',
-      'PayPal-Auth-Assertion': generatePayPalAuthAssertion(
+    }
+    if (credential.mode === 'third-party' && credential.partnerMerchantId) {
+      headers['PayPal-Auth-Assertion'] = generatePayPalAuthAssertion(
         credential.partnerClientId,
         credential.partnerMerchantId,
-      ),
-      'PayPal-Partner-Attribution-Id': config.bnCode,
+      )
+      headers['PayPal-Partner-Attribution-Id'] = config.bnCode
     }
+    return headers
   }
 
   const pipeline = compose(
