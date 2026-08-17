@@ -94,10 +94,13 @@ export function createPayPalClient({ config, credential }: PayPalClientDeps) {
     return headers
   }
 
+  // 业务管线：withLogging 放在**最内层**（贴近 baseFetch），
+  // 这样它打印的是 withAuthHeaders 注入后的最终请求头（能看到 Bearer / Auth-Assertion / BN），
+  // 而不是注入前的空头。错误归一在最外层，非 2xx 时抛出。
   const pipeline = compose(
-    withLogging,
     withErrorNormalization,
     withAuthHeaders(authHeaders),
+    withLogging,
   )(baseFetch)
 
   const resourceUrl = (id?: string) =>

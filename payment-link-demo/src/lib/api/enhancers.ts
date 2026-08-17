@@ -55,8 +55,23 @@ export const baseFetch: RequestFn = async (req) => {
 function redact(headers: Record<string, string>): Record<string, string> {
   const clone = { ...headers }
   if (clone.Authorization) clone.Authorization = clone.Authorization.replace(/(Basic |Bearer ).+/, '$1***')
-  if (clone['PayPal-Auth-Assertion']) clone['PayPal-Auth-Assertion'] = clone['PayPal-Auth-Assertion'].slice(0, 12) + '…'
+  if (clone['PayPal-Auth-Assertion']) clone['PayPal-Auth-Assertion'] = clone['PayPal-Auth-Assertion'].slice(0, 16) + '…'
   return clone
+}
+
+/**
+ * 解码 PayPal-Auth-Assertion 的 payload（第二段 base64）供排查用。
+ * assertion 结构为 `<header>.<payload>.`（alg:none，无签名），payload 内是 {iss, payer_id}。
+ * 解不出就返回 null。
+ */
+function decodeAssertion(assertion: string): { iss?: string; payer_id?: string } | null {
+  try {
+    const payload = assertion.split('.')[1]
+    if (!payload) return null
+    return JSON.parse(atob(payload))
+  } catch {
+    return null
+  }
 }
 
 /** 对象转格式化 JSON 字符串便于 console 查看；字符串/原始值原样返回 */
@@ -74,6 +89,10 @@ export const withLogging: Enhancer = (next) => async (req) => {
   const tag = `[API][${req.label}]`
   console.log(`${tag}[1] ${req.method} ${req.url}`)
   console.log(`${tag}[2] headers`, pretty(redact(req.headers)))
+  // 把 auth-assertion 解码出来：三方模式能看到 iss(partner)/payer_id(merchant)；
+  // 一方模式(及 oauth 调用)该头不存在，打印 "(none)"
+  const assertion = req.headers['PayPal-Auth-Assertion']
+  console.log(`${tag}[2b] auth-assertion`, assertion ? pretty(decodeAssertion(assertion) ?? '(undecodable)') : '(none)')
   if (req.body !== undefined) console.log(`${tag}[3] body`, pretty(req.body))
   const res = await next(req)
   if (res.ok) {
