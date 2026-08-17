@@ -64,10 +64,18 @@ interface DialogProps {
   onOpenChange: (open: boolean) => void
   title: string
   description?: string
+  /** 弹窗宽度：md（默认）用于简单表单，lg/xl 用于 line-item 全量表单 */
+  size?: 'md' | 'lg' | 'xl'
   children: React.ReactNode
 }
 
-export function Dialog({ open, onOpenChange, title, description, children }: DialogProps) {
+const sizeClass: Record<NonNullable<DialogProps['size']>, string> = {
+  md: 'max-w-md',
+  lg: 'max-w-2xl',
+  xl: 'max-w-3xl',
+}
+
+export function Dialog({ open, onOpenChange, title, description, size = 'md', children }: DialogProps) {
   // useId() 生成一个在整个应用内唯一的字符串 ID，
   // 用于把 <h2> 标题和弹窗的 aria-labelledby 关联起来
   const titleId = useId()
@@ -102,7 +110,9 @@ export function Dialog({ open, onOpenChange, title, description, children }: Dia
         aria-modal="true"
         aria-labelledby={titleId}
         className={cn(
-          'relative z-10 w-full max-w-md',
+          'relative z-10 w-full',
+          sizeClass[size],
+          'max-h-[85vh] overflow-y-auto',
           'bg-card rounded-2xl shadow-xl border border-border',
           'p-6',
           'animate-dialog-in',

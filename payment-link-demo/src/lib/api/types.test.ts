@@ -1,52 +1,49 @@
 import { describe, it, expect } from 'vitest'
-import { extractPayUrl } from './types'
-import type { PaymentResource } from './types'
-
-function res(links?: PaymentResource['links']): PaymentResource {
-  return { id: 'PR', links }
-}
+import { extractPayUrl, extractNextPageToken } from './types'
+import type { PaymentResource, PaymentResourceList } from './types'
 
 describe('extractPayUrl', () => {
-  it('prefers the "pay" rel over everything else', () => {
-    expect(
-      extractPayUrl(
-        res([
-          { rel: 'approve', href: 'https://pp/approve' },
-          { rel: 'pay', href: 'https://pp/pay' },
-          { rel: 'payer-action', href: 'https://pp/payer-action' },
-        ]),
-      ),
-    ).toBe('https://pp/pay')
+  it('prefers the top-level payment_link field', () => {
+    const res: PaymentResource = {
+      id: 'PLB-1',
+      payment_link: 'https://www.sandbox.paypal.com/ncp/payment/PLB-1',
+      links: [{ rel: 'payment_link', href: 'https://other/should-not-win' }],
+    }
+    expect(extractPayUrl(res)).toBe('https://www.sandbox.paypal.com/ncp/payment/PLB-1')
   })
 
-  it('falls back to "approve" when no "pay"', () => {
-    expect(
-      extractPayUrl(
-        res([
-          { rel: 'payer-action', href: 'https://pp/payer-action' },
-          { rel: 'approve', href: 'https://pp/approve' },
-        ]),
-      ),
-    ).toBe('https://pp/approve')
+  it('falls back to links[] rel=payment_link when no top-level field', () => {
+    const res: PaymentResource = {
+      id: 'PLB-2',
+      links: [
+        { rel: 'self', href: 'https://api/self', method: 'GET' },
+        { rel: 'payment_link', href: 'https://www.paypal.com/ncp/payment/PLB-2', method: 'GET' },
+      ],
+    }
+    expect(extractPayUrl(res)).toBe('https://www.paypal.com/ncp/payment/PLB-2')
   })
 
-  it('falls back to "payer-action" when no "pay"/"approve"', () => {
-    expect(
-      extractPayUrl(res([{ rel: 'payer-action', href: 'https://pp/payer-action' }])),
-    ).toBe('https://pp/payer-action')
+  it('returns null when neither payment_link nor the rel exists', () => {
+    expect(extractPayUrl({ id: 'PLB-3', links: [{ rel: 'self', href: 'https://api/self' }] })).toBeNull()
+    expect(extractPayUrl({ id: 'PLB-4', links: [] })).toBeNull()
+    expect(extractPayUrl({ id: 'PLB-5' })).toBeNull()
+  })
+})
+
+describe('extractNextPageToken', () => {
+  it('parses page_token from the rel=next link', () => {
+    const list: PaymentResourceList = {
+      resources: [],
+      links: [
+        { rel: 'self', href: 'https://api.paypal.com/v1/checkout/payment-resources?page_size=2' },
+        { rel: 'next', href: 'https://api.paypal.com/v1/checkout/payment-resources?page_token=ABC123&page_size=2' },
+      ],
+    }
+    expect(extractNextPageToken(list)).toBe('ABC123')
   })
 
-  it('falls back to the first link when no known rel matches', () => {
-    expect(
-      extractPayUrl(res([{ rel: 'self', href: 'https://pp/self' }])),
-    ).toBe('https://pp/self')
-  })
-
-  it('returns null when links is empty', () => {
-    expect(extractPayUrl(res([]))).toBeNull()
-  })
-
-  it('returns null when links is absent', () => {
-    expect(extractPayUrl(res(undefined))).toBeNull()
+  it('returns null when there is no next link', () => {
+    expect(extractNextPageToken({ resources: [], links: [{ rel: 'self', href: 'https://api/x' }] })).toBeNull()
+    expect(extractNextPageToken({ resources: [] })).toBeNull()
   })
 })

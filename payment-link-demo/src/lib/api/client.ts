@@ -16,7 +16,12 @@ import {
   withLogging,
   type ApiRequest,
 } from './enhancers'
-import type { CreateLinkInput, UpdateLinkInput, PaymentResource } from './types'
+import type {
+  CreatePaymentResourceInput,
+  UpdatePaymentResourceInput,
+  PaymentResource,
+  PaymentResourceList,
+} from './types'
 
 export interface PayPalClientDeps {
   config: PayPalConfig
@@ -26,6 +31,18 @@ export interface PayPalClientDeps {
 interface TokenCache {
   token: string
   expiresAt: number
+}
+
+/** List 端点查询参数（对应文档的 page_size / page_token / status） */
+export interface ListLinksOptions {
+  pageSize?: number
+  pageToken?: string
+  status?: string
+}
+
+/** 幂等键：非安全上下文(crypto 不可用)时退化到时间戳+随机数 */
+function requestId(): string {
+  return globalThis.crypto?.randomUUID?.() ?? `req-${Date.now()}-${Math.floor(Math.random() * 1e6)}`
 }
 
 export function createPayPalClient({ config, credential }: PayPalClientDeps) {
@@ -62,6 +79,7 @@ export function createPayPalClient({ config, credential }: PayPalClientDeps) {
     const token = await oauthToken()
     return {
       Authorization: `Bearer ${token}`,
+      Accept: 'application/json',
       'Content-Type': 'application/json',
       'PayPal-Auth-Assertion': generatePayPalAuthAssertion(
         credential.partnerClientId,
@@ -80,47 +98,59 @@ export function createPayPalClient({ config, credential }: PayPalClientDeps) {
   const resourceUrl = (id?: string) =>
     `${config.apiBase}${config.endpoints.paymentResources}${id ? `/${id}` : ''}`
 
-  async function run<T>(partial: Omit<ApiRequest, 'headers'>): Promise<T> {
-    const res = await pipeline({ ...partial, headers: {} })
+  // per-call 额外头（如 PayPal-Request-Id）优先级高于 auth 头
+  async function run<T>(
+    partial: Omit<ApiRequest, 'headers'> & { headers?: Record<string, string> },
+  ): Promise<T> {
+    const { headers = {}, ...rest } = partial
+    const res = await pipeline({ ...rest, headers })
     return res.data as T
   }
 
   /**
-   * 把前端的 CreateLinkInput 映射成 PLB 请求体：
-   * returnUrl/cancelUrl 收进 application_context（PayPal 惯例字段；
-   * PLB 为 draft 接口，真实字段名以实际联调为准，改这里即可）。
+   * 组装 PLB 请求体：补齐 integration_mode/type 默认值，其余字段（reusable /
+   * return_url / line_items[...]）直接透传。line_items 已是文档结构，无需再映射。
    */
-  function buildResourceBody(input: CreateLinkInput | UpdateLinkInput): Record<string, unknown> {
-    const { returnUrl, cancelUrl, ...rest } = input
-    const body: Record<string, unknown> = { ...rest }
-    if (returnUrl || cancelUrl) {
-      body.application_context = {
-        ...(returnUrl ? { return_url: returnUrl } : {}),
-        ...(cancelUrl ? { cancel_url: cancelUrl } : {}),
-      }
+  function buildResourceBody(
+    input: CreatePaymentResourceInput | UpdatePaymentResourceInput,
+  ): Record<string, unknown> {
+    return {
+      integration_mode: input.integration_mode ?? 'LINK',
+      type: input.type ?? 'BUY_NOW',
+      reusable: input.reusable,
+      ...(input.return_url ? { return_url: input.return_url } : {}),
+      line_items: input.line_items,
     }
-    return body
   }
 
   return {
     oauthToken,
 
-    createLink: (input: CreateLinkInput) =>
+    /** 创建 payment link；带 PayPal-Request-Id 幂等键（重试须复用同一 id） */
+    createLink: (input: CreatePaymentResourceInput, idempotencyKey?: string) =>
       run<PaymentResource>({
         label: 'createLink',
         method: 'POST',
         path: config.endpoints.paymentResources,
         url: resourceUrl(),
+        headers: { 'PayPal-Request-Id': idempotencyKey ?? requestId() },
         body: buildResourceBody(input),
       }),
 
-    listLinks: () =>
-      run<{ items?: PaymentResource[] } & Record<string, unknown>>({
+    /** 列出 payment resources（支持 page_size / page_token / status 过滤 + 分页） */
+    listLinks: (opts: ListLinksOptions = {}) => {
+      const qs = new URLSearchParams()
+      if (opts.pageSize) qs.set('page_size', String(opts.pageSize))
+      if (opts.pageToken) qs.set('page_token', opts.pageToken)
+      if (opts.status) qs.set('status', opts.status)
+      const query = qs.toString()
+      return run<PaymentResourceList>({
         label: 'listLinks',
         method: 'GET',
         path: config.endpoints.paymentResources,
-        url: resourceUrl(),
-      }),
+        url: `${resourceUrl()}${query ? `?${query}` : ''}`,
+      })
+    },
 
     getLink: (id: string) =>
       run<PaymentResource>({
@@ -130,8 +160,9 @@ export function createPayPalClient({ config, credential }: PayPalClientDeps) {
         url: resourceUrl(id),
       }),
 
-    updateLink: (id: string, input: UpdateLinkInput) =>
-      run<PaymentResource>({
+    /** 整体替换 payment resource（PUT）；成功返回 204（body 可能为空） */
+    updateLink: (id: string, input: UpdatePaymentResourceInput) =>
+      run<PaymentResource | null>({
         label: 'updateLink',
         method: 'PUT',
         path: config.endpoints.paymentResources,

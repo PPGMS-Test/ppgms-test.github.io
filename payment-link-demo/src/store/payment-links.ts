@@ -14,7 +14,13 @@ export interface PaymentLinkRecord {
   resourceId: string
   /** 买家可支付的托管 URL */
   payUrl: string
+  /** 本地生命周期覆盖：live=已创建 / paid=回流标记已支付 / expired */
   status: LinkStatus
+  /** PLB 侧资源状态（如 ACTIVE），由 refresh/getLink 同步，独立于本地 status */
+  resourceStatus?: string
+  /** 展示名（下单商品名，便于 UI 与 API 导入的记录统一展示） */
+  name?: string
+  reusable?: string
   amount: string
   currency: string
   createdAt: number

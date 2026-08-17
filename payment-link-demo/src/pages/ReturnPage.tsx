@@ -30,11 +30,12 @@ export default function ReturnPage() {
     update(record.id, { status: 'paid' })
     console.log('[Return] marked paid:', record.id, '· resource:', record.resourceId)
 
-    // 尽力再拉一次真实状态（PLB 无权限时会报错，忽略即可）
+    // 尽力再拉一次真实资源状态（PLB 无权限时会报错，忽略即可）；
+    // 只写 resourceStatus，本地 status 保持 paid 覆盖，不被 ACTIVE 冲掉
     setSyncing(true)
     client
       .getLink(record.resourceId)
-      .then((res) => update(record.id, { raw: res, status: (res.status as typeof record.status) ?? 'paid' }))
+      .then((res) => update(record.id, { raw: res, resourceStatus: res.status }))
       .catch((e) => console.warn('[Return] getLink sync skipped:', e instanceof ApiError ? e.status : e))
       .finally(() => setSyncing(false))
   }, [status, record, update, client])

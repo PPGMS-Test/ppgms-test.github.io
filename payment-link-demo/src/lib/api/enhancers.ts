@@ -76,12 +76,17 @@ export const withLogging: Enhancer = (next) => async (req) => {
   console.log(`${tag}[2] headers`, pretty(redact(req.headers)))
   if (req.body !== undefined) console.log(`${tag}[3] body`, pretty(req.body))
   const res = await next(req)
-  if (res.ok) console.log(`${tag}[4] HTTP ${res.status} ✓`, pretty(res.data))
-  else console.error(`${tag}[4] HTTP ${res.status} ✗`, pretty(res.data))
+  if (res.ok) {
+    console.log(`${tag}[4] HTTP ${res.status} ✓`, pretty(res.data))
+  } else {
+    const debugId = (res.data as Record<string, unknown> | null)?.debug_id
+    console.error(`${tag}[4] HTTP ${res.status} ✗`, pretty(res.data))
+    if (debugId) console.error(`${tag}[4] debug_id:`, debugId)
+  }
   return res
 }
 
-/** 非 2xx 时按 PayPal 错误体归一并抛 ApiError */
+/** 非 2xx 时按 PayPal 错误体归一并抛 ApiError（携带 debug_id） */
 export const withErrorNormalization: Enhancer = (next) => async (req) => {
   const res = await next(req)
   if (!res.ok) {
@@ -92,7 +97,7 @@ export const withErrorNormalization: Enhancer = (next) => async (req) => {
       (d.error as string) ??
       (d.name as string) ??
       `Request failed: ${res.status}`
-    throw new ApiError(msg, res.status, res.data)
+    throw new ApiError(msg, res.status, res.data, d.debug_id as string | undefined)
   }
   return res
 }

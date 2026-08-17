@@ -1,13 +1,20 @@
 import { useState } from 'react'
 import { LinkTicket } from '@/components/LinkTicket'
 import { Button } from '@/components/ui/button'
-import { RefreshCw, Trash2 } from 'lucide-react'
+import { RefreshCw, Trash2, Pencil, Eye } from 'lucide-react'
 import { useCredentialsStore } from '@/store/credentials'
 import { usePaymentLinksStore, type PaymentLinkRecord } from '@/store/payment-links'
 import { useProductsStore } from '@/store/products'
 import { ApiError } from '@/lib/api/types'
 
-export function LinksList() {
+interface Props {
+  /** 打开某条 link 的详情（GET /{id}） */
+  onInspect: (resourceId: string) => void
+  /** 编辑某条 link（PUT /{id}） */
+  onEdit: (record: PaymentLinkRecord) => void
+}
+
+export function LinksList({ onInspect, onEdit }: Props) {
   const { client } = useCredentialsStore()
   const links = usePaymentLinksStore((s) => s.links)
   const update = usePaymentLinksStore((s) => s.update)
@@ -19,7 +26,8 @@ export function LinksList() {
     setBusy(rec.id)
     try {
       const res = await client.getLink(rec.resourceId)
-      update(rec.id, { status: (res.status as PaymentLinkRecord['status']) ?? rec.status, raw: res })
+      // 只更新 PLB 资源状态，本地生命周期 status 保持不变
+      update(rec.id, { resourceStatus: res.status, raw: res })
     } catch (e) {
       console.error('[LinksList] refresh failed', e instanceof ApiError ? e.data : e)
     } finally {
@@ -49,13 +57,19 @@ export function LinksList() {
       {links.map((rec) => (
         <LinkTicket
           key={rec.id}
-          title={byId(rec.productId)?.name ?? rec.productId}
+          title={rec.name ?? byId(rec.productId)?.name ?? rec.productId}
           amount={rec.amount}
           currency={rec.currency}
           payUrl={rec.payUrl}
           status={rec.status}
         >
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
+            <Button size="sm" variant="outline" onClick={() => onInspect(rec.resourceId)}>
+              <Eye className="h-3.5 w-3.5" /> Details
+            </Button>
+            <Button size="sm" variant="outline" onClick={() => onEdit(rec)}>
+              <Pencil className="h-3.5 w-3.5" /> Edit
+            </Button>
             <Button size="sm" variant="outline" loading={busy === rec.id} onClick={() => refresh(rec)}>
               <RefreshCw className="h-3.5 w-3.5" /> Refresh
             </Button>
