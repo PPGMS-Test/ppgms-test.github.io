@@ -43,13 +43,14 @@ const PARTNER_CREDENTIALS: PartnerCredential[] = [
   },
   {
     // 一方凭证：商户自有 client id/secret，无 auth-assertion，权限齐全即可测通。
-    // TODO(用户提供)：把 1st-party 的 client id / secret 粘到下面两行。
     id: 'firstparty-sandbox',
     label: '1st-party merchant',
     environment: 'sandbox',
     mode: 'first-party',
-    partnerClientId: '',
-    partnerClientSecret: '',
+    partnerClientId:
+      'Adz6qoCn9-BQ0tFfWVZBl_rSTyxD0_fpk39E_u2KqT1HoYtN8HTQsSwunpx5Jynk0q8tj1nxUHS-TWlL',
+    partnerClientSecret:
+      'ENCbxo_xFeOFsq4uVGll5gDau005zIVG_c7AeBipt60sqbbOdA6netNgqQjd1DUacHj2QUD-4GFVqcU8',
   },
 ]
 
