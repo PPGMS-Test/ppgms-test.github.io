@@ -12,6 +12,7 @@ import { useCredentialsStore } from '@/store/credentials'
 import { usePaymentLinksStore } from '@/store/payment-links'
 import type { Product } from '@/store/products'
 import { extractPayUrl, ApiError, type LineItem, type Reusable } from '@/lib/api/types'
+import { buildReturnUrl, isReturnUrlOmitted } from '@/lib/return-url'
 
 interface Props {
   product: Product | null
@@ -21,17 +22,6 @@ interface Props {
 /** crypto.randomUUID 在非安全上下文（LAN 明文 HTTP）会抛错，降级到时间戳+随机数 */
 function makeId() {
   return globalThis.crypto?.randomUUID?.() ?? `link-${Date.now()}-${Math.floor(Math.random() * 1e6)}`
-}
-
-/**
- * 构造回流地址：买家在 PayPal 托管页支付成功后，重定向回站内 /return 页。
- * 用 HashRouter，形如 http://host/base/#/return?link=<id>&status=paid。
- * recordId 提前生成并写进 URL，回流时据此定位本地记录并标记 paid。
- * PLB 仅支持 return_url，不发送 cancel_url。
- */
-function buildReturnUrl(recordId: string) {
-  const base = `${window.location.origin}${window.location.pathname}`
-  return `${base}#/return?link=${recordId}&status=paid`
 }
 
 /** 从产品初始化一个 line item */
@@ -68,11 +58,13 @@ export function CreateLinkDialog({ product, onClose }: Props) {
     setLoading(true)
     setError(null)
     try {
-      // 先生成本地记录 id，写进 return_url，付款成功回流时据此标记 paid
+      // 先生成本地记录 id，写进 return_url，付款成功回流时据此标记 paid。
+      // localhost 且未配 PUBLIC_BASE_URL 时 buildReturnUrl 返回 null → 省略 return_url(仍能创建)。
       const recordId = makeId()
-      console.log('[CreateLinkDialog] creating link', { recordId, reusable, item })
+      const returnUrl = buildReturnUrl(recordId) ?? undefined
+      console.log('[CreateLinkDialog] creating link', { recordId, reusable, returnUrl, item })
       const res = await client.createLink(
-        { reusable, return_url: buildReturnUrl(recordId), line_items: [item] },
+        { reusable, return_url: returnUrl, line_items: [item] },
         recordId,
       )
       const payUrl = extractPayUrl(res)
@@ -125,6 +117,13 @@ export function CreateLinkDialog({ product, onClose }: Props) {
           </div>
 
           <LineItemForm value={item} onChange={setItem} currency={product.currency} />
+
+          {isReturnUrlOmitted() && (
+            <p className="rounded-lg border border-gold/40 bg-gold/10 p-3 text-xs text-foreground">
+              本地 localhost 不能作 PayPal return_url（会被拒），已省略 return_url —— 创建正常，但支付成功不会自动回流站内。
+              需要回流请在 <span className="font-mono">src/config/app.config.ts</span> 配置 <span className="font-mono">PUBLIC_BASE_URL</span>（公网 https / 隧道地址）。
+            </p>
+          )}
 
           {error && (
             <p className="rounded-lg border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">

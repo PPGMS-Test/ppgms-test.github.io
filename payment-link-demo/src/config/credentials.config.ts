@@ -48,9 +48,9 @@ const PARTNER_CREDENTIALS: PartnerCredential[] = [
     environment: 'sandbox',
     mode: 'first-party',
     partnerClientId:
-      'Adz6qoCn9-BQ0tFfWVZBl_rSTyxD0_fpk39E_u2KqT1HoYtN8HTQsSwunpx5Jynk0q8tj1nxUHS-TWlL',
+      'Ae8clZMtGonMbX4-UAGPUv025SVKkFR0DdlK1fFNUXbbqgqLH8jRX-sSBsDevtmrtWv8aBR1q6rSP8mn',
     partnerClientSecret:
-      'ENCbxo_xFeOFsq4uVGll5gDau005zIVG_c7AeBipt60sqbbOdA6netNgqQjd1DUacHj2QUD-4GFVqcU8',
+      'EG6d3EzkMc6yiQ3Yd4w_S3lgeeSFE3L00oTP86CWRBaZISe9CG57dix5QOq5e4CrdG5d88btGLrUOi9V',
   },
 ]
 

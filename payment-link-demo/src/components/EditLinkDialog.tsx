@@ -17,6 +17,7 @@ import {
   type Reusable,
   type PaymentResource,
 } from '@/lib/api/types'
+import { buildReturnUrl } from '@/lib/return-url'
 
 interface Props {
   record: PaymentLinkRecord | null
@@ -90,8 +91,8 @@ export function EditLinkDialog({ record, onClose }: Props) {
     setLoading(true)
     setError(null)
     try {
-      const returnUrl = `${window.location.origin}${window.location.pathname}#/return?link=${record.id}&status=paid`
-      console.log('[EditLinkDialog] updating link', { resourceId: record.resourceId, reusable, item })
+      const returnUrl = buildReturnUrl(record.id) ?? undefined
+      console.log('[EditLinkDialog] updating link', { resourceId: record.resourceId, reusable, returnUrl, item })
       await client.updateLink(record.resourceId, {
         reusable,
         return_url: returnUrl,
