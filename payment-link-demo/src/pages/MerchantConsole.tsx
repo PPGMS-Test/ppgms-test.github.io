@@ -6,6 +6,7 @@ import { ProductCard } from '@/components/ProductCard'
 import { CreateLinkDialog } from '@/components/CreateLinkDialog'
 import { EditLinkDialog } from '@/components/EditLinkDialog'
 import { LinkDetailsDialog } from '@/components/LinkDetailsDialog'
+import { LinkQrDialog } from '@/components/LinkQrDialog'
 import { LinksList } from '@/components/LinksList'
 import ApiLinksBrowser from '@/components/ApiLinksBrowser'
 import { CredentialsPanel } from '@/components/CredentialsPanel'
@@ -18,6 +19,7 @@ export default function MerchantConsole() {
   const products = useProductsStore((s) => s.products)
   const [active, setActive] = useState<Product | null>(null)
   const [editing, setEditing] = useState<PaymentLinkRecord | null>(null)
+  const [qrRecord, setQrRecord] = useState<PaymentLinkRecord | null>(null)
   const [inspectId, setInspectId] = useState<string | null>(null)
 
   return (
@@ -53,7 +55,7 @@ export default function MerchantConsole() {
             <h2 className="font-display text-xl font-bold">Links</h2>
             <p className="mt-1 text-sm text-muted-foreground">Locally created links. Refresh syncs live status; Edit issues a PUT; Delete removes the resource.</p>
             <div className="mt-4">
-              <LinksList onInspect={setInspectId} onEdit={setEditing} />
+              <LinksList onInspect={setInspectId} onEdit={setEditing} onShowQr={setQrRecord} />
             </div>
           </section>
 
@@ -70,6 +72,7 @@ export default function MerchantConsole() {
 
       <CreateLinkDialog product={active} onClose={() => setActive(null)} />
       <EditLinkDialog record={editing} onClose={() => setEditing(null)} />
+      <LinkQrDialog record={qrRecord} onClose={() => setQrRecord(null)} />
       <LinkDetailsDialog resourceId={inspectId} onClose={() => setInspectId(null)} />
     </div>
   )

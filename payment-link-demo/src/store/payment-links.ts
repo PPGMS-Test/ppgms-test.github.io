@@ -21,6 +21,10 @@ export interface PaymentLinkRecord {
   /** 展示名（下单商品名，便于 UI 与 API 导入的记录统一展示） */
   name?: string
   reusable?: string
+  /** 创建时使用的呈现方式（LINK / QR_CODE），用于 UI 区分展示 */
+  integrationMode?: string
+  /** QR_CODE 模式下服务端返回的 QR 图片 URL（若有） */
+  qrCodeUrl?: string
   amount: string
   currency: string
   createdAt: number

@@ -12,7 +12,7 @@ import { useCredentialsStore } from '@/store/credentials'
 import { useFeatureFlagsStore } from '@/store/feature-flags'
 import { usePaymentLinksStore } from '@/store/payment-links'
 import type { Product } from '@/store/products'
-import { extractPayUrl, ApiError, type LineItem, type Reusable } from '@/lib/api/types'
+import { extractPayUrl, extractQrCodeUrl, ApiError, type LineItem, type Reusable, type IntegrationMode } from '@/lib/api/types'
 import { buildReturnUrl, isReturnUrlOmitted } from '@/lib/return-url'
 import {
   defaultProductFormImage,
@@ -46,6 +46,7 @@ export function CreateLinkDialog({ product, onClose }: Props) {
   const imagesEnabled = useFeatureFlagsStore((s) => s.imagesEnabled)
   const addLink = usePaymentLinksStore((s) => s.add)
   const [reusable, setReusable] = useState<Reusable>('MULTIPLE')
+  const [integrationMode, setIntegrationMode] = useState<IntegrationMode>('LINK')
   const [item, setItem] = useState<LineItem>(() =>
     product ? itemFromProduct(product) : { name: '', unit_amount: { currency_code: 'USD', value: '' } },
   )
@@ -59,6 +60,7 @@ export function CreateLinkDialog({ product, onClose }: Props) {
     if (!product) return
     setItem(itemFromProduct(product))
     setReusable('MULTIPLE')
+    setIntegrationMode('LINK')
     setError(null)
     setImgNotice(null)
     setImages([])
@@ -99,12 +101,29 @@ export function CreateLinkDialog({ product, onClose }: Props) {
         }
       }
       const lineItem: LineItem = { ...item, images: apiImages }
-      console.log('[CreateLinkDialog] creating link', { recordId, reusable, returnUrl, item: lineItem })
-      const res = await client.createLink(
-        { reusable, return_url: returnUrl, line_items: [lineItem] },
-        recordId,
-      )
+      const baseInput = { reusable, return_url: returnUrl, line_items: [lineItem] }
+      console.log('[CreateLinkDialog] creating link', { recordId, reusable, integrationMode, returnUrl, item: lineItem })
+      // integration_mode 为 QR_CODE 时 best-effort：公开 sandbox 目前只接受 LINK(实测 QR_CODE → 400
+      // INVALID_PARAMETER_VALUE)。若被拒则自动回退为 LINK 重建(400 未建资源，复用同一幂等键安全)，
+      // 建成后仍可用 Links 里的「QR」按钮由前端本地生成可扫码 QR。
+      let res
+      let effectiveMode = integrationMode
+      try {
+        res = await client.createLink({ integration_mode: integrationMode, ...baseInput }, recordId)
+      } catch (e) {
+        if (integrationMode !== 'LINK' && e instanceof ApiError && (e.status === 400 || e.status === 422)) {
+          console.warn(`[CreateLinkDialog] integration_mode ${integrationMode} rejected (HTTP ${e.status}), falling back to LINK`, e)
+          setImgNotice(
+            `integration_mode "${integrationMode}" 未被当前环境接受（HTTP ${e.status}），已回退为 LINK 创建。可在 Links 里点「QR」按钮由前端本地生成可扫码 QR。`,
+          )
+          effectiveMode = 'LINK'
+          res = await client.createLink({ integration_mode: 'LINK', ...baseInput }, recordId)
+        } else {
+          throw e
+        }
+      }
       const payUrl = extractPayUrl(res)
+      const qrCodeUrl = extractQrCodeUrl(res) ?? undefined
       if (!payUrl) throw new Error('Link created but no pay URL was returned.')
       addLink({
         id: recordId,
@@ -115,6 +134,8 @@ export function CreateLinkDialog({ product, onClose }: Props) {
         resourceStatus: res.status,
         name: item.name,
         reusable,
+        integrationMode: effectiveMode,
+        qrCodeUrl,
         amount: item.unit_amount.value,
         currency: product.currency,
         createdAt: Date.now(),
@@ -141,17 +162,37 @@ export function CreateLinkDialog({ product, onClose }: Props) {
     >
       {product && (
         <div className="space-y-4">
-          <div className="max-w-xs">
-            <Label htmlFor="create-reusable">Reusable</Label>
-            <Select
-              id="create-reusable"
-              value={reusable}
-              onChange={(e) => setReusable(e.target.value as Reusable)}
-            >
-              <option value="MULTIPLE">MULTIPLE — reusable link</option>
-              <option value="SINGLE">SINGLE — one-time link</option>
-            </Select>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div>
+              <Label htmlFor="create-reusable">Reusable</Label>
+              <Select
+                id="create-reusable"
+                value={reusable}
+                onChange={(e) => setReusable(e.target.value as Reusable)}
+              >
+                <option value="MULTIPLE">MULTIPLE — reusable link</option>
+                <option value="SINGLE">SINGLE — one-time link</option>
+              </Select>
+            </div>
+            <div>
+              <Label htmlFor="create-mode">Integration mode</Label>
+              <Select
+                id="create-mode"
+                value={integrationMode}
+                onChange={(e) => setIntegrationMode(e.target.value as IntegrationMode)}
+              >
+                <option value="LINK">LINK — shareable URL</option>
+                <option value="QR_CODE">QR_CODE — QR for offline</option>
+              </Select>
+            </div>
           </div>
+          {integrationMode === 'QR_CODE' && (
+            <p className="rounded-lg border border-gold/40 bg-gold/10 p-3 text-xs text-foreground">
+              以 <span className="font-mono">integration_mode: "QR_CODE"</span> 创建。注意：公开 sandbox 目前只接受 LINK
+              （实测 QR_CODE → 400），本 demo 会在被拒时<b>自动回退为 LINK</b>。无论如何，建成后都可在 Links 里点
+              「QR」按钮由前端本地把支付 URL 生成可扫码 QR（线下门店/展会/打印物料适用）。
+            </p>
+          )}
 
           <LineItemForm
             value={item}

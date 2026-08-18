@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { LinkTicket } from '@/components/LinkTicket'
 import { Button } from '@/components/ui/button'
-import { RefreshCw, Trash2, Pencil, Eye } from 'lucide-react'
+import { RefreshCw, Trash2, Pencil, Eye, QrCode } from 'lucide-react'
 import { useCredentialsStore } from '@/store/credentials'
 import { usePaymentLinksStore, type PaymentLinkRecord } from '@/store/payment-links'
 import { useProductsStore } from '@/store/products'
@@ -12,9 +12,11 @@ interface Props {
   onInspect: (resourceId: string) => void
   /** 编辑某条 link（PUT /{id}） */
   onEdit: (record: PaymentLinkRecord) => void
+  /** 展示某条 link 的 QR Code */
+  onShowQr: (record: PaymentLinkRecord) => void
 }
 
-export function LinksList({ onInspect, onEdit }: Props) {
+export function LinksList({ onInspect, onEdit, onShowQr }: Props) {
   const { client } = useCredentialsStore()
   const links = usePaymentLinksStore((s) => s.links)
   const update = usePaymentLinksStore((s) => s.update)
@@ -69,6 +71,9 @@ export function LinksList({ onInspect, onEdit }: Props) {
             </Button>
             <Button size="sm" variant="outline" onClick={() => onEdit(rec)}>
               <Pencil className="h-3.5 w-3.5" /> Edit
+            </Button>
+            <Button size="sm" variant="outline" onClick={() => onShowQr(rec)}>
+              <QrCode className="h-3.5 w-3.5" /> QR
             </Button>
             <Button size="sm" variant="outline" loading={busy === rec.id} onClick={() => refresh(rec)}>
               <RefreshCw className="h-3.5 w-3.5" /> Refresh

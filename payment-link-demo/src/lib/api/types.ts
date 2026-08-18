@@ -3,7 +3,14 @@
  * 依据官方文档 `POST/GET/PUT/DELETE /v1/checkout/payment-resources` 的 schema 建模，
  * 字段命名与请求/响应体保持一致（snake_case），便于直接序列化上送。
  */
-export type IntegrationMode = 'LINK'
+/**
+ * 集成呈现方式：
+ *  - LINK    可分享的支付链接 URL（默认，官方文档唯一明确记录的值）
+ *  - QR_CODE 生成 QR Code（响应里带 QR 图片 URL）——按内部/AI 说明补充，公开文档未记录
+ *  - BUTTON  可嵌入网页的支付按钮 HTML（同上，UI 暂不暴露）
+ * 注：截至 2026-08 手上文档只明确写了 LINK；QR_CODE/BUTTON 依产品说明补充，实际以线上返回为准。
+ */
+export type IntegrationMode = 'LINK' | 'QR_CODE' | 'BUTTON'
 export type LinkType = 'BUY_NOW'
 /** SINGLE = 一次性链接；MULTIPLE = 可重复使用 */
 export type Reusable = 'SINGLE' | 'MULTIPLE'
@@ -176,6 +183,8 @@ export interface PaymentResource {
   update_time?: string
   /** 买家可支付的托管页 URL（.../ncp/payment/PLB-xxx） */
   payment_link?: string
+  /** QR_CODE 模式下 PayPal 返回的 QR 图片 URL（.../qrcodes/managed/xxx，若有） */
+  qr_code?: string
   line_items?: LineItem[]
   links?: HateoasLink[]
   [key: string]: unknown
@@ -210,9 +219,19 @@ export function extractPayUrl(res: PaymentResource): string | null {
   return byRel ?? null
 }
 
+/**
+ * 从 payment resource 中提取 QR Code 图片 URL（QR_CODE 模式）。
+ * 优先 top-level qr_code，其次 links[] 里 rel=qr_code。都没有则返回 null
+ * （此时可退回用 payment_link 在前端自行生成 QR）。
+ */
+export function extractQrCodeUrl(res: PaymentResource): string | null {
+  if (typeof res.qr_code === 'string' && res.qr_code) return res.qr_code
+  const byRel = res.links?.find((l) => l.rel === 'qr_code' || l.rel === 'qrcode')?.href
+  return byRel ?? null
+}
+
 /** 从 List 响应的 rel=next 链接里解析下一页 page_token（无则返回 null） */
-export function extractNextPageToken(list: PaymentResourceList): string | null {
-  const next = list.links?.find((l) => l.rel === 'next')?.href
+export function extractNextPageToken(list: PaymentResourceList): string | null {  const next = list.links?.find((l) => l.rel === 'next')?.href
   if (!next) return null
   try {
     return new URL(next).searchParams.get('page_token')
