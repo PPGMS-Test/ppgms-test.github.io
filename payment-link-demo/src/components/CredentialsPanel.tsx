@@ -2,8 +2,9 @@ import { useCredentialsStore } from '@/store/credentials'
 import { useFeatureFlagsStore } from '@/store/feature-flags'
 import { Select } from '@/components/ui/select'
 import { Label } from '@/components/ui/label'
-import { KeyRound, Handshake, Store, AlertTriangle, Image as ImageIcon } from 'lucide-react'
+import { KeyRound, Handshake, Store, AlertTriangle, Image as ImageIcon, Info } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { Popover, PopoverHeader, PopoverField } from '@/components/ui/popover'
 import type { IntegrationRole } from '@/config/credentials.config'
 
 const MODES: Array<{ value: IntegrationRole; label: string; icon: typeof Store }> = [
@@ -93,6 +94,13 @@ export function CredentialsPanel() {
           <div className="flex items-center gap-2">
             <ImageIcon className="h-4 w-4 text-gold" />
             <span className="text-sm font-medium text-foreground">Image upload</span>
+            <Popover label="About image upload" align="end" trigger={<Info className="h-3.5 w-3.5" />}>
+              {/* TODO: 内容待填写。可用 PopoverHeader / PopoverField 组合，示例结构如下： */}
+              <PopoverHeader icon={<Info className="h-4 w-4" />} title="标题待填写" />
+              <PopoverField label="LABEL" href="">
+                描述待填写，可内联 <code>code</code>。
+              </PopoverField>
+            </Popover>
           </div>
           <button
             type="button"
@@ -112,11 +120,6 @@ export function CredentialsPanel() {
             />
           </button>
         </div>
-        <p className="mt-2 text-xs text-muted-foreground">
-          PLB 图片 API（<span className="font-mono">/payment-resources/images</span> 两步上传）是内部 Q1 2026 能力，
-          受 feature flag 门控，<span className="text-foreground">公开 sandbox 未部署（调用会 404）</span>。默认关闭；
-          在开了 flag 的内部环境可打开。开启后上传为 best-effort，失败会跳过图片继续建 link。
-        </p>
       </div>
     </div>
   )
