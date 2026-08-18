@@ -191,15 +191,15 @@ describe('createPayPalClient', () => {
     await expect(client.createLink(minimalInput)).rejects.toBeInstanceOf(ApiError)
   })
 
-  it('createLink forwards integration_mode QR_CODE when requested', async () => {
+  it('createLink forwards a non-default integration_mode when requested', async () => {
     const calls = mockFetchSequence([
       { status: 200, body: { access_token: 'TOK', expires_in: 3600 } },
-      { status: 201, body: { id: 'PLB-QR', integration_mode: 'QR_CODE', qr_code: 'https://pp/qr/x' } },
+      { status: 201, body: { id: 'PLB-BTN', integration_mode: 'BUTTON' } },
     ])
     const client = createPayPalClient({ config: createPayPalConfig('sandbox'), credential })
-    await client.createLink({ integration_mode: 'QR_CODE', ...minimalInput })
+    await client.createLink({ integration_mode: 'BUTTON', ...minimalInput })
     const body = JSON.parse(calls[1].init.body as string)
-    expect(body.integration_mode).toBe('QR_CODE')
+    expect(body.integration_mode).toBe('BUTTON')
   })
 
   it('uploadImages POSTs multipart to /images with a files field and no JSON content-type', async () => {

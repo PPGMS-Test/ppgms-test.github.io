@@ -4,13 +4,14 @@
  * 字段命名与请求/响应体保持一致（snake_case），便于直接序列化上送。
  */
 /**
- * 集成呈现方式：
- *  - LINK    可分享的支付链接 URL（默认，官方文档唯一明确记录的值）
- *  - QR_CODE 生成 QR Code（响应里带 QR 图片 URL）——按内部/AI 说明补充，公开文档未记录
- *  - BUTTON  可嵌入网页的支付按钮 HTML（同上，UI 暂不暴露）
- * 注：截至 2026-08 手上文档只明确写了 LINK；QR_CODE/BUTTON 依产品说明补充，实际以线上返回为准。
+ * 集成呈现方式（已核实：官方文档只给了 LINK；另有 BUTTON 用于内嵌 JS SDK 按钮）。
+ *  - LINK   可分享的支付链接 URL（默认）
+ *  - BUTTON 内嵌网页的支付按钮（JS SDK）
+ * 注意：**PLB 没有 QR_CODE 集成模式**——PLB API 不提供 QR 生成接口；paypal.com 后台看到的 QR
+ * 也是前端把 payment_link URL 渲染成图，不是 API 能力。本 demo 的 QR 同样在前端本地生成
+ * （见 LinkQrDialog：用 payment_link 生成可扫码 PNG）。
  */
-export type IntegrationMode = 'LINK' | 'QR_CODE' | 'BUTTON'
+export type IntegrationMode = 'LINK' | 'BUTTON'
 export type LinkType = 'BUY_NOW'
 /** SINGLE = 一次性链接；MULTIPLE = 可重复使用 */
 export type Reusable = 'SINGLE' | 'MULTIPLE'
