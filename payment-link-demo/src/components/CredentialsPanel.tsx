@@ -1,7 +1,8 @@
 import { useCredentialsStore } from '@/store/credentials'
+import { useFeatureFlagsStore } from '@/store/feature-flags'
 import { Select } from '@/components/ui/select'
 import { Label } from '@/components/ui/label'
-import { KeyRound, Handshake, Store, AlertTriangle } from 'lucide-react'
+import { KeyRound, Handshake, Store, AlertTriangle, Image as ImageIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { IntegrationRole } from '@/config/credentials.config'
 
@@ -13,6 +14,8 @@ const MODES: Array<{ value: IntegrationRole; label: string; icon: typeof Store }
 /** 只读展示 + 角色(1st/3rd)与预设切换（凭证来自 hardcode config，不在 UI 编辑） */
 export function CredentialsPanel() {
   const { presets, mode, selectedId, credential, select, setMode } = useCredentialsStore()
+  const imagesEnabled = useFeatureFlagsStore((s) => s.imagesEnabled)
+  const toggleImages = useFeatureFlagsStore((s) => s.toggleImages)
   const modePresets = presets.filter((p) => p.mode === mode)
   const missingCreds = !credential.partnerClientId || !credential.partnerClientSecret
 
@@ -82,6 +85,38 @@ export function CredentialsPanel() {
             )}
           </dl>
         )}
+      </div>
+
+      {/* 全局功能开关：PLB 图片两步上传（内部 Q1 2026 能力，feature-flag 门控，公开 sandbox 未部署） */}
+      <div className="mt-5 border-t border-border pt-4">
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <ImageIcon className="h-4 w-4 text-gold" />
+            <span className="text-sm font-medium text-foreground">Image upload</span>
+          </div>
+          <button
+            type="button"
+            role="switch"
+            aria-checked={imagesEnabled}
+            onClick={toggleImages}
+            className={cn(
+              'relative inline-flex h-5 w-9 flex-shrink-0 items-center rounded-full transition-colors',
+              imagesEnabled ? 'bg-primary' : 'bg-muted-foreground/30',
+            )}
+          >
+            <span
+              className={cn(
+                'inline-block h-4 w-4 transform rounded-full bg-white transition-transform',
+                imagesEnabled ? 'translate-x-4' : 'translate-x-0.5',
+              )}
+            />
+          </button>
+        </div>
+        <p className="mt-2 text-xs text-muted-foreground">
+          PLB 图片 API（<span className="font-mono">/payment-resources/images</span> 两步上传）是内部 Q1 2026 能力，
+          受 feature flag 门控，<span className="text-foreground">公开 sandbox 未部署（调用会 404）</span>。默认关闭；
+          在开了 flag 的内部环境可打开。开启后上传为 best-effort，失败会跳过图片继续建 link。
+        </p>
       </div>
     </div>
   )

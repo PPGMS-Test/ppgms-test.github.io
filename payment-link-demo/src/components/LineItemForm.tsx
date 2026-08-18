@@ -30,6 +30,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select } from '@/components/ui/select'
 import { Button } from '@/components/ui/button'
+import { useFeatureFlagsStore } from '@/store/feature-flags'
 import {
   MAX_IMAGES_PER_ITEM,
   ACCEPTED_IMAGE_TYPES,
@@ -161,6 +162,7 @@ export function LineItemForm({ value, onChange, currency, images, onImagesChange
   // 统一入口：局部 patch 合并到 value 后 emit
   const patch = (p: Partial<LineItem>) => onChange({ ...value, ...p })
 
+  const imagesEnabled = useFeatureFlagsStore((s) => s.imagesEnabled)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const tax = value.taxes?.[0]
@@ -284,8 +286,9 @@ export function LineItemForm({ value, onChange, currency, images, onImagesChange
         </div>
       </Section>
 
-      {/* ── 1b. 图片（两步上传：先上传拿 asset_id，再随 line item 引用） ──── */}
-      <Section icon={<ImageIcon className="h-4 w-4" />} label="Images">
+      {/* ── 1b. 图片（两步上传：先上传拿 asset_id，再随 line item 引用）；受全局开关门控 ── */}
+      {imagesEnabled && (
+        <Section icon={<ImageIcon className="h-4 w-4" />} label="Images">
         <p className="mb-3 text-xs text-muted-foreground">
           Up to {MAX_IMAGES_PER_ITEM} images · PNG / JPEG / BMP · exactly one primary. Uploaded on
           submit (2-step: <span className="font-mono">POST /images</span> → asset_id →{' '}
@@ -369,7 +372,8 @@ export function LineItemForm({ value, onChange, currency, images, onImagesChange
         >
           <Plus className="h-4 w-4" /> Add image
         </Button>
-      </Section>
+        </Section>
+      )}
 
       {/* ── 2. 收货地址 ───────────────────────────────────────────────── */}
       <Section icon={<Truck className="h-4 w-4" />} label="Shipping address">

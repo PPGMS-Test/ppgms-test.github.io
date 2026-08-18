@@ -10,6 +10,19 @@
  */
 export const PUBLIC_BASE_URL = ''
 
+/**
+ * 图片两步上传功能的**默认开关**。
+ *
+ * PLB 图片 API（POST/GET/DELETE /v1/checkout/payment-resources/images + line_items[].images[]）
+ * 是 PayPal 内部 Q1 2026 「Advanced Commerce」路线图上的能力，目前处于 Architect Review / HLD·LLD·Spike
+ * 阶段，受 feature flag(ADR-IMG-016) 门控，**尚未部署到公开的 api-m.sandbox.paypal.com**（直接调用返回 404）。
+ *
+ * 因此默认关闭：公开 sandbox 上 demo 照常建 link，不受影响。
+ * 在开了该 flag 的内部环境里，把此项设为 true（或用 UI 上的全局开关打开），即可启用完整两步上传。
+ * 开启后上传仍是 best-effort：接口不可用时只记录并跳过图片，不会挡住建 link。
+ */
+export const IMAGES_FEATURE_DEFAULT = false
+
 /** 本地回环 host（这些 host 不能作 PayPal return_url） */
 export function isLoopbackHost(hostname: string): boolean {
   return hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '[::1]' || hostname === '::1'

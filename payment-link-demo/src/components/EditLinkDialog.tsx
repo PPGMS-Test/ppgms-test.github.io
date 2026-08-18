@@ -104,9 +104,15 @@ export function EditLinkDialog({ record, onClose }: Props) {
     setError(null)
     try {
       const returnUrl = buildReturnUrl(record.id) ?? undefined
-      // 上传本次新加入的图片，已有 asset_id 的原样保留
-      const resolvedImages = await resolveImageAssets(client, images)
-      setImages(resolvedImages)
+      // best-effort：上传本次新加入的图片（已有 asset_id 的引用原样保留，不重传）。
+      // 上传失败不阻断 PUT——退回用已解析到的引用（保留原有图片）。
+      let resolvedImages = images
+      try {
+        resolvedImages = await resolveImageAssets(client, images)
+        setImages(resolvedImages)
+      } catch (e) {
+        console.warn('[EditLinkDialog] image upload failed, keeping existing image refs', e)
+      }
       const apiImages = toApiImages(resolvedImages)
       const lineItem: LineItem = { ...item, images: apiImages }
       console.log('[EditLinkDialog] updating link', { resourceId: record.resourceId, reusable, returnUrl, item: lineItem })

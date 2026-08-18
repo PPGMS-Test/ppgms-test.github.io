@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { createPayPalClient } from './client'
 import { createPayPalConfig } from '@/config/paypal.config'
 import type { PartnerCredential } from '@/config/credentials.config'
-import { ApiError } from './types'
+import { ApiError, isImageUploadSuccess } from './types'
 import type { CreatePaymentResourceInput } from './types'
 
 const credential: PartnerCredential = {
@@ -194,13 +194,14 @@ describe('createPayPalClient', () => {
   it('uploadImages POSTs multipart to /images with a files field and no JSON content-type', async () => {
     const calls = mockFetchSequence([
       { status: 200, body: { access_token: 'TOK', expires_in: 3600 } },
-      { status: 207, body: { images: [{ asset_id: 'ASSET-1', status: 'ACTIVE' }] } },
+      { status: 207, body: { images: [{ asset_id: 'ASSET-1', status: 'APPROVED' }] } },
     ])
     const client = createPayPalClient({ config: createPayPalConfig('sandbox'), credential })
     const file = new File([new Uint8Array([1, 2, 3])], 'logo.png', { type: 'image/png' })
     const res = await client.uploadImages([file])
 
-    expect(res.images[0].asset_id).toBe('ASSET-1')
+    const first = res.images[0]
+    expect(isImageUploadSuccess(first) && first.asset_id).toBe('ASSET-1')
     expect(calls[1].url).toBe('https://api-m.sandbox.paypal.com/v1/checkout/payment-resources/images')
     expect(calls[1].init.method).toBe('POST')
     // multipart：body 必须是 FormData，字段名 files，且不能手工带 application/json

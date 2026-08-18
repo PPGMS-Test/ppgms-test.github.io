@@ -46,7 +46,7 @@ describe('resolveImageAssets', () => {
     const fakeClient = {
       async uploadImages(files: File[]): Promise<ImageUploadResponse> {
         uploaded.push(files)
-        return { images: files.map((_, i) => ({ asset_id: `NEW-${i}`, status: 'ACTIVE' })) }
+        return { images: files.map((_, i) => ({ asset_id: `NEW-${i}`, status: 'APPROVED' })) }
       },
     }
     const input = [
@@ -61,7 +61,28 @@ describe('resolveImageAssets', () => {
     expect(out[0].asset_id).toBe('EXISTING') // 已有的原样保留
     expect(out[1].asset_id).toBe('NEW-0')
     expect(out[2].asset_id).toBe('NEW-1')
-    expect(out[1].status).toBe('ACTIVE')
+    expect(out[1].status).toBe('APPROVED')
+  })
+
+  it('maps 207 results back by input_index and skips failed items', async () => {
+    const fakeClient = {
+      async uploadImages(): Promise<ImageUploadResponse> {
+        // 顺序打乱 + 一张失败：用 input_index 映射，失败项(无 asset_id)跳过
+        return {
+          images: [
+            { name: 'FILE_TOO_LARGE', message: 'too big', input_index: 1 },
+            { asset_id: 'OK-0', status: 'IN_REVIEW', input_index: 0 },
+          ],
+        }
+      },
+    }
+    const input = [img({ file: new File([], 'a.png') }), img({ file: new File([], 'b.png') })]
+    const out = await resolveImageAssets(fakeClient, input)
+
+    expect(out[0].asset_id).toBe('OK-0') // input_index 0 → 第一张
+    expect(out[0].status).toBe('IN_REVIEW')
+    expect(out[1].asset_id).toBeUndefined() // 失败的那张不回填
+    expect(out[1].file).toBeDefined()
   })
 
   it('does not call uploadImages when nothing is pending', async () => {

@@ -69,19 +69,53 @@ export interface LineItemImage {
   is_primary?: boolean
 }
 
-/** 图片资产状态；上传后可能短暂处于 IN_REVIEW */
-export type ImageStatus = 'ACTIVE' | 'IN_REVIEW' | 'REJECTED' | (string & {})
+/**
+ * 图片资产（moderation）状态，来自内部 spec：
+ *  - APPROVED  实时 CSAM 扫描通过，买家端可见
+ *  - IN_REVIEW 被内部模型标记进入人工复核，可被引用但买家端暂时抑制
+ *  - REJECTED  复核不通过
+ *  - DELETED   已删除
+ */
+export type ImageStatus = 'APPROVED' | 'IN_REVIEW' | 'REJECTED' | 'DELETED' | (string & {})
 
-/** 上传 / 查询单张图片返回的资产信息 */
+/** 上传 / 查询单张图片返回的资产信息（207 里成功项 / GET {asset_id} 响应） */
 export interface ImageAsset {
   asset_id: string
   status: ImageStatus
+  /** 该图已附着到哪个 payment resource；null=已上传但未被任何资源引用 */
+  resource_id?: string | null
+  /** PayPal 托管的图片 URL（pics.paypal.com/...） */
+  url?: string
+  width?: number
+  height?: number
+  file_size?: number
+  content_type?: string
+  create_time?: string
   [key: string]: unknown
 }
 
-/** POST /payment-resources/images 返回体（207 Multi-Status）：逐个文件的上传结果 */
+/** 207 响应里单张图片失败时的错误项（name/message + 请求内零基下标） */
+export interface ImageUploadError {
+  name: string
+  message?: string
+  /** 对应请求数组里的零基位置，用于把结果映射回输入 */
+  input_index: number
+}
+
+/** POST /payment-resources/images 单个结果：成功(ImageAsset) 或失败(ImageUploadError) */
+export type ImageUploadResult = ImageAsset | ImageUploadError
+
+/**
+ * POST /payment-resources/images 返回体（207 Multi-Status）。
+ * images[] 与传入文件按序对应，逐项独立处理：成功项含 asset_id，失败项含 name/input_index。
+ */
 export interface ImageUploadResponse {
-  images: ImageAsset[]
+  images: ImageUploadResult[]
+}
+
+/** 判断 207 里某结果项是否为成功（含 asset_id） */
+export function isImageUploadSuccess(r: ImageUploadResult): r is ImageAsset {
+  return typeof (r as ImageAsset).asset_id === 'string'
 }
 
 export interface AdjustableQuantity {

@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label'
 import { Select } from '@/components/ui/select'
 import { LineItemForm } from '@/components/LineItemForm'
 import { useCredentialsStore } from '@/store/credentials'
+import { useFeatureFlagsStore } from '@/store/feature-flags'
 import { usePaymentLinksStore } from '@/store/payment-links'
 import type { Product } from '@/store/products'
 import { extractPayUrl, ApiError, type LineItem, type Reusable } from '@/lib/api/types'
@@ -42,6 +43,7 @@ function itemFromProduct(product: Product): LineItem {
 
 export function CreateLinkDialog({ product, onClose }: Props) {
   const { client } = useCredentialsStore()
+  const imagesEnabled = useFeatureFlagsStore((s) => s.imagesEnabled)
   const addLink = usePaymentLinksStore((s) => s.add)
   const [reusable, setReusable] = useState<Reusable>('MULTIPLE')
   const [item, setItem] = useState<LineItem>(() =>
@@ -50,14 +52,17 @@ export function CreateLinkDialog({ product, onClose }: Props) {
   const [images, setImages] = useState<FormImage[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [imgNotice, setImgNotice] = useState<string | null>(null)
 
-  // product 切换时重置表单，并异步生成一张默认商品图作主图
+  // product 切换时重置表单；启用图片功能时异步生成一张默认商品图作主图
   useEffect(() => {
     if (!product) return
     setItem(itemFromProduct(product))
     setReusable('MULTIPLE')
     setError(null)
+    setImgNotice(null)
     setImages([])
+    if (!imagesEnabled) return
     let cancelled = false
     defaultProductFormImage(product)
       .then((img) => {
@@ -67,7 +72,7 @@ export function CreateLinkDialog({ product, onClose }: Props) {
     return () => {
       cancelled = true
     }
-  }, [product?.id]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [product?.id, imagesEnabled]) // eslint-disable-line react-hooks/exhaustive-deps
 
   async function submit() {
     if (!product) return
@@ -78,10 +83,21 @@ export function CreateLinkDialog({ product, onClose }: Props) {
       // localhost 且未配 PUBLIC_BASE_URL 时 buildReturnUrl 返回 null → 省略 return_url(仍能创建)。
       const recordId = makeId()
       const returnUrl = buildReturnUrl(recordId) ?? undefined
-      // 两步上传：先把未上传的图片上传拿 asset_id，再随 line item 引用
-      const resolvedImages = await resolveImageAssets(client, images)
-      setImages(resolvedImages)
-      const apiImages = toApiImages(resolvedImages)
+      // 两步上传（best-effort，仅当全局开关启用）：先把未上传的图片上传拿 asset_id，再随 line item 引用。
+      // 图片接口若在当前环境未部署/失败，只记录并跳过图片，不阻断建 link。
+      let apiImages: LineItem['images']
+      if (imagesEnabled && images.length > 0) {
+        try {
+          const resolvedImages = await resolveImageAssets(client, images)
+          setImages(resolvedImages)
+          apiImages = toApiImages(resolvedImages)
+        } catch (e) {
+          console.warn('[CreateLinkDialog] image upload failed, creating link without images', e)
+          setImgNotice(
+            '图片上传失败（该接口可能未在当前环境部署，见全局开关说明），已跳过图片继续创建。',
+          )
+        }
+      }
       const lineItem: LineItem = { ...item, images: apiImages }
       console.log('[CreateLinkDialog] creating link', { recordId, reusable, returnUrl, item: lineItem })
       const res = await client.createLink(
@@ -149,6 +165,12 @@ export function CreateLinkDialog({ product, onClose }: Props) {
             <p className="rounded-lg border border-gold/40 bg-gold/10 p-3 text-xs text-foreground">
               本地 localhost 不能作 PayPal return_url（会被拒），已省略 return_url —— 创建正常，但支付成功不会自动回流站内。
               需要回流请在 <span className="font-mono">src/config/app.config.ts</span> 配置 <span className="font-mono">PUBLIC_BASE_URL</span>（公网 https / 隧道地址）。
+            </p>
+          )}
+
+          {imgNotice && (
+            <p className="rounded-lg border border-gold/40 bg-gold/10 p-3 text-xs text-foreground">
+              {imgNotice}
             </p>
           )}
 

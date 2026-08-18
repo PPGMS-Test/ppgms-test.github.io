@@ -12,10 +12,12 @@
  */
 import type { Product } from '@/store/products'
 import type { PayPalClient } from '@/lib/api/client'
-import type { LineItem, LineItemImage } from '@/lib/api/types'
+import { isImageUploadSuccess, type LineItem, type LineItemImage } from '@/lib/api/types'
 
 /** 每个 line item 最多 5 张图片（文档约束） */
 export const MAX_IMAGES_PER_ITEM = 5
+/** 单次上传请求最多 15 张（内部 spec：>15 → 400 MAX_BATCH_SIZE_EXCEEDED） */
+export const MAX_IMAGES_PER_BATCH = 15
 /** 文件选择器接受的类型（文档：PNG / JPEG / BMP） */
 export const ACCEPTED_IMAGE_TYPES = 'image/png,image/jpeg,image/bmp'
 
@@ -119,7 +121,8 @@ export async function defaultProductFormImage(product: Product): Promise<FormIma
 // ── 上送前处理 ────────────────────────────────────────────────────────────────
 
 /**
- * 上传所有尚未有 asset_id 的图片（第一步），保序把返回的 asset_id/status 回填；
+ * 上传所有尚未有 asset_id 的图片（第一步），按 207 的 input_index/顺序把成功项的
+ * asset_id/status 回填；失败项(name/message/input_index)记录到 console，对应 FormImage 原样保留(无 asset_id)。
  * 已上传（有 asset_id）的原样保留。无待上传项时不发请求。
  */
 export async function resolveImageAssets(
@@ -130,12 +133,31 @@ export async function resolveImageAssets(
   if (pending.length === 0) return images
 
   const res = await client.uploadImages(pending.map((i) => i.file as File))
-  const uploaded = res.images ?? []
-  let u = 0
+  const results = res.images ?? []
+
+  // 把 207 结果按位置映射回 pending：优先用 input_index，否则按数组顺序
+  let seq = 0
+  const byPendingIndex = new Map<number, FormImage>()
+  for (const r of results) {
+    const idx = typeof (r as { input_index?: number }).input_index === 'number'
+      ? (r as { input_index: number }).input_index
+      : seq
+    seq++
+    const target = pending[idx]
+    if (!target) continue
+    if (isImageUploadSuccess(r)) {
+      byPendingIndex.set(idx, { ...target, asset_id: r.asset_id, status: r.status })
+    } else {
+      console.warn('[images] upload failed for one image', r)
+    }
+  }
+
+  let p = 0
   return images.map((img) => {
     if (img.asset_id || !img.file) return img
-    const a = uploaded[u++]
-    return a ? { ...img, asset_id: a.asset_id, status: a.status } : img
+    const resolved = byPendingIndex.get(p)
+    p++
+    return resolved ?? img
   })
 }
 
