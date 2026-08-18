@@ -13,6 +13,12 @@ import { usePaymentLinksStore } from '@/store/payment-links'
 import type { Product } from '@/store/products'
 import { extractPayUrl, ApiError, type LineItem, type Reusable } from '@/lib/api/types'
 import { buildReturnUrl, isReturnUrlOmitted } from '@/lib/return-url'
+import {
+  defaultProductFormImage,
+  resolveImageAssets,
+  toApiImages,
+  type FormImage,
+} from '@/lib/images'
 
 interface Props {
   product: Product | null
@@ -41,15 +47,25 @@ export function CreateLinkDialog({ product, onClose }: Props) {
   const [item, setItem] = useState<LineItem>(() =>
     product ? itemFromProduct(product) : { name: '', unit_amount: { currency_code: 'USD', value: '' } },
   )
+  const [images, setImages] = useState<FormImage[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  // product 切换时重置表单
+  // product 切换时重置表单，并异步生成一张默认商品图作主图
   useEffect(() => {
-    if (product) {
-      setItem(itemFromProduct(product))
-      setReusable('MULTIPLE')
-      setError(null)
+    if (!product) return
+    setItem(itemFromProduct(product))
+    setReusable('MULTIPLE')
+    setError(null)
+    setImages([])
+    let cancelled = false
+    defaultProductFormImage(product)
+      .then((img) => {
+        if (!cancelled) setImages([img])
+      })
+      .catch((e) => console.warn('[CreateLinkDialog] default image generation failed', e))
+    return () => {
+      cancelled = true
     }
   }, [product?.id]) // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -62,9 +78,14 @@ export function CreateLinkDialog({ product, onClose }: Props) {
       // localhost 且未配 PUBLIC_BASE_URL 时 buildReturnUrl 返回 null → 省略 return_url(仍能创建)。
       const recordId = makeId()
       const returnUrl = buildReturnUrl(recordId) ?? undefined
-      console.log('[CreateLinkDialog] creating link', { recordId, reusable, returnUrl, item })
+      // 两步上传：先把未上传的图片上传拿 asset_id，再随 line item 引用
+      const resolvedImages = await resolveImageAssets(client, images)
+      setImages(resolvedImages)
+      const apiImages = toApiImages(resolvedImages)
+      const lineItem: LineItem = { ...item, images: apiImages }
+      console.log('[CreateLinkDialog] creating link', { recordId, reusable, returnUrl, item: lineItem })
       const res = await client.createLink(
-        { reusable, return_url: returnUrl, line_items: [item] },
+        { reusable, return_url: returnUrl, line_items: [lineItem] },
         recordId,
       )
       const payUrl = extractPayUrl(res)
@@ -116,7 +137,13 @@ export function CreateLinkDialog({ product, onClose }: Props) {
             </Select>
           </div>
 
-          <LineItemForm value={item} onChange={setItem} currency={product.currency} />
+          <LineItemForm
+            value={item}
+            onChange={setItem}
+            currency={product.currency}
+            images={images}
+            onImagesChange={setImages}
+          />
 
           {isReturnUrlOmitted() && (
             <p className="rounded-lg border border-gold/40 bg-gold/10 p-3 text-xs text-foreground">

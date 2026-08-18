@@ -61,6 +61,29 @@ export interface Variants {
   dimensions: VariantDimension[]
 }
 
+/** line_items[].images[] 中引用一张已上传图片（两步上传第二步：用 asset_id 关联） */
+export interface LineItemImage {
+  /** 第一步上传返回的资产 id */
+  asset_id: string
+  /** 每个 line item 有且仅有一张 is_primary=true 的主图 */
+  is_primary?: boolean
+}
+
+/** 图片资产状态；上传后可能短暂处于 IN_REVIEW */
+export type ImageStatus = 'ACTIVE' | 'IN_REVIEW' | 'REJECTED' | (string & {})
+
+/** 上传 / 查询单张图片返回的资产信息 */
+export interface ImageAsset {
+  asset_id: string
+  status: ImageStatus
+  [key: string]: unknown
+}
+
+/** POST /payment-resources/images 返回体（207 Multi-Status）：逐个文件的上传结果 */
+export interface ImageUploadResponse {
+  images: ImageAsset[]
+}
+
 export interface AdjustableQuantity {
   /** 创建时文档用 { maximum }；响应有时回 { enabled, min_quantity, max_quantity }，宽松建模 */
   maximum?: number
@@ -83,6 +106,8 @@ export interface LineItem {
   customer_notes?: CustomerNote[]
   variants?: Variants
   adjustable_quantity?: AdjustableQuantity
+  /** 商品图片：最多 5 张，有且仅有 1 张 is_primary=true（asset_id 由两步上传第一步获得） */
+  images?: LineItemImage[]
 }
 
 /** 创建/更新 payment resource 的请求体（PUT 为整体替换，结构相同） */

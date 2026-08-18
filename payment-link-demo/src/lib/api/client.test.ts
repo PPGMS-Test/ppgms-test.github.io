@@ -190,4 +190,43 @@ describe('createPayPalClient', () => {
     const client = createPayPalClient({ config: createPayPalConfig('sandbox'), credential })
     await expect(client.createLink(minimalInput)).rejects.toBeInstanceOf(ApiError)
   })
+
+  it('uploadImages POSTs multipart to /images with a files field and no JSON content-type', async () => {
+    const calls = mockFetchSequence([
+      { status: 200, body: { access_token: 'TOK', expires_in: 3600 } },
+      { status: 207, body: { images: [{ asset_id: 'ASSET-1', status: 'ACTIVE' }] } },
+    ])
+    const client = createPayPalClient({ config: createPayPalConfig('sandbox'), credential })
+    const file = new File([new Uint8Array([1, 2, 3])], 'logo.png', { type: 'image/png' })
+    const res = await client.uploadImages([file])
+
+    expect(res.images[0].asset_id).toBe('ASSET-1')
+    expect(calls[1].url).toBe('https://api-m.sandbox.paypal.com/v1/checkout/payment-resources/images')
+    expect(calls[1].init.method).toBe('POST')
+    // multipart：body 必须是 FormData，字段名 files，且不能手工带 application/json
+    const body = calls[1].init.body as unknown as FormData
+    expect(body).toBeInstanceOf(FormData)
+    expect(body.getAll('files')).toHaveLength(1)
+    const headers = calls[1].init.headers as Record<string, string>
+    expect(headers['Content-Type']).toBeUndefined()
+    // 鉴权头仍在
+    expect(headers.Authorization).toBe('Bearer TOK')
+  })
+
+  it('getImage/deleteImage hit the image asset endpoint with id and right method', async () => {
+    const calls = mockFetchSequence([
+      { status: 200, body: { access_token: 'TOK', expires_in: 3600 } },
+      { status: 200, body: { asset_id: 'ASSET-9', status: 'ACTIVE' } },
+      { status: 204, body: null },
+    ])
+    const client = createPayPalClient({ config: createPayPalConfig('sandbox'), credential })
+
+    await client.getImage('ASSET-9')
+    expect(calls[1].url).toBe('https://api-m.sandbox.paypal.com/v1/checkout/payment-resources/images/ASSET-9')
+    expect(calls[1].init.method).toBe('GET')
+
+    await client.deleteImage('ASSET-9')
+    expect(calls[2].url).toBe('https://api-m.sandbox.paypal.com/v1/checkout/payment-resources/images/ASSET-9')
+    expect(calls[2].init.method).toBe('DELETE')
+  })
 })

@@ -29,17 +29,28 @@ export function compose(...enhancers: Enhancer[]): Enhancer {
   return (next) => enhancers.reduceRight((acc, e) => e(acc), next)
 }
 
+/** body 是否为 multipart FormData（图片上传用；浏览器需自行设置带 boundary 的 Content-Type） */
+function isFormData(body: unknown): body is FormData {
+  return typeof FormData !== 'undefined' && body instanceof FormData
+}
+
 /** 底层执行器：真正发 fetch，解析 JSON（失败则回退文本） */
 export const baseFetch: RequestFn = async (req) => {
+  const form = isFormData(req.body)
+  // multipart：必须删掉手工设的 Content-Type，交给浏览器带 boundary 自动生成
+  const headers = { ...req.headers }
+  if (form) delete headers['Content-Type']
   const res = await fetch(req.url, {
     method: req.method,
-    headers: req.headers,
+    headers,
     body:
       req.body === undefined
         ? undefined
-        : typeof req.body === 'string'
-          ? req.body
-          : JSON.stringify(req.body),
+        : form
+          ? (req.body as FormData)
+          : typeof req.body === 'string'
+            ? req.body
+            : JSON.stringify(req.body),
   })
   const text = await res.text()
   let data: unknown = null
@@ -74,6 +85,18 @@ function decodeAssertion(assertion: string): { iss?: string; payer_id?: string }
   }
 }
 
+/** 把 FormData 概述成可读结构（列字段名 + 文件名/大小），避免 JSON.stringify 打成 {} */
+function describeFormData(form: FormData): Record<string, unknown> {
+  const out: Record<string, unknown> = {}
+  for (const [k, v] of form.entries()) {
+    const desc =
+      v instanceof File ? `File(${v.name}, ${v.type || 'unknown'}, ${v.size}B)` : String(v)
+    if (k in out) out[k] = ([] as unknown[]).concat(out[k], desc)
+    else out[k] = desc
+  }
+  return out
+}
+
 /** 对象转格式化 JSON 字符串便于 console 查看；字符串/原始值原样返回 */
 function pretty(value: unknown): string {
   if (typeof value === 'string') return value
@@ -93,7 +116,10 @@ export const withLogging: Enhancer = (next) => async (req) => {
   // 一方模式(及 oauth 调用)该头不存在，打印 "(none)"
   const assertion = req.headers['PayPal-Auth-Assertion']
   console.log(`${tag}[2b] auth-assertion`, assertion ? pretty(decodeAssertion(assertion) ?? '(undecodable)') : '(none)')
-  if (req.body !== undefined) console.log(`${tag}[3] body`, pretty(req.body))
+  if (req.body !== undefined) {
+    const body = req.body instanceof FormData ? describeFormData(req.body) : req.body
+    console.log(`${tag}[3] body`, pretty(body))
+  }
   const res = await next(req)
   if (res.ok) {
     console.log(`${tag}[4] HTTP ${res.status} ✓`, pretty(res.data))

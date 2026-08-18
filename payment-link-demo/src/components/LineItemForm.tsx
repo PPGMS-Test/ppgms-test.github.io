@@ -22,11 +22,20 @@ import {
   Layers,
   Plus,
   Trash2,
+  Image as ImageIcon,
+  Star,
 } from 'lucide-react'
+import { useRef } from 'react'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select } from '@/components/ui/select'
 import { Button } from '@/components/ui/button'
+import {
+  MAX_IMAGES_PER_ITEM,
+  ACCEPTED_IMAGE_TYPES,
+  filesToFormImages,
+  type FormImage,
+} from '@/lib/images'
 import type {
   LineItem,
   AmountType,
@@ -43,6 +52,9 @@ interface Props {
   value: LineItem
   onChange: (next: LineItem) => void
   currency: string
+  /** 图片作为独立 UI 状态（含未上传 File / 预览），由父级持有并在提交时上传 */
+  images: FormImage[]
+  onImagesChange: (next: FormImage[]) => void
 }
 
 const MAX_DIMENSIONS = 3
@@ -145,9 +157,11 @@ function AmountTypeSelect({
 
 // ── 主组件 ────────────────────────────────────────────────────────────────────
 
-export function LineItemForm({ value, onChange, currency }: Props) {
+export function LineItemForm({ value, onChange, currency, images, onImagesChange }: Props) {
   // 统一入口：局部 patch 合并到 value 后 emit
   const patch = (p: Partial<LineItem>) => onChange({ ...value, ...p })
+
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const tax = value.taxes?.[0]
   const shipping = value.shipping?.[0]
@@ -202,6 +216,28 @@ export function LineItemForm({ value, onChange, currency }: Props) {
     })
   }
 
+  // ── 图片操作 ────────────────────────────────────────────────────────────────
+  function addImageFiles(fileList: FileList | null) {
+    if (!fileList || fileList.length === 0) return
+    const remaining = MAX_IMAGES_PER_ITEM - images.length
+    if (remaining <= 0) return
+    const picked = Array.from(fileList).slice(0, remaining)
+    // 当前没有任何图片时，新加入的首张自动设为主图
+    onImagesChange([...images, ...filesToFormImages(picked, images.length === 0)])
+    if (fileInputRef.current) fileInputRef.current.value = ''
+  }
+  function removeImage(key: string) {
+    let next = images.filter((i) => i.key !== key)
+    // 删掉的若是主图且仍有剩余，则把第一张补为主图（保证有且仅有一张主图）
+    if (next.length > 0 && !next.some((i) => i.is_primary)) {
+      next = next.map((i, idx) => ({ ...i, is_primary: idx === 0 }))
+    }
+    onImagesChange(next)
+  }
+  function setPrimaryImage(key: string) {
+    onImagesChange(images.map((i) => ({ ...i, is_primary: i.key === key })))
+  }
+
   return (
     <div className="space-y-4">
       {/* ── 1. 基础信息 ───────────────────────────────────────────────── */}
@@ -246,6 +282,93 @@ export function LineItemForm({ value, onChange, currency }: Props) {
             />
           </div>
         </div>
+      </Section>
+
+      {/* ── 1b. 图片（两步上传：先上传拿 asset_id，再随 line item 引用） ──── */}
+      <Section icon={<ImageIcon className="h-4 w-4" />} label="Images">
+        <p className="mb-3 text-xs text-muted-foreground">
+          Up to {MAX_IMAGES_PER_ITEM} images · PNG / JPEG / BMP · exactly one primary. Uploaded on
+          submit (2-step: <span className="font-mono">POST /images</span> → asset_id →{' '}
+          <span className="font-mono">line_items[].images[]</span>).
+        </p>
+
+        {images.length > 0 && (
+          <div className="mb-3 grid grid-cols-2 gap-3 sm:grid-cols-3">
+            {images.map((img) => (
+              <div key={img.key} className="rounded-lg border border-border p-2">
+                <div className="relative aspect-square overflow-hidden rounded-md bg-muted">
+                  {img.previewUrl ? (
+                    <img
+                      src={img.previewUrl}
+                      alt=""
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <div className="flex h-full w-full flex-col items-center justify-center gap-1 text-muted-foreground">
+                      <ImageIcon className="h-6 w-6" />
+                      <span className="px-1 text-center font-mono text-[10px] break-all">
+                        {img.asset_id ?? 'asset'}
+                      </span>
+                    </div>
+                  )}
+                  {img.is_primary && (
+                    <span className="absolute left-1 top-1 inline-flex items-center gap-1 rounded-full bg-brand px-2 py-0.5 text-[10px] font-medium text-white">
+                      <Star className="h-3 w-3" /> Primary
+                    </span>
+                  )}
+                </div>
+
+                <div className="mt-2 space-y-1">
+                  {img.asset_id ? (
+                    <div className="font-mono text-[10px] text-muted-foreground break-all">
+                      {img.asset_id}
+                      {img.status ? ` · ${img.status}` : ''}
+                    </div>
+                  ) : (
+                    <div className="text-[10px] text-muted-foreground">Pending upload</div>
+                  )}
+                  <div className="flex items-center justify-between">
+                    <label className="flex cursor-pointer items-center gap-1 text-xs text-foreground">
+                      <input
+                        type="radio"
+                        name="li-primary-image"
+                        className="h-3.5 w-3.5 accent-primary"
+                        checked={img.is_primary}
+                        onChange={() => setPrimaryImage(img.key)}
+                      />
+                      Primary
+                    </label>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => removeImage(img.key)}
+                      aria-label="Remove image"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept={ACCEPTED_IMAGE_TYPES}
+          multiple
+          className="hidden"
+          onChange={(e) => addImageFiles(e.target.files)}
+        />
+        <Button
+          variant="outline"
+          size="sm"
+          disabled={images.length >= MAX_IMAGES_PER_ITEM}
+          onClick={() => fileInputRef.current?.click()}
+        >
+          <Plus className="h-4 w-4" /> Add image
+        </Button>
       </Section>
 
       {/* ── 2. 收货地址 ───────────────────────────────────────────────── */}

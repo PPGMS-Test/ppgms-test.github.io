@@ -242,6 +242,12 @@ function LineItemCard({ item }: { item: LineItem }) {
               .join(' · ')}
           </div>
         )}
+        {item.images && item.images.length > 0 && (
+          <div>
+            Images ({item.images.length}):{' '}
+            {item.images.map((im) => `${im.asset_id}${im.is_primary ? ' (primary)' : ''}`).join(', ')}
+          </div>
+        )}
       </div>
     </div>
   )

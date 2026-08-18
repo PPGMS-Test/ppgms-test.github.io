@@ -12,6 +12,8 @@ export interface PayPalConfig {
   endpoints: {
     oauthToken: string
     paymentResources: string
+    /** 图片两步上传端点：POST 上传 / GET {asset_id} 查状态 / DELETE {asset_id} 删孤立图 */
+    paymentResourceImages: string
   }
 }
 
@@ -31,6 +33,7 @@ export function createPayPalConfig(environment: PayPalEnvironment): PayPalConfig
     endpoints: {
       oauthToken: '/v1/oauth2/token',
       paymentResources: '/v1/checkout/payment-resources',
+      paymentResourceImages: '/v1/checkout/payment-resources/images',
     },
   }
 }

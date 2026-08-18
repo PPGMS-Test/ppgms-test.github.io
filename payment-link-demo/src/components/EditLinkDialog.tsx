@@ -18,6 +18,12 @@ import {
   type PaymentResource,
 } from '@/lib/api/types'
 import { buildReturnUrl } from '@/lib/return-url'
+import {
+  seedImagesFromLineItem,
+  resolveImageAssets,
+  toApiImages,
+  type FormImage,
+} from '@/lib/images'
 
 interface Props {
   record: PaymentLinkRecord | null
@@ -38,6 +44,7 @@ export function EditLinkDialog({ record, onClose }: Props) {
   const productName = useProductsStore((s) => (record ? s.byId(record.productId)?.name : undefined))
   const [reusable, setReusable] = useState<Reusable>('MULTIPLE')
   const [item, setItem] = useState<LineItem | null>(null)
+  const [images, setImages] = useState<FormImage[]>([])
   const [seeding, setSeeding] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -60,18 +67,23 @@ export function EditLinkDialog({ record, onClose }: Props) {
     const fromRaw = rawLineItem(record.raw)
     if (fromRaw) {
       setItem(fromRaw)
+      setImages(seedImagesFromLineItem(fromRaw))
       return
     }
 
     // raw 不含 line_items：尝试从服务端拉取当前配置
     setSeeding(true)
     setItem(fallback)
+    setImages([])
     client
       .getLink(record.resourceId)
       .then((res) => {
         if (cancelled) return
         const li = rawLineItem(res)
-        if (li) setItem(li)
+        if (li) {
+          setItem(li)
+          setImages(seedImagesFromLineItem(li))
+        }
         if (typeof res.reusable === 'string') setReusable(res.reusable as Reusable)
       })
       .catch(() => {
@@ -92,11 +104,16 @@ export function EditLinkDialog({ record, onClose }: Props) {
     setError(null)
     try {
       const returnUrl = buildReturnUrl(record.id) ?? undefined
-      console.log('[EditLinkDialog] updating link', { resourceId: record.resourceId, reusable, returnUrl, item })
+      // 上传本次新加入的图片，已有 asset_id 的原样保留
+      const resolvedImages = await resolveImageAssets(client, images)
+      setImages(resolvedImages)
+      const apiImages = toApiImages(resolvedImages)
+      const lineItem: LineItem = { ...item, images: apiImages }
+      console.log('[EditLinkDialog] updating link', { resourceId: record.resourceId, reusable, returnUrl, item: lineItem })
       await client.updateLink(record.resourceId, {
         reusable,
         return_url: returnUrl,
-        line_items: [item],
+        line_items: [lineItem],
       })
       // PUT 返回 204/null，尽力再拉一次以同步资源状态
       const fresh = await client.getLink(record.resourceId).catch(() => null)
@@ -146,7 +163,13 @@ export function EditLinkDialog({ record, onClose }: Props) {
             </Select>
           </div>
 
-          <LineItemForm value={item} onChange={setItem} currency={record.currency} />
+          <LineItemForm
+            value={item}
+            onChange={setItem}
+            currency={record.currency}
+            images={images}
+            onImagesChange={setImages}
+          />
 
           {error && (
             <p className="rounded-lg border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">

@@ -21,6 +21,8 @@ import type {
   UpdatePaymentResourceInput,
   PaymentResource,
   PaymentResourceList,
+  ImageAsset,
+  ImageUploadResponse,
 } from './types'
 
 export interface PayPalClientDeps {
@@ -106,6 +108,9 @@ export function createPayPalClient({ config, credential }: PayPalClientDeps) {
   const resourceUrl = (id?: string) =>
     `${config.apiBase}${config.endpoints.paymentResources}${id ? `/${id}` : ''}`
 
+  const imageUrl = (assetId?: string) =>
+    `${config.apiBase}${config.endpoints.paymentResourceImages}${assetId ? `/${assetId}` : ''}`
+
   // per-call 额外头（如 PayPal-Request-Id）优先级高于 auth 头
   async function run<T>(
     partial: Omit<ApiRequest, 'headers'> & { headers?: Record<string, string> },
@@ -184,6 +189,42 @@ export function createPayPalClient({ config, credential }: PayPalClientDeps) {
         method: 'DELETE',
         path: config.endpoints.paymentResources,
         url: resourceUrl(id),
+      }),
+
+    // ── 图片两步上传 ────────────────────────────────────────────────────────
+    /**
+     * 第一步：上传图片二进制（multipart/form-data，字段名 files），换回 asset_id。
+     * 支持 PNG/JPEG/BMP，返回 207 Multi-Status，images[] 与传入文件按序对应。
+     * Content-Type 不手工设，交给浏览器带 boundary 自动生成（见 baseFetch）。
+     */
+    uploadImages: (files: File[]) => {
+      const form = new FormData()
+      for (const f of files) form.append('files', f, f.name)
+      return run<ImageUploadResponse>({
+        label: 'uploadImages',
+        method: 'POST',
+        path: config.endpoints.paymentResourceImages,
+        url: imageUrl(),
+        body: form,
+      })
+    },
+
+    /** 查询单张图片资产状态（ACTIVE / IN_REVIEW / …） */
+    getImage: (assetId: string) =>
+      run<ImageAsset>({
+        label: 'getImage',
+        method: 'GET',
+        path: config.endpoints.paymentResourceImages,
+        url: imageUrl(assetId),
+      }),
+
+    /** 删除孤立图片（未被任何 payment link 引用时才可删；否则须先 PUT 移除引用） */
+    deleteImage: (assetId: string) =>
+      run<null>({
+        label: 'deleteImage',
+        method: 'DELETE',
+        path: config.endpoints.paymentResourceImages,
+        url: imageUrl(assetId),
       }),
   }
 }
