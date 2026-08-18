@@ -62,54 +62,53 @@ export function seedImagesFromLineItem(item: LineItem | null | undefined): FormI
   }))
 }
 
-// ── 默认商品图（canvas 生成合法 PNG，避免打包二进制/联网取图） ────────────────
+// ── 默认商品图（用 public 下的商品图，光栅化成可上传的 PNG） ──────────────────
 
-const PALETTE = ['#1e3a8a', '#b45309', '#0f766e', '#7c3aed', '#be123c', '#0369a1']
-
-/** 由产品 id 派生一个稳定的品牌底色 */
-function colorFor(id: string): string {
-  let h = 0
-  for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) >>> 0
-  return PALETTE[h % PALETTE.length]
-}
-
-/**
- * 为产品生成一张默认商品图：600×600 PNG（渐变底 + 首字母 + 产品名）。
- * 返回可上传的 File 与用于预览的 dataURL。
- */
-export async function generateDefaultProductImage(
-  product: Product,
+/** 把一张图片 URL 画到指定尺寸的 PNG canvas 上（SVG 也可，浏览器解码后光栅化）。 */
+async function rasterizeToPng(
+  url: string,
+  size = 600,
 ): Promise<{ file: File; dataUrl: string }> {
-  const size = 600
+  const image = await new Promise<HTMLImageElement>((resolve, reject) => {
+    const el = new Image()
+    el.crossOrigin = 'anonymous'
+    el.onload = () => resolve(el)
+    el.onerror = () => reject(new Error(`failed to load image: ${url}`))
+    el.src = url
+  })
+
   const canvas = document.createElement('canvas')
   canvas.width = size
   canvas.height = size
   const ctx = canvas.getContext('2d')
   if (!ctx) throw new Error('canvas 2d context unavailable')
 
-  const g = ctx.createLinearGradient(0, 0, size, size)
-  g.addColorStop(0, colorFor(product.id))
-  g.addColorStop(1, '#0b1020')
-  ctx.fillStyle = g
+  // 白底（PNG 透明区在买家端展示更干净），图片按 contain 居中不变形
+  ctx.fillStyle = '#ffffff'
   ctx.fillRect(0, 0, size, size)
-
-  ctx.textAlign = 'center'
-  ctx.textBaseline = 'middle'
-
-  const initial = (product.name.trim()[0] ?? '?').toUpperCase()
-  ctx.fillStyle = 'rgba(255,255,255,0.95)'
-  ctx.font = 'bold 300px system-ui, -apple-system, sans-serif'
-  ctx.fillText(initial, size / 2, size / 2 - 30)
-
-  ctx.font = '600 40px system-ui, -apple-system, sans-serif'
-  ctx.fillStyle = 'rgba(255,255,255,0.85)'
-  ctx.fillText(product.name, size / 2, size - 90)
+  const iw = image.naturalWidth || size
+  const ih = image.naturalHeight || size
+  const scale = Math.min(size / iw, size / ih)
+  const dw = iw * scale
+  const dh = ih * scale
+  ctx.drawImage(image, (size - dw) / 2, (size - dh) / 2, dw, dh)
 
   const dataUrl = canvas.toDataURL('image/png')
   const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/png'))
   if (!blob) throw new Error('canvas.toBlob returned null')
-  const file = new File([blob], `${product.id}-default.png`, { type: 'image/png' })
-  return { file, dataUrl }
+  return { file: new File([blob], 'default.png', { type: 'image/png' }), dataUrl }
+}
+
+/**
+ * 为产品生成一张默认商品图：取 product.image（public 下的 SVG）光栅化成 600×600 PNG。
+ * 返回可上传的 File 与用于预览的 dataURL。
+ */
+export async function generateDefaultProductImage(
+  product: Product,
+): Promise<{ file: File; dataUrl: string }> {
+  const { file, dataUrl } = await rasterizeToPng(product.image)
+  // 用产品 id 命名，便于日志/调试区分
+  return { file: new File([file], `${product.id}-default.png`, { type: 'image/png' }), dataUrl }
 }
 
 /** 生成产品默认图并包装成一张主图 FormImage（供创建弹窗初始化） */
