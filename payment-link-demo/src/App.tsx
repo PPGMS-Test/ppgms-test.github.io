@@ -6,7 +6,7 @@ import Storefront from './pages/Storefront'
 import ProductDetail from './pages/ProductDetail'
 import ReturnPage from './pages/ReturnPage'
 import { useThemeStore } from './store/theme'
-import { RETURN_LINK_PARAM, RETURN_STATUS_PARAM } from './lib/return-url'
+import { RETURN_LINK_PARAM } from './lib/return-url'
 
 export default function App() {
   const theme = useThemeStore((s) => s.theme)
@@ -18,16 +18,15 @@ export default function App() {
   }, [theme])
 
   // PayPal 回流：return_url 无 hash，形如 /?paylink=<id>&status=paid。
-  // 启动时把该 query 转发到 HashRouter 的 /return，并清掉 search 防刷新重复触发。
+  // PayPal redirect 回来时会把它的参数（token / PayerID / 交易号等）**追加到同一个 query string 上**，
+  // 因此启动时要把 window.location.search **整段**转发到 HashRouter 的 /return，
+  // 而不是只挑 link/status——否则 PayPal 追加的交易号会被丢掉。清掉 search 防刷新重复触发。
   useEffect(() => {
-    const sp = new URLSearchParams(window.location.search)
-    const link = sp.get(RETURN_LINK_PARAM)
-    if (!link) return
-    const status = sp.get(RETURN_STATUS_PARAM) ?? 'paid'
+    const search = window.location.search
+    const sp = new URLSearchParams(search)
+    if (!sp.get(RETURN_LINK_PARAM)) return
     window.history.replaceState(null, '', window.location.pathname)
-    navigate(`/return?link=${encodeURIComponent(link)}&status=${encodeURIComponent(status)}`, {
-      replace: true,
-    })
+    navigate(`/return${search}`, { replace: true })
   }, [navigate])
 
   return (
