@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import { CheckCircle2, XCircle, ArrowLeft, Loader2 } from 'lucide-react'
+import { CheckCircle2, XCircle, ArrowLeft, Loader2, Info } from 'lucide-react'
 import { usePaymentLinksStore } from '@/store/payment-links'
 import { useCredentialsStore } from '@/store/credentials'
 import { ApiError } from '@/lib/api/types'
@@ -71,6 +71,8 @@ export default function ReturnPage() {
                 <Loader2 className="h-3.5 w-3.5 animate-spin" /> Confirming status…
               </p>
             )}
+
+            <TransactionIdNote />
           </>
         )}
 
@@ -97,6 +99,51 @@ export default function ReturnPage() {
           Continue shopping
         </Link>
       </main>
+    </div>
+  )
+}
+
+/**
+ * 开发者说明卡片：解释这个回流页拿不到真实交易号，以及生产环境该怎么拿。
+ * 面向集成方，不是买家话术；纯静态文案，无逻辑。
+ */
+function TransactionIdNote() {
+  return (
+    <div className="mt-10 w-full rounded-xl border border-border bg-muted/40 p-5 text-left">
+      <div className="flex items-center gap-2">
+        <Info className="h-4 w-4 text-brand" />
+        <h2 className="text-sm font-semibold">Developer note — where's the transaction ID?</h2>
+      </div>
+
+      <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
+        This screen only reflects a <span className="font-medium text-foreground">local demo record</span>. There is no
+        real transaction ID here: the Payment Links &amp; Buttons resource
+        (<code className="rounded bg-background px-1 py-0.5 font-mono text-[11px]">GET /v1/checkout/payment-resources/&#123;id&#125;</code>)
+        returns only the link's lifecycle <code className="rounded bg-background px-1 py-0.5 font-mono text-[11px]">status</code> (ACTIVE / INACTIVE) —
+        never the order or capture ID. The payment is a separate Order + Capture object that PayPal creates on its hosted page and does not write back onto the link.
+      </p>
+
+      <p className="mt-4 text-xs font-medium text-foreground">How to obtain the transaction ID in production</p>
+      <ul className="mt-2 space-y-2 text-xs leading-relaxed text-muted-foreground">
+        <li>
+          <span className="font-medium text-foreground">Webhooks (authoritative, real-time).</span> Subscribe your app to{' '}
+          <code className="rounded bg-background px-1 py-0.5 font-mono text-[11px]">PAYMENT.CAPTURE.COMPLETED</code> —{' '}
+          <code className="rounded bg-background px-1 py-0.5 font-mono text-[11px]">resource.id</code> is the capture ID
+          (the transaction number used for refunds and shown in the dashboard).{' '}
+          <code className="rounded bg-background px-1 py-0.5 font-mono text-[11px]">CHECKOUT.ORDER.APPROVED</code>/<code className="rounded bg-background px-1 py-0.5 font-mono text-[11px]">.COMPLETED</code>{' '}
+          gives the order ID. Correlate back to a link via <code className="rounded bg-background px-1 py-0.5 font-mono text-[11px]">custom_id</code>/<code className="rounded bg-background px-1 py-0.5 font-mono text-[11px]">invoice_id</code>.
+        </li>
+        <li>
+          <span className="font-medium text-foreground">Don't rely on the return URL.</span> NCP/PLB hosted pages don't
+          reliably append the order ID to <code className="rounded bg-background px-1 py-0.5 font-mono text-[11px]">return_url</code> —
+          treat the redirect as a "buyer is back" signal only, and take the transaction ID from webhooks.
+        </li>
+        <li>
+          <span className="font-medium text-foreground">Reporting API (offline reconciliation).</span>{' '}
+          <code className="rounded bg-background px-1 py-0.5 font-mono text-[11px]">GET /v1/reporting/transactions</code>{' '}
+          can be queried by date range as a fallback, but has up to ~3h delay — not for real-time display.
+        </li>
+      </ul>
     </div>
   )
 }
