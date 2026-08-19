@@ -28,21 +28,32 @@ export interface PartnerCredential {
   partnerMerchantId?: string
 }
 
-/** 已知可用于疏通的凭证；后续在此追加 */
+/** 测试用凭证(1st and 3rd) */
 const PARTNER_CREDENTIALS: PartnerCredential[] = [
   {
-    id: 'shoppaas-test',
-    label: 'shoppaas-test.tt@gmai.com',
+    // partner js v6 sandbox（p-test-cn-v6-2026-partner@test.com / payer-id PVQS4XCWAMC72）
+    id: 'partner-v6',
+    label: 'p-test-cn-v6-2026-partner@test.com',
     environment: 'sandbox',
     mode: 'third-party',
     partnerClientId:
-      'ATIwW9NdRH9Nqde8MCftI_0QbOL9APdYok0a7ircWl2-3fBHv-CoMYsfIDpcUDisqTHmHT7d0Dz9DV7V',
+      'AePs-yrCXVsSOXgyI366Of0nlHm4siQdYBTKmQHSOwAaelbWFi836og7nc1y-gKZxROWTNFSV1l7oELW',
     partnerClientSecret:
-      'EC-Qcp-6LdYoEw9g02iTkVTRHa49c_HLP19P2hxbSHATN3cov2_G-wmFzp5-Cx2gK3phIzrKhOhbLhPJ',
-    partnerMerchantId: 'TVARY8GX789ZA',
+      'EAvQRspHg3Z5ID5q8u0NY5PmmXVHNJFpEQpqjIoqhUe5iwWQNnZTMpYDSP9LVz_TEwDn7midKulLkRZ4',
+
+    /**
+     * 
+      email: payment-link@yqtest.com
+      pwd: 12345678
+     */
+    partnerMerchantId: '2Z793HCNQFCS4',
   },
   {
-    // 一方凭证：商户自有 client id/secret，无 auth-assertion，权限齐全即可测通。
+    /**
+     * 
+      email: payment-link@yqtest.com
+      pwd: 12345678
+     */
     id: 'firstparty-sandbox',
     label: '1st-party merchant',
     environment: 'sandbox',
