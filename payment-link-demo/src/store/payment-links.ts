@@ -36,6 +36,8 @@ interface PaymentLinksState {
   add: (record: PaymentLinkRecord) => void
   update: (id: string, patch: Partial<PaymentLinkRecord>) => void
   remove: (id: string) => void
+  /** 按 PLB 资源 id 删除本地记录（Live resources 列表删除后同步用） */
+  removeByResourceId: (resourceId: string) => void
   byProduct: (productId: string) => PaymentLinkRecord[]
 }
 
@@ -47,6 +49,8 @@ export const usePaymentLinksStore = create<PaymentLinksState>()(
       update: (id, patch) =>
         set((s) => ({ links: s.links.map((l) => (l.id === id ? { ...l, ...patch } : l)) })),
       remove: (id) => set((s) => ({ links: s.links.filter((l) => l.id !== id) })),
+      removeByResourceId: (resourceId) =>
+        set((s) => ({ links: s.links.filter((l) => l.resourceId !== resourceId) })),
       byProduct: (productId) => get().links.filter((l) => l.productId === productId),
     }),
     { name: 'paylink-demo-links' },

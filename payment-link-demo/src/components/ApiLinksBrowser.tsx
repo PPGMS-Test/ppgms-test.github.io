@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Select } from '@/components/ui/select'
 import { cn } from '@/lib/utils'
 import { useCredentialsStore } from '@/store/credentials'
+import { usePaymentLinksStore } from '@/store/payment-links'
 import {
   ApiError,
   extractPayUrl,
@@ -35,6 +36,8 @@ const STATUS_OPTIONS = ['', 'ACTIVE', 'INACTIVE'] as const
 
 export default function ApiLinksBrowser({ className, onInspect }: ApiLinksBrowserProps) {
   const { client } = useCredentialsStore()
+  // Live resources 删除后，同步清掉 Links 列表里指向同一资源的本地记录（否则会"删了还显示"）
+  const removeLocalByResourceId = usePaymentLinksStore((s) => s.removeByResourceId)
 
   const [resources, setResources] = useState<PaymentResource[]>([])
   const [nextToken, setNextToken] = useState<string | null>(null)
@@ -93,6 +96,7 @@ export default function ApiLinksBrowser({ className, onInspect }: ApiLinksBrowse
     try {
       await client.deleteLink(res.id)
       setResources((prev) => prev.filter((r) => r.id !== res.id))
+      removeLocalByResourceId(res.id)
     } catch (e) {
       console.error('[ApiLinksBrowser] delete failed', e instanceof ApiError ? e.data : e)
       setDeleteError(`Failed to delete ${res.id}: ${formatError(e)}`)
@@ -135,6 +139,7 @@ export default function ApiLinksBrowser({ className, onInspect }: ApiLinksBrowse
       }
     })
     setResources((prev) => prev.filter((r) => !succeeded.includes(r.id)))
+    succeeded.forEach((id) => removeLocalByResourceId(id))
     setSelected((prev) => {
       const next = new Set(prev)
       succeeded.forEach((id) => next.delete(id))
