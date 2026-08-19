@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { RefreshCw, ExternalLink, ListFilter } from 'lucide-react'
+import { RefreshCw, ExternalLink, ListFilter, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Select } from '@/components/ui/select'
 import { cn } from '@/lib/utils'
@@ -43,6 +43,8 @@ export default function ApiLinksBrowser({ className, onInspect }: ApiLinksBrowse
   const [status, setStatus] = useState<string>('')
   const [pageSize, setPageSize] = useState<number>(10)
   const [loaded, setLoaded] = useState(false) // 是否至少 Load 过一次
+  const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
 
   // Load：重置列表拉第一页
   async function load() {
@@ -77,6 +79,23 @@ export default function ApiLinksBrowser({ className, onInspect }: ApiLinksBrowse
       setError(formatError(e))
     } finally {
       setLoading(false)
+    }
+  }
+
+  // Delete：真实调用 DELETE /{id}，成功后从当前列表移除该项（不重新拉全量）
+  async function del(res: PaymentResource) {
+    if (!window.confirm(`Delete ${res.id}? This calls DELETE on PayPal and cannot be undone.`)) return
+    setDeletingId(res.id)
+    setDeleteError(null)
+    console.log('[ApiLinksBrowser] delete', res.id)
+    try {
+      await client.deleteLink(res.id)
+      setResources((prev) => prev.filter((r) => r.id !== res.id))
+    } catch (e) {
+      console.error('[ApiLinksBrowser] delete failed', e instanceof ApiError ? e.data : e)
+      setDeleteError(`Failed to delete ${res.id}: ${formatError(e)}`)
+    } finally {
+      setDeletingId(null)
     }
   }
 
@@ -123,6 +142,13 @@ export default function ApiLinksBrowser({ className, onInspect }: ApiLinksBrowse
         </div>
       )}
 
+      {/* 删除错误 */}
+      {deleteError && (
+        <div className="rounded-lg border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">
+          {deleteError}
+        </div>
+      )}
+
       {/* 列表 / 空状态 */}
       {!loaded && !error && (
         <div className="rounded-xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
@@ -139,7 +165,13 @@ export default function ApiLinksBrowser({ className, onInspect }: ApiLinksBrowse
       {resources.length > 0 && (
         <div className="space-y-3">
           {resources.map((res) => (
-            <ResourceRow key={res.id} res={res} onInspect={onInspect} />
+            <ResourceRow
+              key={res.id}
+              res={res}
+              onInspect={onInspect}
+              onDelete={del}
+              deleting={deletingId === res.id}
+            />
           ))}
         </div>
       )}
@@ -160,9 +192,13 @@ export default function ApiLinksBrowser({ className, onInspect }: ApiLinksBrowse
 function ResourceRow({
   res,
   onInspect,
+  onDelete,
+  deleting,
 }: {
   res: PaymentResource
   onInspect?: (resourceId: string) => void
+  onDelete: (res: PaymentResource) => void
+  deleting: boolean
 }) {
   const payUrl = extractPayUrl(res)
   const first = res.line_items?.[0]
@@ -205,13 +241,16 @@ function ResourceRow({
         )}
       </div>
 
-      {onInspect && (
-        <div className="shrink-0">
+      <div className="flex shrink-0 gap-2">
+        {onInspect && (
           <Button size="sm" variant="outline" onClick={() => onInspect(res.id)}>
             Details
           </Button>
-        </div>
-      )}
+        )}
+        <Button size="sm" variant="destructive" loading={deleting} onClick={() => onDelete(res)}>
+          <Trash2 className="h-3.5 w-3.5" /> Delete
+        </Button>
+      </div>
     </div>
   )
 }
