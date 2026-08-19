@@ -28,7 +28,7 @@ export function LinksList({ onInspect, onEdit, onShowQr }: Props) {
     setBusy(rec.id)
     try {
       const res = await client.getLink(rec.resourceId)
-      // 只更新 PLB 资源状态，本地生命周期 status 保持不变
+      // 同步 PLB 资源状态（ACTIVE）
       update(rec.id, { resourceStatus: res.status, raw: res })
     } catch (e) {
       console.error('[LinksList] refresh failed', e instanceof ApiError ? e.data : e)
@@ -63,7 +63,7 @@ export function LinksList({ onInspect, onEdit, onShowQr }: Props) {
           amount={rec.amount}
           currency={rec.currency}
           payUrl={rec.payUrl}
-          status={rec.status}
+          status={rec.resourceStatus ?? 'ACTIVE'}
         >
           <div className="flex flex-wrap gap-2">
             <Button size="sm" variant="outline" onClick={() => onInspect(rec.resourceId)}>

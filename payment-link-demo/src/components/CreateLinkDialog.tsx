@@ -115,7 +115,6 @@ export function CreateLinkDialog({ product, onClose }: Props) {
         productId: product.id,
         resourceId: res.id,
         payUrl,
-        status: 'live',
         resourceStatus: res.status,
         name: item.name,
         reusable,

@@ -4,8 +4,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
-export type LinkStatus = 'live' | 'paid' | 'expired'
-
 export interface PaymentLinkRecord {
   /** 本地记录 id */
   id: string
@@ -14,9 +12,10 @@ export interface PaymentLinkRecord {
   resourceId: string
   /** 买家可支付的托管 URL */
   payUrl: string
-  /** 本地生命周期覆盖：live=已创建 / paid=回流标记已支付 / expired */
-  status: LinkStatus
-  /** PLB 侧资源状态（如 ACTIVE），由 refresh/getLink 同步，独立于本地 status */
+  /**
+   * PLB 侧资源状态。对商户（API 调用者）而言 payment link 只有一个状态：ACTIVE
+   * ——能查到即 ACTIVE（被付款 N 次也不变），被 DELETE 后就查不到。由 create/refresh/getLink 同步。
+   */
   resourceStatus?: string
   /** 展示名（下单商品名，便于 UI 与 API 导入的记录统一展示） */
   name?: string

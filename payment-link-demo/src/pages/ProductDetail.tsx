@@ -58,25 +58,19 @@ export default function ProductDetail() {
                 amount={latest.amount}
                 currency={latest.currency}
                 payUrl={latest.payUrl}
-                status={latest.status}
+                status={latest.resourceStatus ?? 'ACTIVE'}
               />
-              {latest.status === 'paid' ? (
-                <p className="rounded-xl border border-verified/40 bg-verified/10 p-4 text-center text-sm font-medium text-verified">
-                  Paid — thanks for your purchase.
-                </p>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => {
-                    // Same-tab navigation so PayPal's return_url lands back in this SPA tab
-                    console.log('[ProductDetail] paying via hosted link:', latest.payUrl)
-                    window.location.href = latest.payUrl
-                  }}
-                  className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-primary px-5 py-3 font-medium text-primary-foreground transition-transform hover:scale-[1.01]"
-                >
-                  Pay with PayPal
-                </button>
-              )}
+              <button
+                type="button"
+                onClick={() => {
+                  // Same-tab navigation so PayPal's return_url lands back in this SPA tab
+                  console.log('[ProductDetail] paying via hosted link:', latest.payUrl)
+                  window.location.href = latest.payUrl
+                }}
+                className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-primary px-5 py-3 font-medium text-primary-foreground transition-transform hover:scale-[1.01]"
+              >
+                Pay with PayPal
+              </button>
             </div>
           ) : (
             <p className="rounded-xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground">

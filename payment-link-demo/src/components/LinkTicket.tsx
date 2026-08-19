@@ -1,25 +1,24 @@
 import { useState } from 'react'
 import { Copy, Check, ExternalLink } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import type { LinkStatus } from '@/store/payment-links'
 
 interface LinkTicketProps {
   title: string
   amount: string
   currency: string
   payUrl: string
-  status: LinkStatus
+  /** PLB 资源状态字符串（商户视角只有 ACTIVE）；默认 ACTIVE */
+  status?: string
   className?: string
   children?: React.ReactNode
 }
 
-const statusStyles: Record<LinkStatus, string> = {
-  live: 'bg-verified/15 text-verified',
-  paid: 'bg-signal/15 text-signal',
-  expired: 'bg-muted text-muted-foreground',
+/** ACTIVE 走 verified 配色，其余走 muted（与 ApiLinksBrowser 一致） */
+function statusPillClass(status: string): string {
+  return status === 'ACTIVE' ? 'bg-verified/15 text-verified' : 'bg-muted text-muted-foreground'
 }
 
-export function LinkTicket({ title, amount, currency, payUrl, status, className, children }: LinkTicketProps) {
+export function LinkTicket({ title, amount, currency, payUrl, status = 'ACTIVE', className, children }: LinkTicketProps) {
   const [copied, setCopied] = useState(false)
 
   async function copy() {
@@ -43,7 +42,7 @@ export function LinkTicket({ title, amount, currency, payUrl, status, className,
         <div className="mt-1 font-mono text-2xl">
           {currency} {amount}
         </div>
-        <span className={cn('mt-3 inline-block rounded-full px-2.5 py-0.5 text-xs font-medium', statusStyles[status])}>
+        <span className={cn('mt-3 inline-block rounded-full px-2.5 py-0.5 text-xs font-medium', statusPillClass(status))}>
           {status}
         </span>
       </div>
