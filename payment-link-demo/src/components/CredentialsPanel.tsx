@@ -48,8 +48,8 @@ export function CredentialsPanel() {
       </div>
       <p className="mt-2 text-xs text-muted-foreground">
         {mode === 'third-party'
-          ? 'Partner 代商户调用，注入 PayPal-Auth-Assertion + BN。需授权关系。'
-          : '商户自有凭证直连，不带 auth-assertion，权限齐全即可测通。'}
+          ? 'Partner operate on behalf of the merchant, PayPal-Auth-Assertion + BNCODE; onboarding flow is required.'
+          : '商户自有凭证直连，不带 auth-assertion, 权限齐全即可测通。'}
       </p>
 
       <div className="mt-4 space-y-3">

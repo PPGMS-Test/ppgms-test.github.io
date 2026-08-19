@@ -22,8 +22,10 @@ const API_BASE: Record<PayPalEnvironment, string> = {
   production: 'https://api-m.paypal.com',
 }
 
-/** 默认 BN Code；真实商用需向 PayPal 申请专属值，此处为 demo 占位 */
-export const DEFAULT_BN_CODE = 'PAYLINKDEMO_SP_PPCP'
+/**
+ * BNCODE for p-test-cn-v6-2026-partner@test.com
+ */
+export const DEFAULT_BN_CODE = 'jsv6_c2_platform'
 
 export function createPayPalConfig(environment: PayPalEnvironment): PayPalConfig {
   return {
