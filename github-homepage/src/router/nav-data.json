@@ -26,6 +26,14 @@
         "items": [
           {
             "description": "",
+            "url": "__1__-jsv5-test/ACDC/ACDC-3ds.html",
+            "text": "ACDC-3ds",
+            "isFolder": false,
+            "hasChildren": false,
+            "isExternal": false
+          },
+          {
+            "description": "",
             "url": "__1__-jsv5-test/ACDC/ACDC-Sample.html",
             "text": "ACDC-Sample",
             "isFolder": false,
@@ -414,6 +422,14 @@
             "isFolder": false,
             "hasChildren": false,
             "isExternal": false
+          },
+          {
+            "description": "",
+            "url": "/__6__-API/payment-link-demo/index.html",
+            "text": "Payment Link Builder (PLB)",
+            "isFolder": false,
+            "hasChildren": false,
+            "isExternal": true
           },
           {
             "description": "",

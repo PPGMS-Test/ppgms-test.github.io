@@ -36,6 +36,7 @@ jobs:
             applepay-dashboard/pnpm-lock.yaml
             bopis-dashboard/pnpm-lock.yaml
             psp-path-dashboard/pnpm-lock.yaml
+            payment-link-demo/pnpm-lock.yaml
 
       # ── applepay-dashboard ──────────────────────────────────────────
       - name: Install applepay-dashboard dependencies
@@ -62,6 +63,15 @@ jobs:
 
       - name: Build psp-path-dashboard
         working-directory: psp-path-dashboard
+        run: pnpm build
+
+      # ── payment-link-demo ───────────────────────────────────────────
+      - name: Install payment-link-demo dependencies
+        working-directory: payment-link-demo
+        run: pnpm install --no-frozen-lockfile
+
+      - name: Build payment-link-demo
+        working-directory: payment-link-demo
         run: pnpm build
 
       # ── github-homepage ─────────────────────────────────────────────
@@ -97,6 +107,12 @@ jobs:
         run: |
           mkdir -p github-homepage/dist/__6__-API/psp-path-dashboard
           cp -r psp-path-dashboard/dist/. github-homepage/dist/__6__-API/psp-path-dashboard/
+
+      # Merge: payment-link-demo dist. Vite base = /__6__-API/payment-link-demo/
+      - name: Merge payment-link-demo into dist
+        run: |
+          mkdir -p github-homepage/dist/__6__-API/payment-link-demo
+          cp -r payment-link-demo/dist/. github-homepage/dist/__6__-API/payment-link-demo/
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
