@@ -95,10 +95,21 @@ export function CredentialsPanel() {
             <ImageIcon className="h-4 w-4 text-gold" />
             <span className="text-sm font-medium text-foreground">Image upload</span>
             <Popover label="About image upload" align="end" trigger={<Info className="h-3.5 w-3.5" />}>
-              {/* TODO: 内容待填写。可用 PopoverHeader / PopoverField 组合，示例结构如下： */}
-              <PopoverHeader icon={<Info className="h-4 w-4" />} title="标题待填写" />
-              <PopoverField label="LABEL" href="">
-                描述待填写，可内联 <code>code</code>。
+              <PopoverHeader icon={<Info className="h-4 w-4" />} title="Image upload isn't available yet" />
+              <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
+                The image API isn't deployed to the public sandbox yet — this feature is still in progress. Internal design docs:
+              </p>
+              <PopoverField
+                label="HLD"
+                href="https://paypal.atlassian.net/wiki/spaces/NCPS/pages/2967057474/HLD+Image+Externalization+in+API+Response"
+              >
+                Image Externalization in API Response
+              </PopoverField>
+              <PopoverField
+                label="PRD"
+                href="https://paypal.atlassian.net/wiki/spaces/NCPS/pages/2885166250/PRD+Image+externalization+in+API+response"
+              >
+                Image externalization in API response
               </PopoverField>
             </Popover>
           </div>
