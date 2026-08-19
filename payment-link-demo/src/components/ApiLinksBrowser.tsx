@@ -45,6 +45,8 @@ export default function ApiLinksBrowser({ className, onInspect }: ApiLinksBrowse
   const [loaded, setLoaded] = useState(false) // 是否至少 Load 过一次
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const [deleteError, setDeleteError] = useState<string | null>(null)
+  const [selected, setSelected] = useState<Set<string>>(new Set())
+  const [bulkDeleting, setBulkDeleting] = useState(false)
 
   // Load：重置列表拉第一页
   async function load() {
@@ -97,6 +99,51 @@ export default function ApiLinksBrowser({ className, onInspect }: ApiLinksBrowse
     } finally {
       setDeletingId(null)
     }
+  }
+
+  function toggleSelect(id: string) {
+    setSelected((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+
+  function toggleSelectAll() {
+    setSelected((prev) =>
+      prev.size === resources.length ? new Set() : new Set(resources.map((r) => r.id)),
+    )
+  }
+
+  // 批量删除：逐个 DELETE，用 allSettled 保证一个失败不影响其余；成功的从列表和选中态里摘掉
+  async function bulkDelete() {
+    const ids = Array.from(selected)
+    if (ids.length === 0) return
+    if (!window.confirm(`Delete ${ids.length} resource(s)? This calls DELETE on PayPal for each and cannot be undone.`)) return
+    setBulkDeleting(true)
+    setDeleteError(null)
+    console.log('[ApiLinksBrowser] bulkDelete', ids)
+    const results = await Promise.allSettled(ids.map((id) => client.deleteLink(id)))
+    const failed: string[] = []
+    const succeeded: string[] = []
+    results.forEach((r, i) => {
+      if (r.status === 'fulfilled') succeeded.push(ids[i])
+      else {
+        failed.push(ids[i])
+        console.error('[ApiLinksBrowser] bulkDelete failed', ids[i], r.reason instanceof ApiError ? r.reason.data : r.reason)
+      }
+    })
+    setResources((prev) => prev.filter((r) => !succeeded.includes(r.id)))
+    setSelected((prev) => {
+      const next = new Set(prev)
+      succeeded.forEach((id) => next.delete(id))
+      return next
+    })
+    if (failed.length > 0) {
+      setDeleteError(`Failed to delete ${failed.length} of ${ids.length}: ${failed.join(', ')}`)
+    }
+    setBulkDeleting(false)
   }
 
   return (
@@ -164,6 +211,25 @@ export default function ApiLinksBrowser({ className, onInspect }: ApiLinksBrowse
 
       {resources.length > 0 && (
         <div className="space-y-3">
+          <div className="flex items-center gap-3">
+            <label className="flex items-center gap-2 text-xs text-muted-foreground">
+              <input
+                type="checkbox"
+                checked={selected.size === resources.length}
+                ref={(el) => {
+                  if (el) el.indeterminate = selected.size > 0 && selected.size < resources.length
+                }}
+                onChange={toggleSelectAll}
+              />
+              Select all
+            </label>
+            {selected.size > 0 && (
+              <Button size="sm" variant="destructive" loading={bulkDeleting} onClick={bulkDelete}>
+                <Trash2 className="h-3.5 w-3.5" /> Delete selected ({selected.size})
+              </Button>
+            )}
+          </div>
+
           {resources.map((res) => (
             <ResourceRow
               key={res.id}
@@ -171,6 +237,8 @@ export default function ApiLinksBrowser({ className, onInspect }: ApiLinksBrowse
               onInspect={onInspect}
               onDelete={del}
               deleting={deletingId === res.id}
+              selected={selected.has(res.id)}
+              onToggleSelect={toggleSelect}
             />
           ))}
         </div>
@@ -194,51 +262,63 @@ function ResourceRow({
   onInspect,
   onDelete,
   deleting,
+  selected,
+  onToggleSelect,
 }: {
   res: PaymentResource
   onInspect?: (resourceId: string) => void
   onDelete: (res: PaymentResource) => void
   deleting: boolean
+  selected: boolean
+  onToggleSelect: (id: string) => void
 }) {
   const payUrl = extractPayUrl(res)
   const first = res.line_items?.[0]
 
   return (
     <div className="flex flex-col gap-3 rounded-xl border border-border bg-card p-4 text-card-foreground sm:flex-row sm:items-center sm:justify-between">
-      <div className="min-w-0 space-y-1">
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="font-mono text-xs text-muted-foreground">{res.id}</span>
-          <span className={cn('rounded-full px-2 py-0.5 text-xs', statusPillClass(res.status))}>
-            {res.status ?? 'UNKNOWN'}
-          </span>
-          {res.reusable && <span className="text-xs text-muted-foreground">{res.reusable}</span>}
-          {res.type && <span className="text-xs text-muted-foreground">{res.type}</span>}
-        </div>
-        <div className="text-sm text-foreground">
-          {first ? (
-            <>
-              <span className="font-medium">{first.name}</span>
-              {first.unit_amount && (
-                <span className="ml-2 font-mono text-muted-foreground">
-                  {first.unit_amount.currency_code} {first.unit_amount.value}
-                </span>
-              )}
-            </>
-          ) : (
-            <span className="text-muted-foreground">No line items</span>
+      <div className="flex min-w-0 items-start gap-3">
+        <input
+          type="checkbox"
+          className="mt-1.5 shrink-0"
+          checked={selected}
+          onChange={() => onToggleSelect(res.id)}
+        />
+        <div className="min-w-0 space-y-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="font-mono text-xs text-muted-foreground">{res.id}</span>
+            <span className={cn('rounded-full px-2 py-0.5 text-xs', statusPillClass(res.status))}>
+              {res.status ?? 'UNKNOWN'}
+            </span>
+            {res.reusable && <span className="text-xs text-muted-foreground">{res.reusable}</span>}
+            {res.type && <span className="text-xs text-muted-foreground">{res.type}</span>}
+          </div>
+          <div className="text-sm text-foreground">
+            {first ? (
+              <>
+                <span className="font-medium">{first.name}</span>
+                {first.unit_amount && (
+                  <span className="ml-2 font-mono text-muted-foreground">
+                    {first.unit_amount.currency_code} {first.unit_amount.value}
+                  </span>
+                )}
+              </>
+            ) : (
+              <span className="text-muted-foreground">No line items</span>
+            )}
+          </div>
+          {payUrl && (
+            <a
+              href={payUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-1 font-mono text-xs text-brand hover:underline"
+            >
+              <ExternalLink className="h-3.5 w-3.5" />
+              <span className="truncate">{payUrl}</span>
+            </a>
           )}
         </div>
-        {payUrl && (
-          <a
-            href={payUrl}
-            target="_blank"
-            rel="noreferrer"
-            className="inline-flex items-center gap-1 font-mono text-xs text-brand hover:underline"
-          >
-            <ExternalLink className="h-3.5 w-3.5" />
-            <span className="truncate">{payUrl}</span>
-          </a>
-        )}
       </div>
 
       <div className="flex shrink-0 gap-2">
