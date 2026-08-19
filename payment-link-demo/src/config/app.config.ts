@@ -8,7 +8,7 @@
  *     return_url 用它拼接，买家支付成功后能回流到该地址的 app 并标记 paid。
  *   末尾带不带 `/` 都可，buildReturnUrl 会规整。
  */
-export const PUBLIC_BASE_URL = ''
+export const PUBLIC_BASE_URL = 'https://ppgms-test.github.io/__6__-API/payment-link-demo/'
 
 /**
  * 图片两步上传功能的**默认开关**。
