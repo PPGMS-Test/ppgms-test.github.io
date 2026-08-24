@@ -15,6 +15,11 @@
     "filePath": "__1__-jsv5-test/ApplePay/applepay-test-archive.html"
   },
   {
+    "name": "spb-applepay-bcdc",
+    "path": "__1__-jsv5-test/ApplePay/spb-applepay-bcdc.html",
+    "filePath": "__1__-jsv5-test/ApplePay/spb-applepay-bcdc.html"
+  },
+  {
     "name": "index",
     "path": "__1__-jsv5-test/BCDC",
     "filePath": "__1__-jsv5-test/BCDC/index.html"
