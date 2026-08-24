@@ -50,6 +50,11 @@
     "filePath": "__2__-jsv6-test/__5__-iframe-hostpage.html"
   },
   {
+    "name": "jsv6-ap-thr-bcdc",
+    "path": "__2__-jsv6-test/ApplePay/jsv6-ap-thr-bcdc.html",
+    "filePath": "__2__-jsv6-test/ApplePay/jsv6-ap-thr-bcdc.html"
+  },
+  {
     "name": "jsv6-jsv5-comparison",
     "path": "__2__-jsv6-test/jsv6-jsv5-comparison/jsv6-jsv5-comparison.html",
     "filePath": "__2__-jsv6-test/jsv6-jsv5-comparison/jsv6-jsv5-comparison.html"

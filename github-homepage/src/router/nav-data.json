@@ -230,6 +230,21 @@
         ]
       },
       {
+        "title": "ApplePay",
+        "icon": "folder",
+        "expanded": true,
+        "items": [
+          {
+            "description": "",
+            "url": "__2__-jsv6-test/ApplePay/jsv6-ap-thr-bcdc.html",
+            "text": "jsv6-ap-thr-bcdc",
+            "isFolder": false,
+            "hasChildren": false,
+            "isExternal": false
+          }
+        ]
+      },
+      {
         "title": "jsv6-jsv5-comparison",
         "icon": "folder",
         "expanded": true,
