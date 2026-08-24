@@ -700,7 +700,18 @@
     </div>
 
     <script>
-      const BACKEND = "https://ppgms-test-github-io.pages.dev";
+      /**
+       * email: apply-pay-bcdc-cn@test.com
+       * pwd: 111222333
+       * payer-id: 26TQFNTZD6L44
+       */
+      const SANDBOX_DEFAULTS = {
+        clientId:
+          "BAAhVujFGtsZHp1Lj2HxmJVEojZ8Z-WI13ugjBMJOaMYkPiyfphsp_ZqkUZhFDP6NY4lJ_30VdwG8BCFgM",
+        clientSecret:
+          "EDvl6jMz1JuJnPADmVh_j2UMKndnsOpIGww58DViBbMS_yF4MDexHtZ7C8-xZsVInBBFaJ3QpGW9z0KS",
+      };
+      const PAYPAL_API_BASE = "https://api-m.sandbox.paypal.com";
       const $ = (id) => document.getElementById(id);
 
       // ── Theme toggle ────────────────────────────────────────
@@ -742,43 +753,90 @@
         el.scrollTop = el.scrollHeight;
       }
 
-      // ── Backend calls ──────────────────────────────────────
+      // ── 直连 PayPal Sandbox REST API（沙箱测试专用，client secret 暴露在前端） ──
+      const oauthAuth = () => "Basic " + btoa(`${SANDBOX_DEFAULTS.clientId}:${SANDBOX_DEFAULTS.clientSecret}`);
+
+      // Step 2 — SDK v6 createInstance() 需要的 browser-safe client token
+      // （OAuth response_type=client_token，与 access_token 不是同一种 token）
       async function getClientToken() {
-        const res = await fetch(`${BACKEND}/api/auth/sandbox-client-token`);
+        const res = await fetch(`${PAYPAL_API_BASE}/v1/oauth2/token`, {
+          method: "POST",
+          headers: {
+            Authorization: oauthAuth(),
+            "Content-Type": "application/x-www-form-urlencoded",
+          },
+          body: "grant_type=client_credentials&response_type=client_token",
+        });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error_description || data.error || "获取 client token 失败");
-        return data.accessToken;
+        return data.access_token;
+      }
+
+      // 建单 / 捕获用的普通 access_token（缓存，30s 缓冲）
+      let tokenCache = null;
+      async function getAccessToken() {
+        const now = Date.now();
+        if (tokenCache && tokenCache.expiresAt > now + 30_000) return tokenCache.token;
+        const res = await fetch(`${PAYPAL_API_BASE}/v1/oauth2/token`, {
+          method: "POST",
+          headers: {
+            Authorization: oauthAuth(),
+            "Content-Type": "application/x-www-form-urlencoded",
+          },
+          body: "grant_type=client_credentials",
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error_description || data.error || "OAuth 失败");
+        tokenCache = { token: data.access_token, expiresAt: now + data.expires_in * 1000 };
+        return tokenCache.token;
       }
 
       async function createOrder() {
         const amount = $("amount").value.trim();
         const currencyCode = $("currency").value.trim().toUpperCase();
-        const body = { scenario: "one-time-basic", amount, currencyCode };
+        const body = {
+          intent: "CAPTURE",
+          purchase_units: [
+            { description: "JSv6 Apple Pay BCDC Test", amount: { currency_code: currencyCode, value: amount } },
+          ],
+        };
         logJSON("Create Order · Request", body);
         setTrace(7, "active");
-        const res = await fetch(`${BACKEND}/api/apple-pay/create-order`, {
+        const token = await getAccessToken();
+        const res = await fetch(`${PAYPAL_API_BASE}/v2/checkout/orders`, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+            "PayPal-Request-Id": crypto.randomUUID(),
+            Prefer: "return=minimal",
+          },
           body: JSON.stringify(body),
         });
         const data = await res.json();
         logJSON("Create Order · Response", data);
         if (!res.ok || !data.id) {
-          setTrace(7, "fail", data.error || data.message || `HTTP ${res.status}`);
-          throw new Error(data.error || data.message || "建单失败");
+          setTrace(7, "fail", data.message || data.name || `HTTP ${res.status}`);
+          throw new Error(data.message || data.name || "建单失败");
         }
         setTrace(7, "ok", `orderId=${data.id}`);
         return data.id;
       }
 
       async function captureOrder(orderId) {
-        const res = await fetch(`${BACKEND}/api/apple-pay/capture-order/${orderId}`, {
+        const token = await getAccessToken();
+        const res = await fetch(`${PAYPAL_API_BASE}/v2/checkout/orders/${orderId}/capture`, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+            "PayPal-Request-Id": crypto.randomUUID(),
+            Prefer: "return=representation",
+          },
         });
         const data = await res.json();
         logJSON("Capture Order · Response", data);
-        if (!res.ok) throw new Error(data.error || data.message || "捕获失败");
+        if (!res.ok) throw new Error(data.message || data.name || "捕获失败");
         return data;
       }
 
