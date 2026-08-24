@@ -458,36 +458,41 @@
         border-radius: var(--radius-sm);
       }
 
+      /* 官方 Apple Pay 按钮：WebKit 原生 -apple-pay-button 外观。
+         不加载 Apple 的任何 JS SDK（PayPal 的 session.start() 负责支付逻辑），
+         这里只负责合规的视觉。仅在 Safari + 支持 Apple Pay 的设备上渲染。
+         按钮内不能有文字内容，否则会盖掉原生外观。 */
       .btn-pay {
         margin-top: 16px;
         width: 100%;
-        background: #000;
-        color: #fff;
+        height: 48px;
         border: none;
         border-radius: var(--radius-sm);
-        padding: 13px;
-        font-family: var(--sans);
-        font-weight: 600;
-        font-size: 14.5px;
         cursor: pointer;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
-        transition: opacity 0.15s, transform 0.06s;
+        -webkit-appearance: -apple-pay-button;
+        appearance: -apple-pay-button;
+        -apple-pay-button-type: buy;
+      }
+      html[data-theme="light"] .btn-pay {
+        -apple-pay-button-style: black;
+      }
+      html[data-theme="dark"] .btn-pay {
+        -apple-pay-button-style: white;
       }
       .btn-pay.ready {
-        display: flex;
+        display: block;
       }
-      .btn-pay:hover {
-        opacity: 0.85;
+      .btn-pay.busy {
+        opacity: 0.55;
+        pointer-events: none;
       }
-      .btn-pay:active {
-        transform: translateY(1px);
-      }
-      .btn-pay:disabled {
-        background: var(--surface-2);
-        color: var(--muted-2);
-        cursor: not-allowed;
+
+      /* 标签里的 Apple logo（内联 SVG，随主题反色） */
+      .apple-glyph {
+        width: 13px;
+        height: 13px;
+        vertical-align: -1px;
+        fill: var(--ink);
       }
 
       /* result */
@@ -680,12 +685,21 @@
             </div>
             <div class="pm-option" id="applePayRow">
               <input type="radio" name="pm" value="apple-pay" id="pmApplePay" checked />
-              <label for="pmApplePay"><apple-pay-mark></apple-pay-mark> Apple Pay</label>
+              <label for="pmApplePay"
+                ><svg class="apple-glyph" viewBox="0 0 384 512" aria-hidden="true">
+                  <path
+                    d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z"
+                  ></path></svg
+                >Apple Pay</label
+              >
               <small id="applePayHint">via BCDC hosted session</small>
             </div>
 
             <p class="pm-waiting" id="pmWaiting">等待 Eligibility Check 通过后展示 Apple Pay 按钮…</p>
-            <button class="btn-pay" id="btnPay" type="button">Pay with 🍎 Pay</button>
+            <!-- 官方 Apple Pay 按钮：普通 <button> + CSS -apple-pay-button 原生外观（见 .btn-pay）。
+                 不引入 Apple JS SDK；点击走 onPayClick → PayPal 的 session.start()。
+                 按钮内不放文字，靠 aria-label 提供无障碍名称。 -->
+            <button class="btn-pay" id="btnPay" type="button" aria-label="Pay with Apple Pay"></button>
           </div>
         </div>
 
@@ -715,6 +729,7 @@
       const $ = (id) => document.getElementById(id);
 
       // ── Theme toggle ────────────────────────────────────────
+      // Apple Pay 按钮颜色随主题由 CSS（-apple-pay-button-style）自动切换，无需 JS 干预
       $("themeToggle").addEventListener("click", () => {
         const next = document.documentElement.dataset.theme === "light" ? "dark" : "light";
         document.documentElement.dataset.theme = next;
@@ -930,7 +945,7 @@
 
       async function onPayClick() {
         const btn = $("btnPay");
-        btn.disabled = true;
+        btn.classList.add("busy");
         try {
           setTrace(8, "active", "start() 已调用");
           setStatus("建单中…", "info");
@@ -941,7 +956,7 @@
           setTrace(9, "fail", String(error.message || error));
           setStatus(`支付未能发起：${error.message || error}`, "fail");
         } finally {
-          btn.disabled = false;
+          btn.classList.remove("busy");
         }
       }
 
