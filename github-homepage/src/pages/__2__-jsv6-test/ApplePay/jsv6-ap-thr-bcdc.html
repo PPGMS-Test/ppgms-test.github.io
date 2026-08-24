@@ -961,9 +961,12 @@
       (async function boot() {
         try {
           setTrace(1, "active");
+          // ⚠️ 必须从 www.sandbox.paypal.com 加载：v6 SDK 的 API base（np）由脚本来源域名决定。
+          // 从 www.paypal.com（生产）加载时 findEligibleMethods 会打到 api-m.paypal.com，
+          // 而我们用的是沙箱 client token → 被生产端以 invalid_client 拒绝。
           await Promise.all([
-            loadScript("https://www.paypal.com/web-sdk/v6/core"),
-            loadScript("https://www.paypal.com/web-sdk/v6/brand"),
+            loadScript("https://www.sandbox.paypal.com/web-sdk/v6/core"),
+            loadScript("https://www.sandbox.paypal.com/web-sdk/v6/brand"),
           ]);
           setTrace(1, "ok");
           await initApplePay();
