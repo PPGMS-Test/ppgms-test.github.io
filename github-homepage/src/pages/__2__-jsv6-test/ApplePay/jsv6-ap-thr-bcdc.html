@@ -150,15 +150,16 @@
         background: var(--surface-2);
         border: 1px solid var(--line);
         border-radius: var(--radius-sm);
-        color: var(--muted);
+        color: var(--ink);
         cursor: pointer;
-        font-size: 14px;
+        font-size: 16px;
         line-height: 1;
-        transition: color 0.15s, border-color 0.15s;
+        transition: color 0.15s, border-color 0.15s, background 0.15s;
       }
       .theme-toggle:hover {
         color: var(--signal);
         border-color: var(--signal);
+        background: var(--signal-dim);
       }
       .theme-toggle .icon-dark {
         display: none;
@@ -442,8 +443,19 @@
         font-size: 10.5px;
         color: var(--muted-2);
       }
-      #applePayRow {
+      #applePayRow,
+      .btn-pay {
         display: none;
+      }
+      .pm-waiting {
+        margin-top: 16px;
+        text-align: center;
+        font-family: var(--mono);
+        font-size: 11.5px;
+        color: var(--muted-2);
+        padding: 13px;
+        border: 1px dashed var(--line);
+        border-radius: var(--radius-sm);
       }
 
       .btn-pay {
@@ -458,11 +470,13 @@
         font-weight: 600;
         font-size: 14.5px;
         cursor: pointer;
-        display: flex;
         align-items: center;
         justify-content: center;
         gap: 8px;
         transition: opacity 0.15s, transform 0.06s;
+      }
+      .btn-pay.ready {
+        display: flex;
       }
       .btn-pay:hover {
         opacity: 0.85;
@@ -670,7 +684,8 @@
               <small id="applePayHint">via BCDC hosted session</small>
             </div>
 
-            <button class="btn-pay" id="btnPay" type="button" disabled>Pay with 🍎 Pay</button>
+            <p class="pm-waiting" id="pmWaiting">等待 Eligibility Check 通过后展示 Apple Pay 按钮…</p>
+            <button class="btn-pay" id="btnPay" type="button">Pay with 🍎 Pay</button>
           </div>
         </div>
 
@@ -844,9 +859,10 @@
           }
           setTrace(6, "ok");
 
-          // Reveal the Apple Pay option + enable Pay Now
+          // Reveal the Apple Pay option + Pay Now only after both eligibility checks pass
           $("applePayRow").style.display = "flex";
-          $("btnPay").disabled = false;
+          $("pmWaiting").style.display = "none";
+          $("btnPay").classList.add("ready");
         } catch (error) {
           console.error("[jsv6-ap-thr-bcdc] init error:", error);
           failActiveTrace(String(error.message || error));
