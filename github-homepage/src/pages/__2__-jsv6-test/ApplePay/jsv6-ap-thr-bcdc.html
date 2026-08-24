@@ -3,6 +3,13 @@
   <head>
     <meta charset="UTF-8" />
     <title>JSv6 Apple Pay through BCDC</title>
+    <script>
+      // 提前设置主题属性，避免切换主题后刷新页面出现一帧默认深色的闪烁
+      (function () {
+        const saved = localStorage.getItem("jsv6-ap-thr-bcdc-theme");
+        document.documentElement.dataset.theme = saved === "light" ? "light" : "dark";
+      })();
+    </script>
     <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=0" />
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -13,7 +20,7 @@
     />
 
     <style>
-      :root {
+      html[data-theme="dark"] {
         --bg: #0f1115;
         --surface: #171922;
         --surface-2: #1d202b;
@@ -30,6 +37,32 @@
         --fail-dim: rgba(255, 92, 124, 0.14);
         --warn: #ffc24b;
         --warn-dim: rgba(255, 194, 75, 0.14);
+        --log-bg: #0a0c11;
+        --log-ink: #c8cdf2;
+        --mark-invert: 1;
+      }
+      html[data-theme="light"] {
+        --bg: #f4f5f9;
+        --surface: #ffffff;
+        --surface-2: #eef0f6;
+        --line: #dde1ea;
+        --line-soft: #e6e9f1;
+        --ink: #14161c;
+        --muted: #5b6072;
+        --muted-2: #8b90a0;
+        --signal: #4b53e0;
+        --signal-dim: rgba(75, 83, 224, 0.12);
+        --ok: #1c8f5f;
+        --ok-dim: rgba(28, 143, 95, 0.12);
+        --fail: #cf2c53;
+        --fail-dim: rgba(207, 44, 83, 0.1);
+        --warn: #a8720a;
+        --warn-dim: rgba(168, 114, 10, 0.12);
+        --log-bg: #14161c;
+        --log-ink: #d7dbf5;
+        --mark-invert: 0;
+      }
+      :root {
         --radius: 12px;
         --radius-sm: 8px;
         --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
@@ -50,6 +83,7 @@
         font-size: 14.5px;
         line-height: 1.55;
         -webkit-font-smoothing: antialiased;
+        transition: background 0.15s ease, color 0.15s ease;
       }
       code {
         font-family: var(--mono);
@@ -105,6 +139,38 @@
         letter-spacing: 0.06em;
         text-transform: uppercase;
         color: var(--muted);
+      }
+      .theme-toggle {
+        margin-left: auto;
+        width: 30px;
+        height: 30px;
+        flex: none;
+        display: grid;
+        place-items: center;
+        background: var(--surface-2);
+        border: 1px solid var(--line);
+        border-radius: var(--radius-sm);
+        color: var(--muted);
+        cursor: pointer;
+        font-size: 14px;
+        line-height: 1;
+        transition: color 0.15s, border-color 0.15s;
+      }
+      .theme-toggle:hover {
+        color: var(--signal);
+        border-color: var(--signal);
+      }
+      .theme-toggle .icon-dark {
+        display: none;
+      }
+      html[data-theme="dark"] .theme-toggle .icon-dark {
+        display: block;
+      }
+      html[data-theme="dark"] .theme-toggle .icon-light {
+        display: none;
+      }
+      html[data-theme="light"] .theme-toggle .icon-light {
+        display: block;
       }
 
       .trace__list {
@@ -368,6 +434,7 @@
       apple-pay-mark {
         display: inline-block;
         height: 22px;
+        filter: invert(var(--mark-invert));
       }
       .pm-option small {
         margin-left: auto;
@@ -408,9 +475,6 @@
         color: var(--muted-2);
         cursor: not-allowed;
       }
-       apple-pay-mark.mark-white {
-        filter: invert(1);
-      }
 
       /* result */
       .status-line {
@@ -441,8 +505,8 @@
         font-family: var(--mono);
         font-size: 11.5px;
         line-height: 1.6;
-        color: #c8cdf2;
-        background: #0a0c11;
+        color: var(--log-ink);
+        background: var(--log-bg);
         border: 1px solid var(--line-soft);
         border-radius: var(--radius-sm);
         padding: 14px;
@@ -476,6 +540,10 @@
         <div class="trace__brand">
           <div class="trace__mark"></div>
           <span class="trace__title">Session Trace</span>
+          <button class="theme-toggle" id="themeToggle" type="button" aria-label="切换主题色">
+            <span class="icon-dark">☾</span>
+            <span class="icon-light">☀</span>
+          </button>
         </div>
         <ol class="trace__list" id="traceList">
           <li class="trace-row" data-state="pending" data-step="1">
@@ -619,6 +687,13 @@
     <script>
       const BACKEND = "https://ppgms-test-github-io.pages.dev";
       const $ = (id) => document.getElementById(id);
+
+      // ── Theme toggle ────────────────────────────────────────
+      $("themeToggle").addEventListener("click", () => {
+        const next = document.documentElement.dataset.theme === "light" ? "dark" : "light";
+        document.documentElement.dataset.theme = next;
+        localStorage.setItem("jsv6-ap-thr-bcdc-theme", next);
+      });
 
       // ── Session trace helpers ─────────────────────────────
       function setTrace(step, state, note) {
