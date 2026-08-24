@@ -2,470 +2,676 @@
 <html lang="zh-CN">
   <head>
     <meta charset="UTF-8" />
-    <title>SPB (JSv5) w/ Apple Pay — BCDC Render</title>
+    <title>SPB (JSv5) · Apple Pay 渲染诊断台</title>
     <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=0" />
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
-    <!-- VConsole -->
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- VConsole：iPhone Safari 上实测时看日志用 -->
     <script src="https://cdn.jsdelivr.net/npm/vconsole@3.15.1/dist/vconsole.min.js"></script>
+
     <style>
+      :root {
+        --pp-navy: #001c64;
+        --pp-blue: #0070e0;
+        --pp-blue-bright: #0090ff;
+        --ink: #0a0f1c;
+        --paper: #eef2f7;
+        --surface: #ffffff;
+        --surface-2: #f7f9fc;
+        --line: #dce3ed;
+        --line-strong: #c4cede;
+        --muted: #5a6577;
+        --muted-2: #8a94a6;
+        --ok: #147d52;
+        --ok-bg: #e6f4ec;
+        --no: #c0392b;
+        --no-bg: #fbeae8;
+        --pending: #9a6a00;
+        --pending-bg: #fbf1dc;
+        --radius: 14px;
+        --radius-sm: 9px;
+        --shadow: 0 1px 2px rgba(16, 26, 51, 0.04), 0 8px 24px rgba(16, 26, 51, 0.06);
+        --sans: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+        --display: "Space Grotesk", "Inter", system-ui, sans-serif;
+        --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+      }
+
       * {
-        --color-success: #10b981;
-        --color-warning: #f59e0b;
-        --color-danger: #ef4444;
-        --color-blue: #003087;
-        --color-gray-50: #f9fafb;
-        --color-gray-900: #111827;
-        --color-code-bg: #1e1e1e;
-        --color-code-text: #d4d4d4;
+        box-sizing: border-box;
       }
-
-      html, body {
-        margin: 0;
-        padding: 0;
+      html {
+        -webkit-text-size-adjust: 100%;
       }
-
       body {
-        background: var(--color-gray-50);
-        color: var(--color-gray-900);
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        margin: 0;
+        background: var(--paper);
+        color: var(--ink);
+        font-family: var(--sans);
+        font-size: 15px;
+        line-height: 1.55;
+        -webkit-font-smoothing: antialiased;
       }
 
-      .pp-navbar {
-        background: var(--color-blue);
-        padding: 1rem 0;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-      }
-
-      .pp-navbar .navbar-brand {
+      /* ── App bar ─────────────────────────────────────────── */
+      .appbar {
+        position: sticky;
+        top: 0;
+        z-index: 20;
+        background: var(--pp-navy);
         color: #fff;
-        font-weight: 600;
-        letter-spacing: -0.5px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
       }
-
-      .container-main {
-        max-width: 680px;
-        padding-left: 1rem;
-        padding-right: 1rem;
-      }
-
-      /* ── 合法性检查英雄卡 ────────────────────────────────────────────────────── */
-      .eligibility-hero {
-        background: white;
-        border-radius: 12px;
-        padding: 2rem 1.5rem;
-        margin-bottom: 2rem;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-        text-align: center;
-      }
-
-      .eligibility-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
-        padding: 0.75rem 1.5rem;
-        border-radius: 9999px;
-        font-weight: 700;
-        font-size: 1.1rem;
-        margin-bottom: 1rem;
-        font-family: "IBM Plex Mono", monospace;
-        letter-spacing: 0.5px;
-      }
-
-      .eligibility-badge.eligible {
-        background: var(--color-success);
-        color: white;
-      }
-
-      .eligibility-badge.not-eligible {
-        background: var(--color-warning);
-        color: var(--color-gray-900);
-      }
-
-      .eligibility-badge.loading {
-        background: #e5e7eb;
-        color: var(--color-gray-900);
-      }
-
-      .eligibility-badge svg {
-        width: 1.25rem;
-        height: 1.25rem;
-      }
-
-      .eligibility-details {
-        font-size: 0.9rem;
-        color: #6b7280;
-        line-height: 1.7;
-        margin-top: 1rem;
-        text-align: left;
-        display: inline-block;
-      }
-
-      .eligibility-details strong {
-        color: var(--color-gray-900);
-      }
-
-      .detail-row {
-        padding: 0.5rem 0;
-      }
-
-      .detail-label {
-        min-width: 120px;
-        display: inline-block;
-      }
-
-      /* ── 通用卡片样式 ────────────────────────────────────────────────────────── */
-      .card {
-        border: none;
-        border-radius: 12px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-        margin-bottom: 1.5rem;
-        background: white;
-      }
-
-      .card-body {
-        padding: 1.5rem;
-      }
-
-      .card-title {
-        font-weight: 600;
-        margin-bottom: 1.25rem;
-        font-size: 1rem;
-        text-transform: uppercase;
-        letter-spacing: 0.3px;
-        color: #6b7280;
-      }
-
-      /* ── 配置面板 ────────────────────────────────────────────────────────────── */
-      .config-section {
-        background: #fafafa;
-        border-radius: 8px;
-        padding: 1.25rem;
-        border-left: 3px solid var(--color-blue);
-      }
-
-      /* ── 表单控件 ────────────────────────────────────────────────────────────── */
-      .form-label {
-        font-size: 0.8rem;
-        font-weight: 600;
-        color: #6b7280;
-        text-transform: uppercase;
-        letter-spacing: 0.3px;
-        margin-bottom: 0.5rem;
-      }
-
-      .form-control, .form-select {
-        border: 1px solid #d1d5db;
-        border-radius: 8px;
-        padding: 0.625rem 0.875rem;
-        font-size: 0.95rem;
-        background: white;
-        transition: border-color 0.2s, box-shadow 0.2s;
-      }
-
-      .form-control:focus, .form-select:focus {
-        border-color: var(--color-blue);
-        box-shadow: 0 0 0 3px rgba(0, 48, 135, 0.1);
-        outline: none;
-      }
-
-      /* ── 按钮 ────────────────────────────────────────────────────────────────── */
-      .btn {
-        border-radius: 8px;
-        font-weight: 600;
-        padding: 0.625rem 1.25rem;
-        transition: all 0.2s ease;
-        border: none;
-      }
-
-      .btn-primary {
-        background: var(--color-blue);
-        color: white;
-      }
-
-      .btn-primary:hover:not(:disabled) {
-        background: #002254;
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(0, 48, 135, 0.3);
-      }
-
-      .btn-primary:active:not(:disabled) {
-        transform: translateY(0);
-      }
-
-      /* ── PayPal 按钮容器 ────────────────────────────────────────────────────── */
-      .paypal-button-container {
-        min-height: 180px;
+      .appbar__inner {
+        max-width: 1140px;
+        margin: 0 auto;
+        padding: 14px 24px;
         display: flex;
         align-items: center;
-        justify-content: center;
-        background: #fafafa;
+        gap: 14px;
+      }
+      .mark {
+        width: 30px;
+        height: 30px;
         border-radius: 8px;
-        border: 1px dashed #d1d5db;
-      }
-
-      #render-placeholder {
-        color: #9ca3af;
-        font-size: 0.95rem;
-      }
-
-      /* ── 结果区域 ────────────────────────────────────────────────────────────── */
-      .result-header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 1rem;
-        margin-bottom: 1rem;
-        flex-wrap: wrap;
-      }
-
-      .status-badge {
-        padding: 0.375rem 0.875rem;
-        border-radius: 6px;
-        font-size: 0.75rem;
+        background: linear-gradient(135deg, var(--pp-blue-bright), var(--pp-blue));
+        display: grid;
+        place-items: center;
+        font-family: var(--display);
         font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
+        font-size: 15px;
+        color: #fff;
+        flex: none;
+      }
+      .appbar__title {
+        font-family: var(--display);
+        font-weight: 600;
+        font-size: 16px;
+        letter-spacing: -0.01em;
+      }
+      .appbar__tag {
+        margin-left: auto;
+        font-family: var(--mono);
+        font-size: 11.5px;
+        letter-spacing: 0.02em;
+        color: #a9b8e8;
+        border: 1px solid rgba(255, 255, 255, 0.16);
+        padding: 4px 10px;
+        border-radius: 999px;
         white-space: nowrap;
       }
 
-      .status-badge.pending {
-        background: #dbeafe;
-        color: #0c4a6e;
+      /* ── Layout ──────────────────────────────────────────── */
+      .console {
+        max-width: 1140px;
+        margin: 0 auto;
+        padding: 28px 24px 64px;
+        display: grid;
+        grid-template-columns: 380px 1fr;
+        gap: 24px;
+        align-items: start;
+      }
+      .lede {
+        grid-column: 1 / -1;
+        margin: 0 0 4px;
+      }
+      .lede h1 {
+        font-family: var(--display);
+        font-weight: 700;
+        font-size: 26px;
+        letter-spacing: -0.02em;
+        margin: 0 0 6px;
+      }
+      .lede p {
+        margin: 0;
+        color: var(--muted);
+        max-width: 70ch;
+        font-size: 14px;
+      }
+      .lede code {
+        font-family: var(--mono);
+        font-size: 12.5px;
+        background: #dfe6f2;
+        padding: 1px 5px;
+        border-radius: 5px;
+        color: var(--pp-navy);
       }
 
-      .status-badge.success {
-        background: #dcfce7;
-        color: #15803d;
+      @media (max-width: 860px) {
+        .console {
+          grid-template-columns: 1fr;
+          padding: 20px 16px 48px;
+        }
       }
 
-      .status-badge.danger {
-        background: #fee2e2;
-        color: #991b1b;
+      /* ── Panel (config, left) ────────────────────────────── */
+      .panel {
+        position: sticky;
+        top: 76px;
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+        overflow: hidden;
+      }
+      @media (max-width: 860px) {
+        .panel {
+          position: static;
+        }
+      }
+      .panel__section {
+        padding: 18px 20px;
+      }
+      .panel__section + .panel__section {
+        border-top: 1px solid var(--line);
+      }
+      .eyebrow {
+        font-family: var(--mono);
+        font-size: 10.5px;
+        font-weight: 500;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--muted-2);
+        margin: 0 0 14px;
       }
 
-      .status-badge.warning {
-        background: #fef3c7;
-        color: #92400e;
+      .field {
+        margin-bottom: 12px;
       }
-
-      #json-result {
-        background: var(--color-code-bg);
-        color: var(--color-code-text);
-        border-radius: 8px;
-        padding: 1rem;
-        font-family: "Monaco", "Menlo", monospace;
-        font-size: 0.8rem;
-        max-height: 400px;
-        overflow: auto;
-        white-space: pre-wrap;
-        word-break: break-all;
+      .field:last-child {
+        margin-bottom: 0;
+      }
+      .field > label {
+        display: block;
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--muted);
+        margin-bottom: 5px;
+      }
+      .grid-2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+      }
+      input.ctrl,
+      select.ctrl {
+        width: 100%;
+        font-family: var(--sans);
+        font-size: 14px;
+        color: var(--ink);
+        background: var(--surface-2);
+        border: 1px solid var(--line-strong);
+        border-radius: var(--radius-sm);
+        padding: 9px 11px;
+        transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+      }
+      input.ctrl.mono {
+        font-family: var(--mono);
+        font-size: 12px;
+      }
+      input.ctrl:focus,
+      select.ctrl:focus {
+        outline: none;
+        background: #fff;
+        border-color: var(--pp-blue);
+        box-shadow: 0 0 0 3px rgba(0, 112, 224, 0.14);
+      }
+      select.ctrl {
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%235A6577' d='M6 8L2 4h8z'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 11px center;
+        padding-right: 30px;
+      }
+      .hint {
+        font-size: 11.5px;
+        color: var(--muted-2);
+        margin: 7px 0 0;
         line-height: 1.5;
       }
 
-      #orderJSON {
-        font-size: 0.85rem;
-        text-decoration: none;
-        color: var(--color-blue);
+      .btn-render {
+        width: 100%;
+        margin-top: 4px;
+        font-family: var(--display);
         font-weight: 600;
-        transition: color 0.2s;
-      }
-
-      #orderJSON:hover {
-        color: #002254;
-      }
-
-      /* ── 加载遮罩 ────────────────────────────────────────────────────────────── */
-      .loading-mask {
-        display: none;
-        position: fixed;
-        inset: 0;
-        background: rgba(255, 255, 255, 0.7);
-        backdrop-filter: blur(2px);
-        z-index: 1000;
+        font-size: 15px;
+        color: #fff;
+        background: var(--pp-blue);
+        border: none;
+        border-radius: var(--radius-sm);
+        padding: 12px;
+        cursor: pointer;
+        display: flex;
         align-items: center;
         justify-content: center;
+        gap: 8px;
+        transition: background 0.15s, transform 0.06s;
+      }
+      .btn-render:hover {
+        background: #005ec2;
+      }
+      .btn-render:active {
+        transform: translateY(1px);
+      }
+      .btn-render:disabled {
+        background: var(--line-strong);
+        cursor: not-allowed;
+      }
+      .btn-render .dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: #fff;
+        opacity: 0.9;
+      }
+      .btn-render.busy .dot {
+        animation: pulse 0.9s ease-in-out infinite;
+      }
+      @keyframes pulse {
+        0%, 100% { opacity: 0.25; transform: scale(0.8); }
+        50% { opacity: 1; transform: scale(1.15); }
       }
 
-      body.loading .loading-mask {
+      /* ── Stage (right) ───────────────────────────────────── */
+      .stage {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        min-width: 0;
+      }
+      .card {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+      }
+      .card__head {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 15px 20px;
+        border-bottom: 1px solid var(--line);
+      }
+      .card__head h2 {
+        font-family: var(--display);
+        font-weight: 600;
+        font-size: 15px;
+        margin: 0;
+        letter-spacing: -0.01em;
+      }
+      .card__body {
+        padding: 20px;
+      }
+
+      /* ── Signature: eligibility diagnostics ──────────────── */
+      .diag__meta {
+        margin-left: auto;
+        font-family: var(--mono);
+        font-size: 11px;
+        color: var(--muted-2);
+      }
+      .diag-list {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+      }
+      .diag-row {
+        display: grid;
+        grid-template-columns: auto 1fr auto;
+        align-items: center;
+        gap: 12px;
+        padding: 13px 4px;
+      }
+      .diag-row + .diag-row {
+        border-top: 1px dashed var(--line);
+      }
+      .diag-row__dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: var(--line-strong);
+        flex: none;
+        box-shadow: 0 0 0 4px transparent;
+        transition: background 0.2s, box-shadow 0.2s;
+      }
+      .diag-row[data-state="yes"] .diag-row__dot {
+        background: var(--ok);
+        box-shadow: 0 0 0 4px var(--ok-bg);
+      }
+      .diag-row[data-state="no"] .diag-row__dot {
+        background: var(--no);
+        box-shadow: 0 0 0 4px var(--no-bg);
+      }
+      .diag-row__name {
+        font-family: var(--mono);
+        font-size: 13px;
+        font-weight: 500;
+      }
+      .diag-row__name small {
+        display: block;
+        font-family: var(--sans);
+        font-size: 11px;
+        color: var(--muted-2);
+        font-weight: 400;
+        margin-top: 1px;
+      }
+      .verdict {
+        font-family: var(--mono);
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.03em;
+        padding: 4px 9px;
+        border-radius: 999px;
+        white-space: nowrap;
+        background: var(--surface-2);
+        color: var(--muted-2);
+        border: 1px solid var(--line);
+      }
+      .diag-row[data-state="yes"] .verdict {
+        background: var(--ok-bg);
+        color: var(--ok);
+        border-color: transparent;
+      }
+      .diag-row[data-state="no"] .verdict {
+        background: var(--no-bg);
+        color: var(--no);
+        border-color: transparent;
+      }
+      .diag-note {
+        margin: 14px 0 0;
+        padding: 10px 12px;
+        background: var(--surface-2);
+        border: 1px solid var(--line);
+        border-radius: var(--radius-sm);
+        font-size: 12px;
+        color: var(--muted);
+        line-height: 1.5;
+      }
+      .diag-note b {
+        color: var(--ink);
+      }
+
+      /* ── Button render area ──────────────────────────────── */
+      .paypal-button-container {
+        min-height: 52px;
+      }
+      .stage-empty {
+        border: 1.5px dashed var(--line-strong);
+        border-radius: var(--radius-sm);
+        padding: 34px 20px;
+        text-align: center;
+        color: var(--muted-2);
+        font-size: 13.5px;
+      }
+      .stage-empty .icon {
+        font-size: 22px;
+        display: block;
+        margin-bottom: 6px;
+      }
+
+      /* ── Result log ──────────────────────────────────────── */
+      .status-pill {
+        margin-left: auto;
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        font-family: var(--mono);
+        font-size: 11.5px;
+        font-weight: 600;
+        padding: 5px 11px;
+        border-radius: 999px;
+        background: var(--surface-2);
+        color: var(--muted);
+        border: 1px solid var(--line);
+      }
+      .status-pill .sdot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: currentColor;
+      }
+      .status-pill[data-s="info"] {
+        background: #e7f0fd;
+        color: var(--pp-blue);
+        border-color: transparent;
+      }
+      .status-pill[data-s="ok"] {
+        background: var(--ok-bg);
+        color: var(--ok);
+        border-color: transparent;
+      }
+      .status-pill[data-s="no"] {
+        background: var(--no-bg);
+        color: var(--no);
+        border-color: transparent;
+      }
+      .status-pill[data-s="warn"] {
+        background: var(--pending-bg);
+        color: var(--pending);
+        border-color: transparent;
+      }
+      .status-pill[data-s="info"] .sdot {
+        animation: pulse 0.9s ease-in-out infinite;
+      }
+
+      .log {
+        margin: 0;
+        font-family: var(--mono);
+        font-size: 12px;
+        line-height: 1.6;
+        color: #cdd6e6;
+        background: #0c1226;
+        border-radius: var(--radius-sm);
+        padding: 16px;
+        max-height: 380px;
+        overflow: auto;
+        white-space: pre-wrap;
+        word-break: break-all;
+      }
+      .log:empty::before {
+        content: "// 建单 / 捕获结果将输出在这里";
+        color: #5b6683;
+      }
+      .result-link {
+        display: none;
+        margin-top: 12px;
+        font-family: var(--mono);
+        font-size: 12px;
+        color: var(--pp-blue);
+        text-decoration: none;
+      }
+      .result-link:hover {
+        text-decoration: underline;
+      }
+
+      /* ── Loading veil ────────────────────────────────────── */
+      .veil {
+        position: fixed;
+        inset: 0;
+        z-index: 50;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        background: rgba(238, 242, 247, 0.55);
+        backdrop-filter: blur(1.5px);
+      }
+      body.busy .veil {
         display: flex;
       }
-
-      /* ── 辅助文本 ────────────────────────────────────────────────────────────── */
-      .hint {
-        font-size: 0.85rem;
-        color: #6b7280;
-        line-height: 1.6;
-        margin: 1rem 0 0 0;
+      .spinner {
+        width: 34px;
+        height: 34px;
+        border: 3px solid rgba(0, 112, 224, 0.2);
+        border-top-color: var(--pp-blue);
+        border-radius: 50%;
+        animation: spin 0.7s linear infinite;
+      }
+      @keyframes spin {
+        to { transform: rotate(360deg); }
       }
 
-      .hint code {
-        background: #f3f4f6;
-        padding: 0.2rem 0.4rem;
-        border-radius: 4px;
-        font-family: "Monaco", monospace;
-        color: var(--color-gray-900);
+      :focus-visible {
+        outline: 2px solid var(--pp-blue);
+        outline-offset: 2px;
       }
 
-      /* ── 响应式 ────────────────────────────────────────────────────────────── */
-      @media (max-width: 640px) {
-        .container-main {
-          padding-left: 0.75rem;
-          padding-right: 0.75rem;
-        }
-
-        .card-body {
-          padding: 1.25rem;
-        }
-
-        .eligibility-hero {
-          padding: 1.5rem 1.25rem;
-        }
-
-        .paypal-button-container {
-          min-height: 120px;
-        }
-
-        .result-header {
-          gap: 0.5rem;
-        }
-      }
-
-      /* ── 减速动画（尊重用户偏好） ────────────────────────────────────────────── */
       @media (prefers-reduced-motion: reduce) {
         * {
-          animation-duration: 0.01ms !important;
+          animation-duration: 0.001ms !important;
           animation-iteration-count: 1 !important;
-          transition-duration: 0.01ms !important;
+          transition-duration: 0.001ms !important;
         }
       }
     </style>
   </head>
-
   <body>
-    <div class="loading-mask">
-      <div class="spinner-border text-primary" role="status"></div>
-    </div>
+    <div class="veil"><div class="spinner"></div></div>
 
-    <nav class="navbar pp-navbar">
-      <div class="container container-main">
-        <span class="navbar-brand mb-0">PayPal Integration Demo</span>
+    <header class="appbar">
+      <div class="appbar__inner">
+        <div class="mark">PP</div>
+        <span class="appbar__title">Apple Pay 渲染诊断台</span>
+        <span class="appbar__tag">JS SDK v5 · Smart Payment Buttons</span>
       </div>
-    </nav>
+    </header>
 
-    <div class="container container-main my-4">
-      <div style="margin-bottom: 3rem">
-        <h2 style="font-weight: 700; margin-bottom: 0.5rem">SPB (JSv5) w/ Apple Pay</h2>
-        <p class="hint" style="margin-top: 0.5rem">
-          用 <code>paypal.Buttons()</code> 的 Smart Payment Buttons 方式渲染 Apple Pay（BCDC 场景）——
-          Apple Pay 作为按钮栈中的一颗，由 SDK 内部托管。后台直接在前端调 PayPal REST API。
+    <main class="console">
+      <div class="lede">
+        <h1>SPB (JSv5) with Apple Pay</h1>
+        <p>
+          用 <code>paypal.Buttons()</code> 的 Smart Payment Buttons 方式渲染 Apple Pay —— Apple Pay
+          作为按钮栈中的一颗，由 SDK 内部托管。渲染前先用
+          <code>isEligible()</code> 逐一诊断各资金来源的资格；建单 / 捕获在前端用 client
+          credentials 直连 PayPal Orders v2 API（<code>intent=CAPTURE</code>）。
         </p>
       </div>
 
-      <!-- === 合法性检查英雄卡 === -->
-      <div class="eligibility-hero">
-        <div class="eligibility-badge loading" id="eligibility-badge">
-          <svg width="1.25rem" height="1.25rem" viewBox="0 0 20 20" fill="currentColor">
-            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v3.5H7a1 1 0 100 2h4a1 1 0 001-1V7z" clip-rule="evenodd" />
-          </svg>
-          <span>检查中…</span>
-        </div>
-        <div class="eligibility-details" id="eligibility-details">
-          <div class="detail-row"><span class="detail-label"><strong>设备：</strong></span><span id="detail-device">检查中</span></div>
-          <div class="detail-row"><span class="detail-label"><strong>浏览器：</strong></span><span id="detail-browser">检查中</span></div>
-          <div class="detail-row"><span class="detail-label"><strong>状态：</strong></span><span id="detail-status">检查中</span></div>
-          <div class="detail-row" id="detail-config-row" style="display: none">
-            <span class="detail-label"><strong>配置：</strong></span><span id="detail-config">—</span>
+      <!-- ── 配置面板 ─────────────────────────────────── -->
+      <aside class="panel" aria-label="配置">
+        <div class="panel__section">
+          <p class="eyebrow">凭据</p>
+          <div class="field">
+            <label for="environment">环境</label>
+            <select id="environment" class="ctrl">
+              <option value="sandbox" selected>Sandbox</option>
+              <option value="production">Production</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="clientId">Client ID</label>
+            <input id="clientId" class="ctrl mono" value="" spellcheck="false" />
+          </div>
+          <div class="field">
+            <label for="clientSecret">Client Secret</label>
+            <input id="clientSecret" class="ctrl mono" value="" spellcheck="false" />
+            <p class="hint">前端直连 OAuth 换 token 用，仅限沙箱测试，切勿用于生产。</p>
           </div>
         </div>
-      </div>
 
-      <!-- === 凭据配置 === -->
-      <div class="card">
-        <div class="card-body">
-          <h6 class="card-title">凭据配置</h6>
-          <div class="config-section">
-            <div class="row g-3 mb-3">
-              <div class="col-sm-4">
-                <label class="form-label" for="environment">环境</label>
-                <select id="environment" class="form-select">
-                  <option value="sandbox" selected>Sandbox</option>
-                  <option value="production">Production</option>
-                </select>
-              </div>
-              <div class="col-sm-8">
-                <label class="form-label" for="clientId">Client ID</label>
-                <input id="clientId" class="form-control" value="" placeholder="Will auto-fill sandbox default" />
-              </div>
+        <div class="panel__section">
+          <p class="eyebrow">交易</p>
+          <div class="grid-2">
+            <div class="field">
+              <label for="amount">金额</label>
+              <input id="amount" class="ctrl mono" value="1.00" spellcheck="false" />
             </div>
-            <div class="row g-3">
-              <div class="col-12">
-                <label class="form-label" for="clientSecret">Client Secret</label>
-                <input id="clientSecret" class="form-control" type="password" value="" placeholder="For sandbox testing only" />
-              </div>
+            <div class="field">
+              <label for="currency">币种</label>
+              <input id="currency" class="ctrl mono" value="USD" spellcheck="false" />
             </div>
           </div>
         </div>
-      </div>
 
-      <!-- === 交易配置 === -->
-      <div class="card">
-        <div class="card-body">
-          <h6 class="card-title">交易配置</h6>
-          <div class="row g-3 align-items-end">
-            <div class="col-sm-4">
-              <label class="form-label" for="amount">金额</label>
-              <input id="amount" class="form-control" type="number" step="0.01" value="1.00" />
-            </div>
-            <div class="col-sm-3">
-              <label class="form-label" for="currency">币种</label>
-              <input id="currency" class="form-control" maxlength="3" value="USD" />
-            </div>
-            <div class="col-sm-5">
-              <button id="renderSPB" type="button" class="btn btn-primary w-100">
-                <svg width="1rem" height="1rem" viewBox="0 0 20 20" fill="currentColor" style="vertical-align: -2px; margin-right: 0.5rem">
-                  <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z" />
-                </svg>
-                Render SPB
-              </button>
-            </div>
-          </div>
+        <div class="panel__section">
+          <button id="renderSPB" class="btn-render" type="button">
+            <span class="dot"></span><span class="btn-render__label">渲染并诊断</span>
+          </button>
+          <p class="hint">改动凭据 / 金额 / 币种后重新点击，会用最新参数干净重载 SDK。</p>
         </div>
-      </div>
+      </aside>
 
-      <!-- === 按钮渲染区 === -->
-      <div class="card">
-        <div class="card-body">
-          <h6 class="card-title">支付按钮</h6>
-          <div class="paypal-button-container"></div>
-          <div id="render-placeholder" class="text-center py-4">
-            点击上方 "Render SPB" 来渲染支付按钮
+      <!-- ── 输出台 ───────────────────────────────────── -->
+      <section class="stage">
+        <!-- 签名元素：资格诊断 -->
+        <div class="card">
+          <div class="card__head">
+            <h2>资金来源资格诊断</h2>
+            <span id="diagMeta" class="diag__meta">未运行</span>
+          </div>
+          <div class="card__body">
+            <ul class="diag-list" id="diagList">
+              <li class="diag-row" data-key="paypal">
+                <span class="diag-row__dot"></span>
+                <span class="diag-row__name">paypal<small>PayPal 结账</small></span>
+                <span class="verdict">待检测</span>
+              </li>
+              <li class="diag-row" data-key="applepay">
+                <span class="diag-row__dot"></span>
+                <span class="diag-row__name"
+                  >applepay<small>Apple Pay · 需 Safari + Wallet</small></span
+                >
+                <span class="verdict">待检测</span>
+              </li>
+              <li class="diag-row" data-key="card">
+                <span class="diag-row__dot"></span>
+                <span class="diag-row__name">card<small>借记卡 / 信用卡</small></span>
+                <span class="verdict">待检测</span>
+              </li>
+            </ul>
+            <p class="diag-note" id="diagNote">
+              点击左侧「渲染并诊断」后，这里显示
+              <b>paypal.Buttons({ fundingSource }).isEligible()</b> 的逐项结果。Apple Pay 在非
+              Safari 浏览器或未配置 Wallet 时会判定为不可用 —— 这是预期行为。
+            </p>
           </div>
         </div>
-      </div>
 
-      <!-- === 结果区 === -->
-      <div class="card">
-        <div class="card-body">
-          <div class="result-header">
-            <h6 class="card-title mb-0">支付结果</h6>
-            <span id="status" class="status-badge pending">待支付</span>
-            <a id="orderJSON" href="" target="_blank" style="display: none">在 Dashboard 查看</a>
+        <!-- 按钮渲染 -->
+        <div class="card">
+          <div class="card__head"><h2>按钮渲染</h2></div>
+          <div class="card__body">
+            <div class="paypal-button-container"></div>
+            <div class="stage-empty" id="stagePlaceholder">
+              <span class="icon">◎</span>
+              等待渲染 —— 仅资格通过的资金来源会出现在这里
+            </div>
           </div>
-          <pre id="json-result" class="mb-0">// 支付完成后这里显示订单 JSON</pre>
         </div>
-      </div>
-    </div>
+
+        <!-- 结果 -->
+        <div class="card">
+          <div class="card__head">
+            <h2>建单 / 捕获结果</h2>
+            <span id="status" class="status-pill"><span class="sdot"></span>待支付</span>
+          </div>
+          <div class="card__body">
+            <pre class="log" id="log"></pre>
+            <a id="resultLink" class="result-link" href="" target="_blank" rel="noopener"
+              >↗ 在 PayPal Dashboard 查看订单</a
+            >
+          </div>
+        </div>
+      </section>
+    </main>
 
     <script>
       new VConsole();
 
-      // ── 沙箱默认凭据（dashboard test.tt） ──
+      // ── 我们自己的沙箱默认凭据（applepay-dashboard 的 test.tt 一方预设） ──
       const SANDBOX_DEFAULTS = {
-        clientId: "Adz6qoCn9-BQ0tFfWVZBl_rSTyxD0_fpk39E_u2KqT1HoYtN8HTQsSwunpx5Jynk0q8tj1nxUHS-TWlL",
-        clientSecret: "ENCbxo_xFeOFsq4uVGll5gDau005zIVG_c7AeBipt60sqbbOdA6netNgqQjd1DUacHj2QUD-4GFVqcU8",
+        clientId:
+          "Adz6qoCn9-BQ0tFfWVZBl_rSTyxD0_fpk39E_u2KqT1HoYtN8HTQsSwunpx5Jynk0q8tj1nxUHS-TWlL",
+        clientSecret:
+          "ENCbxo_xFeOFsq4uVGll5gDau005zIVG_c7AeBipt60sqbbOdA6netNgqQjd1DUacHj2QUD-4GFVqcU8",
       };
-      document.getElementById("clientId").value = SANDBOX_DEFAULTS.clientId;
-      document.getElementById("clientSecret").value = SANDBOX_DEFAULTS.clientSecret;
 
       const PAYPAL_API_BASE = {
         sandbox: "https://api-m.sandbox.paypal.com",
@@ -473,14 +679,16 @@
       };
       const PAYPAL_SCRIPT_ID = "paypal-js-sdk";
 
-      const logGreen = (msg) =>
+      const $ = (id) => document.getElementById(id);
+      $("clientId").value = SANDBOX_DEFAULTS.clientId;
+      $("clientSecret").value = SANDBOX_DEFAULTS.clientSecret;
+
+      const logGreen = (m) =>
         console.log(
-          "%c " + msg,
-          "color:#fff;background:#10b981;padding:2px 6px;border-radius:4px;font-weight:bold;",
+          "%c " + m,
+          "color:#fff;background:#147d52;padding:2px 6px;border-radius:4px;font-weight:bold;",
         );
 
-      // ── 工具 ──
-      const $ = (id) => document.getElementById(id);
       const cfg = () => ({
         environment: $("environment").value,
         clientId: $("clientId").value.trim(),
@@ -488,65 +696,21 @@
         amount: $("amount").value.trim(),
         currency: $("currency").value.trim().toUpperCase(),
       });
-      const setStatus = (text, cls) => {
+
+      const setStatus = (text, s) => {
         const el = $("status");
-        el.textContent = text;
-        el.className = "status-badge " + cls;
+        el.dataset.s = s || "";
+        el.innerHTML = `<span class="sdot"></span>${text}`;
+      };
+      const setBusy = (on) => {
+        document.body.classList.toggle("busy", on);
+        const btn = $("renderSPB");
+        btn.disabled = on;
+        btn.classList.toggle("busy", on);
+        btn.querySelector(".btn-render__label").textContent = on ? "处理中…" : "渲染并诊断";
       };
 
-      // ── 设备检查（Apple Pay 合法性） ──
-      function checkApplePayEligibility() {
-        const badge = $("eligibility-badge");
-        const details = $("eligibility-details");
-
-        // 1. 检查基础支持
-        const hasApplePaySession = typeof window !== "undefined" && "ApplePaySession" in window;
-        const supportsV4 = hasApplePaySession && window.ApplePaySession.supportsVersion(4);
-        const canMakePayments = hasApplePaySession && window.ApplePaySession.canMakePayments();
-
-        const isEligible = hasApplePaySession && supportsV4 && canMakePayments;
-
-        // 2. 更新 UI
-        badge.className = isEligible
-          ? "eligibility-badge eligible"
-          : "eligibility-badge not-eligible";
-
-        badge.innerHTML = isEligible
-          ? '<svg width="1.25rem" height="1.25rem" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg><span>支持 Apple Pay</span>'
-          : '<svg width="1.25rem" height="1.25rem" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" /></svg><span>不支持 Apple Pay</span>';
-
-        // 3. 详情
-        const userAgent = navigator.userAgent;
-        const isApple = /iPhone|iPad|Mac/.test(userAgent);
-        const isSafari = /Safari|Mobile/.test(userAgent) && !/Chrome/.test(userAgent);
-
-        $("detail-device").textContent = isApple ? "✓ Apple 设备" : "✗ 非 Apple 设备";
-        $("detail-browser").textContent = isSafari ? "✓ Safari / Mobile" : "✗ 其他浏览器";
-        $("detail-status").textContent = isEligible
-          ? "✓ 可使用 Apple Pay"
-          : "✗ 无法使用 Apple Pay";
-
-        if (isEligible) {
-          $("detail-config-row").style.display = "block";
-          $("detail-config").textContent = `v${supportsV4 ? "4" : "?"} · canMakePayments=${canMakePayments}`;
-        }
-
-        console.log(
-          "[eligibility]",
-          {
-            hasSession: hasApplePaySession,
-            supportsV4,
-            canMakePayments,
-            isEligible,
-            isApple,
-            isSafari,
-          }
-        );
-
-        return isEligible;
-      }
-
-      // ── Access token（缓存 + 30s 缓冲） ──
+      // ── Access token（缓存，30s 缓冲） ──────────────────────
       let tokenCache = null;
       async function getAccessToken() {
         const { environment, clientId, clientSecret } = cfg();
@@ -572,18 +736,20 @@
           body: "grant_type=client_credentials",
         });
         const data = await res.json();
-        if (!res.ok) throw new Error(`PayPal auth failed: ${data.error_description ?? res.status}`);
+        if (!res.ok) throw new Error(`OAuth 失败: ${data.error_description ?? res.status}`);
         tokenCache = {
           token: data.access_token,
           expiresAt: now + data.expires_in * 1000,
           environment,
           clientId,
         };
-        logGreen(`[token] obtained ✓ (${data.expires_in}s)`);
+        logGreen(`[token] ok (expires in ${data.expires_in}s)`);
         return tokenCache.token;
       }
 
-      // ── 建单 ──
+      // ── 建单：SPB 场景 Apple Pay 由 SDK 托管 confirmOrder，
+      //    建普通订单即可，不带 payment_source（对应原始 skipPaymentSource:true）。
+      //    guide 强制要求 intent=CAPTURE。 ────────────────────────
       async function createOrder() {
         const { environment, amount, currency } = cfg();
         const base = PAYPAL_API_BASE[environment];
@@ -609,12 +775,11 @@
           body: JSON.stringify(body),
         });
         const data = await res.json();
-        if (!res.ok) throw new Error(data.message ?? data.name ?? `Create order failed: ${res.status}`);
-        logGreen(`[createOrder] id=${data.id}`);
+        if (!res.ok) throw new Error(data.message ?? data.name ?? `建单失败: ${res.status}`);
+        logGreen(`[createOrder] id=${data.id} status=${data.status}`);
         return data.id;
       }
 
-      // ── 捕获 ──
       async function captureOrder(orderId) {
         const { environment } = cfg();
         const base = PAYPAL_API_BASE[environment];
@@ -630,60 +795,58 @@
           },
         });
         const data = await res.json();
-        if (!res.ok) throw new Error(data.message ?? data.name ?? `Capture failed: ${res.status}`);
+        if (!res.ok) throw new Error(data.message ?? data.name ?? `捕获失败: ${res.status}`);
         return data;
       }
 
-      // ── SPB 按钮配置 ──
+      // ── SPB 配置 ────────────────────────────────────────
       const spbConfig = {
         style: { layout: "vertical", color: "gold", shape: "pill", label: "checkout" },
-        onInit() {
-          logGreen("[SPB] init");
+        onInit: () => logGreen("[SPB] onInit"),
+        createOrder: () => {
+          setBusy(true);
+          $("resultLink").style.display = "none";
+          $("log").textContent = "// 建单中…";
+          setStatus("建单中…", "info");
+          return createOrder().finally(() => setBusy(false));
         },
-        createOrder() {
-          document.body.classList.add("loading");
-          $("orderJSON").style.display = "none";
-          $("json-result").textContent = "// 建单中…";
-          setStatus("建单中…", "warning");
-          return createOrder().finally(() => document.body.classList.remove("loading"));
-        },
-        onClick(data) {
-          console.log("[SPB] onClick:", data.fundingSource);
-        },
-        async onApprove(data) {
-          logGreen(`[SPB] onApprove: ${data.orderID}`);
-          document.body.classList.add("loading");
-          setStatus("捕获中…", "warning");
+        onClick: (data) => console.log("[SPB] onClick — fundingSource:", data.fundingSource),
+        onApprove: async (data) => {
+          logGreen(`[SPB] onApprove — orderID=${data.orderID}`);
+          setBusy(true);
+          setStatus("捕获中…", "info");
           try {
             const result = await captureOrder(data.orderID);
-            $("json-result").textContent = JSON.stringify(result, null, 2);
+            $("log").textContent = JSON.stringify(result, null, 2);
             const txn =
               result?.purchase_units?.[0]?.payments?.captures?.[0] ??
               result?.purchase_units?.[0]?.payments?.authorizations?.[0];
-            setStatus(`成功 · ${txn?.id ?? result.id}`, "success");
-            $("orderJSON").style.display = "inline";
+            setStatus(`成功 · ${txn?.id ?? result.id}`, "ok");
+            const link = $("resultLink");
+            link.href = `https://www.${cfg().environment === "sandbox" ? "sandbox." : ""}paypal.com/`;
+            link.style.display = "inline-block";
           } catch (err) {
             console.error(err);
-            $("json-result").textContent = String(err);
-            setStatus("捕获失败", "danger");
+            $("log").textContent = String(err);
+            setStatus("捕获失败", "no");
           } finally {
-            document.body.classList.remove("loading");
+            setBusy(false);
           }
         },
-        onCancel(data) {
-          document.body.classList.remove("loading");
-          setStatus("已取消", "warning");
+        onCancel: (data) => {
+          setBusy(false);
+          setStatus("用户取消", "warn");
           console.log("[SPB] onCancel:", data);
         },
-        onError(err) {
-          document.body.classList.remove("loading");
-          setStatus("SDK 错误", "danger");
-          $("json-result").textContent = String(err);
+        onError: (err) => {
+          setBusy(false);
+          setStatus("SDK 错误", "no");
+          $("log").textContent = String(err);
           console.error("[SPB] onError:", err);
         },
       };
 
-      // ── 加载 PayPal SDK ──
+      // ── 动态加载 PayPal JS SDK（buttons + applepay funding） ──
       function loadPayPalSDK() {
         return new Promise((resolve, reject) => {
           const { clientId, currency } = cfg();
@@ -693,22 +856,48 @@
           const src =
             `https://www.paypal.com/sdk/js?client-id=${clientId}` +
             `&intent=capture&currency=${currency}&locale=zh_CN` +
-            `&enable-funding=applepay&components=buttons`;
-          console.log("[PayPal SDK] loading:", src);
+            `&enable-funding=applepay&components=buttons,messages`;
+          console.log("[PayPal SDK] loading", src);
           const s = document.createElement("script");
           s.id = PAYPAL_SCRIPT_ID;
           s.src = src;
           s.crossOrigin = "anonymous";
           s.onload = () => {
-            logGreen("[PayPal SDK] loaded ✓");
+            logGreen("[PayPal SDK] loaded");
             resolve();
           };
-          s.onerror = () => reject(new Error("PayPal SDK failed to load"));
+          s.onerror = () => reject(new Error("PayPal SDK 加载失败"));
           document.head.appendChild(s);
         });
       }
 
-      // ── 渲染 ──
+      // ── 资格诊断（v5：paypal.Buttons({fundingSource}).isEligible()） ──
+      const FUNDING = [
+        { key: "paypal", src: () => paypal.FUNDING.PAYPAL },
+        { key: "applepay", src: () => paypal.FUNDING.APPLEPAY },
+        { key: "card", src: () => paypal.FUNDING.CARD },
+      ];
+      function runEligibility() {
+        let anyEligible = false;
+        FUNDING.forEach(({ key, src }) => {
+          let eligible = false;
+          try {
+            eligible = paypal.Buttons({ fundingSource: src() }).isEligible();
+          } catch (e) {
+            console.warn(`[eligibility] ${key} 检测异常`, e);
+          }
+          anyEligible = anyEligible || eligible;
+          const row = document.querySelector(`.diag-row[data-key="${key}"]`);
+          row.dataset.state = eligible ? "yes" : "no";
+          row.querySelector(".verdict").textContent = eligible ? "ELIGIBLE" : "NOT ELIGIBLE";
+          logGreen(`[eligibility] ${key} → ${eligible}`);
+        });
+        const ok = document.querySelectorAll('.diag-row[data-state="yes"]').length;
+        $("diagMeta").textContent = `${ok}/${FUNDING.length} 可用`;
+        return anyEligible;
+      }
+
+      // ── 渲染主流程 ──────────────────────────────────────
       async function renderSPB() {
         const { clientId, clientSecret } = cfg();
         if (!clientId || !clientSecret) {
@@ -716,40 +905,42 @@
           return;
         }
         tokenCache = null;
-        $("render-placeholder").style.display = "none";
         document.querySelector(".paypal-button-container").innerHTML = "";
-        setStatus("待支付", "pending");
-        $("json-result").textContent = "// 支付完成后显示结果";
-        $("orderJSON").style.display = "none";
+        $("stagePlaceholder").style.display = "none";
+        setStatus("待支付", "");
+        $("log").textContent = "";
+        $("resultLink").style.display = "none";
 
         try {
-          document.body.classList.add("loading");
+          setBusy(true);
           await loadPayPalSDK();
+
+          // guide Step 4：渲染前先诊断资格
+          const anyEligible = runEligibility();
+          if (!anyEligible) {
+            $("stagePlaceholder").style.display = "block";
+            $("stagePlaceholder").innerHTML =
+              '<span class="icon">⚠</span>当前环境下没有可用的资金来源';
+            return;
+          }
+
           const btn = paypal.Buttons(spbConfig);
           if (btn.hasReturned && btn.hasReturned()) {
             btn.resume();
           } else {
             await btn.render(".paypal-button-container");
           }
-          logGreen("[SPB] rendered ✓");
+          logGreen("[SPB] rendered");
         } catch (err) {
           console.error(err);
-          $("render-placeholder").style.display = "block";
-          $("render-placeholder").textContent = "❌ " + err.message;
+          $("stagePlaceholder").style.display = "block";
+          $("stagePlaceholder").innerHTML = '<span class="icon">⚠</span>渲染失败：' + err.message;
         } finally {
-          document.body.classList.remove("loading");
+          setBusy(false);
         }
       }
 
       $("renderSPB").addEventListener("click", renderSPB);
-
-      // ── 页面加载时检查合法性 ──
-      window.addEventListener("load", () => {
-        checkApplePayEligibility();
-      });
-      if (document.readyState !== "loading") {
-        checkApplePayEligibility();
-      }
     </script>
   </body>
 </html>
