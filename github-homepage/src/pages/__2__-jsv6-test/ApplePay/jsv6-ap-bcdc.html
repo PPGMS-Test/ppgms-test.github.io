@@ -303,48 +303,54 @@
                 letter-spacing: -0.01em;
                 margin: 0 0 8px;
             }
-            /* 集成要点列表:菱形标记编码“PayPal 托管(绿)/ 你要注意的约束(琥珀)” */
-            .facts {
+            /* 集成要点:规格表式(mono 维度键 + 说明),呼应页面的 trace / elig 行结构 */
+            .spec {
                 list-style: none;
                 margin: 0 0 32px;
                 padding: 0;
-                max-width: 64ch;
-                display: flex;
-                flex-direction: column;
-                gap: 9px;
+                max-width: 66ch;
+                border-top: 1px solid var(--line-soft);
             }
-            .facts__item {
-                position: relative;
-                padding-left: 22px;
+            .spec__row {
+                display: grid;
+                grid-template-columns: 92px 1fr;
+                gap: 18px;
+                padding: 12px 0;
+                border-bottom: 1px solid var(--line-soft);
+                align-items: baseline;
+            }
+            .spec__key {
+                font-family: var(--mono);
+                font-size: 10.5px;
+                font-weight: 600;
+                letter-spacing: 0.09em;
+                text-transform: uppercase;
+                color: var(--signal);
+                white-space: nowrap;
+            }
+            .spec__val {
                 color: var(--muted);
                 font-size: 13.5px;
-                line-height: 1.55;
+                line-height: 1.5;
                 overflow-wrap: anywhere;
             }
-            .facts__item::before {
-                content: "";
-                position: absolute;
-                left: 2px;
-                top: 8px;
-                width: 7px;
-                height: 7px;
-                border-radius: 2px;
-                transform: rotate(45deg);
-                background: var(--warn);
-            }
-            .facts__item[data-kind="ok"]::before {
-                background: var(--ok);
-            }
-            .facts__item b {
+            .spec__val b {
                 color: var(--ink);
                 font-weight: 600;
             }
-            .facts__item code {
+            .spec__val code {
                 background: var(--surface-2);
                 padding: 1px 5px;
                 border-radius: 5px;
                 font-size: 12px;
                 color: var(--signal);
+            }
+            @media (max-width: 560px) {
+                .spec__row {
+                    grid-template-columns: 1fr;
+                    gap: 4px;
+                    padding: 11px 0;
+                }
             }
 
             .block {
@@ -769,30 +775,48 @@
             <!-- ── Stage ───────────────────────────────────────────── -->
             <main class="stage">
                 <h1>JSv6 Apple Pay through BCDC</h1>
-                <ul class="facts">
-                    <li class="facts__item">
-                        Apple Pay + BCDC 集成<b>只支持 Web SDK v6</b>;JSv5
-                        (Smart Payment Buttons)不支持。
+                <ul class="spec">
+                    <li class="spec__row">
+                        <span class="spec__key">SDK</span>
+                        <span class="spec__val"
+                            >只支持 <b>Web SDK v6</b>;JSv5(Smart Payment
+                            Buttons)不支持。</span
+                        >
                     </li>
-                    <li class="facts__item">
-                        商户主体不能是 US——<b>US merchant 无法开通</b>此集成。
+                    <li class="spec__row">
+                        <span class="spec__key">Merchant</span>
+                        <span class="spec__val"
+                            ><b>US 主体的商户无法开通</b>此集成。</span
+                        >
                     </li>
-                    <li class="facts__item" data-kind="ok">
-                        走新的
-                        <code>createBasicApplePayOneTimePaymentSession()</code>,相当于一个<b>简化版
-                        Apple Pay</b>(基础一次性付款)。
+                    <li class="spec__row">
+                        <span class="spec__key">Session</span>
+                        <span class="spec__val"
+                            >走
+                            <code>createBasicApplePayOneTimePaymentSession()</code
+                            >,一个<b>简化版 Apple Pay</b>(基础一次性付款)。</span
+                        >
                     </li>
-                    <li class="facts__item" data-kind="ok">
-                        <b>无需再做 Apple 域名注册</b>——域名验证由 PayPal
-                        统一托管。
+                    <li class="spec__row">
+                        <span class="spec__key">Domain</span>
+                        <span class="spec__val"
+                            ><b>无需 Apple 域名注册</b>——域名验证由 PayPal
+                            统一托管。</span
+                        >
                     </li>
-                    <li class="facts__item">
-                        <b>不同地区的文案与 UI 会不一样</b>(例如 EU 与 3PL
-                        存在差异)。
+                    <li class="spec__row">
+                        <span class="spec__key">Region</span>
+                        <span class="spec__val"
+                            >文案与 UI <b>因地区而异</b>(例如 EU 与 3PL
+                            存在差异)。</span
+                        >
                     </li>
-                    <li class="facts__item">
-                        Apple Pay 按钮需<b>自行绘制</b>,或按 Apple
-                        官方最佳实践(有一份 CSS 指引)实现。
+                    <li class="spec__row">
+                        <span class="spec__key">Button</span>
+                        <span class="spec__val"
+                            >按钮需<b>自行绘制</b>,或按 Apple
+                            官方最佳实践(有一份 CSS 指引)实现。</span
+                        >
                     </li>
                 </ul>
 
