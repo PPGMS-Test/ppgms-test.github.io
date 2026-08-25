@@ -604,12 +604,8 @@
                     <p class="eyebrow">凭据</p>
                     <div class="field">
                         <label for="credSet">凭证组</label>
-                        <select id="credSet" class="ctrl">
-                            <option value="cn" selected>
-                                CN · apply-pay-bcdc-cn
-                            </option>
-                            <option value="hk">HK · apply-pay-bcdc-hk</option>
-                        </select>
+                        <!-- 选项由 JS 从 CRED_SETS 自动生成 -->
+                        <select id="credSet" class="ctrl"></select>
                     </div>
                     <div class="field">
                         <label for="environment">环境</label>
@@ -798,6 +794,14 @@
             const PAYPAL_SCRIPT_ID = "paypal-js-sdk";
 
             const $ = (id) => document.getElementById(id);
+
+            // 下拉选项从 CRED_SETS 自动生成：以后加/删凭证组只改 CRED_SETS 一处
+            $("credSet").innerHTML = Object.entries(CRED_SETS)
+                .map(
+                    ([k, v]) =>
+                        `<option value="${k}">${v.label || k.toUpperCase()}</option>`,
+                )
+                .join("");
 
             // 切换凭证组时，把对应 clientId/secret 填进输入框（仍可手动覆盖）
             function applyCredSet(key) {
