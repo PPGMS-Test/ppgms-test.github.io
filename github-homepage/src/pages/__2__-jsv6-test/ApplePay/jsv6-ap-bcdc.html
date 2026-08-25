@@ -303,19 +303,48 @@
                 letter-spacing: -0.01em;
                 margin: 0 0 8px;
             }
-            .stage__sub {
-                color: var(--muted);
+            /* 集成要点列表:菱形标记编码“PayPal 托管(绿)/ 你要注意的约束(琥珀)” */
+            .facts {
+                list-style: none;
                 margin: 0 0 32px;
-                max-width: 62ch;
+                padding: 0;
+                max-width: 64ch;
+                display: flex;
+                flex-direction: column;
+                gap: 9px;
+            }
+            .facts__item {
+                position: relative;
+                padding-left: 22px;
+                color: var(--muted);
                 font-size: 13.5px;
+                line-height: 1.55;
                 overflow-wrap: anywhere;
             }
-            .stage__sub code {
+            .facts__item::before {
+                content: "";
+                position: absolute;
+                left: 2px;
+                top: 8px;
+                width: 7px;
+                height: 7px;
+                border-radius: 2px;
+                transform: rotate(45deg);
+                background: var(--warn);
+            }
+            .facts__item[data-kind="ok"]::before {
+                background: var(--ok);
+            }
+            .facts__item b {
+                color: var(--ink);
+                font-weight: 600;
+            }
+            .facts__item code {
                 background: var(--surface-2);
                 padding: 1px 5px;
                 border-radius: 5px;
                 font-size: 12px;
-                color: #c8cdf2;
+                color: var(--signal);
             }
 
             .block {
@@ -740,13 +769,32 @@
             <!-- ── Stage ───────────────────────────────────────────── -->
             <main class="stage">
                 <h1>JSv6 Apple Pay through BCDC</h1>
-                <p class="stage__sub">
-                    验证 PayPal Web SDK v6 的新渲染路径 ——
-                    <code>createBasicApplePayOneTimePaymentSession()</code>。
-                    Apple 域名验证、支付弹窗与资金处理全部由 PayPal
-                    托管；左侧「Session Trace」实时展示 guide 中 Step 1–9
-                    的执行进度。
-                </p>
+                <ul class="facts">
+                    <li class="facts__item">
+                        Apple Pay + BCDC 集成<b>只支持 Web SDK v6</b>;JSv5
+                        (Smart Payment Buttons)不支持。
+                    </li>
+                    <li class="facts__item">
+                        商户主体不能是 US——<b>US merchant 无法开通</b>此集成。
+                    </li>
+                    <li class="facts__item" data-kind="ok">
+                        走新的
+                        <code>createBasicApplePayOneTimePaymentSession()</code>,相当于一个<b>简化版
+                        Apple Pay</b>(基础一次性付款)。
+                    </li>
+                    <li class="facts__item" data-kind="ok">
+                        <b>无需再做 Apple 域名注册</b>——域名验证由 PayPal
+                        统一托管。
+                    </li>
+                    <li class="facts__item">
+                        <b>不同地区的文案与 UI 会不一样</b>(例如 EU 与 3PL
+                        存在差异)。
+                    </li>
+                    <li class="facts__item">
+                        Apple Pay 按钮需<b>自行绘制</b>,或按 Apple
+                        官方最佳实践(有一份 CSS 指引)实现。
+                    </li>
+                </ul>
 
                 <div class="block">
                     <div class="block__head"><h2>交易参数</h2></div>
