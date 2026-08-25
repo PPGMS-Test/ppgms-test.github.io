@@ -798,9 +798,13 @@
                 $("clientSecret").value = s.clientSecret;
             }
             applyCredSet($("credSet").value);
-            $("credSet").addEventListener("change", () =>
-                applyCredSet($("credSet").value),
-            );
+            $("credSet").addEventListener("change", () => {
+                applyCredSet($("credSet").value);
+                // 换凭证：旧 access_token 作废 + 清掉上一组凭证残留在屏幕上的
+                // 诊断/按钮/结果，让画面回到「未运行」态（需再点渲染并诊断）
+                tokenCache = null;
+                resetOutputs();
+            });
 
             const logGreen = (m) =>
                 console.log(
@@ -827,8 +831,8 @@
                 btn.disabled = on;
                 btn.classList.toggle("busy", on);
                 btn.querySelector(".btn-render__label").textContent = on
-                    ? "处理中…"
-                    : "渲染并诊断";
+                    ? "In process…"
+                    : "Render and check";
             };
 
             // ── Access token（缓存，30s 缓冲） ──────────────────────
@@ -1052,6 +1056,24 @@
                 return anyEligible;
             }
 
+            // 把输出区（诊断 / 按钮 / 结果 / 日志）复位到「未运行」初始态。
+            // 切换凭证组、以及每次重新渲染前都会调用，避免上一组凭证的结果残留。
+            function resetOutputs() {
+                document.querySelectorAll(".diag-row").forEach((row) => {
+                    delete row.dataset.state;
+                    row.querySelector(".verdict").textContent = "待检测";
+                });
+                $("diagMeta").textContent = "未运行";
+                document.querySelector(".paypal-button-container").innerHTML = "";
+                const ph = $("stagePlaceholder");
+                ph.style.display = "block";
+                ph.innerHTML =
+                    '<span class="icon">◎</span>等待渲染 —— 仅资格通过的资金来源会出现在这里';
+                setStatus("待支付", "");
+                $("log").textContent = "";
+                $("resultLink").style.display = "none";
+            }
+
             // ── 渲染主流程 ──────────────────────────────────────
             async function renderSPB() {
                 const { clientId, clientSecret } = cfg();
@@ -1060,12 +1082,8 @@
                     return;
                 }
                 tokenCache = null;
-                document.querySelector(".paypal-button-container").innerHTML =
-                    "";
+                resetOutputs();
                 $("stagePlaceholder").style.display = "none";
-                setStatus("待支付", "");
-                $("log").textContent = "";
-                $("resultLink").style.display = "none";
 
                 try {
                     setBusy(true);
