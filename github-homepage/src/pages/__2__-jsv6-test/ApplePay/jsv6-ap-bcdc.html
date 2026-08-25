@@ -362,7 +362,8 @@
                 font-family: var(--mono);
                 letter-spacing: 0.03em;
             }
-            .field input {
+            .field input,
+            .field select {
                 width: 100%;
                 background: var(--surface-2);
                 border: 1px solid var(--line);
@@ -372,7 +373,8 @@
                 font-size: 14px;
                 padding: 9px 11px;
             }
-            .field input:focus-visible {
+            .field input:focus-visible,
+            .field select:focus-visible {
                 outline: 2px solid var(--signal);
                 outline-offset: 1px;
                 border-color: transparent;
@@ -706,6 +708,19 @@
                     <div class="block__head"><h2>交易参数</h2></div>
                     <div class="block__body">
                         <div class="field-row">
+                            <div class="field" style="flex-basis: 100%">
+                                <label for="credSet">凭证组</label>
+                                <select id="credSet" class="ctrl">
+                                    <option value="cn" selected>
+                                        CN · apply-pay-bcdc-cn
+                                    </option>
+                                    <option value="hk">
+                                        HK · apply-pay-bcdc-hk
+                                    </option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="field-row" style="margin-top: 12px">
                             <div class="field">
                                 <label for="amount">Amount</label>
                                 <input
@@ -831,17 +846,26 @@
             new VConsole();
 
             /**
-             * email: apply-pay-bcdc-cn@test.com
-             * pwd: 111222333
-             * payer-id: 26TQFNTZD6L44
+             * 两组沙箱测试凭证（BCDC Apple Pay），密码均为 111222333：
+             *   cn — apply-pay-bcdc-cn@test.com / payer-id 26TQFNTZD6L44
+             *   hk — apply-pay-bcdc-hk@test.com / payer-id YCLYKZLA2PHBY
              */
-
-            const SANDBOX_DEFAULTS = {
-                clientId:
-                    "BAAhVujFGtsZHp1Lj2HxmJVEojZ8Z-WI13ugjBMJOaMYkPiyfphsp_ZqkUZhFDP6NY4lJ_30VdwG8BCFgM",
-                clientSecret:
-                    "EDvl6jMz1JuJnPADmVh_j2UMKndnsOpIGww58DViBbMS_yF4MDexHtZ7C8-xZsVInBBFaJ3QpGW9z0KS",
+            const CRED_SETS = {
+                cn: {
+                    clientId:
+                        "BAAhVujFGtsZHp1Lj2HxmJVEojZ8Z-WI13ugjBMJOaMYkPiyfphsp_ZqkUZhFDP6NY4lJ_30VdwG8BCFgM",
+                    clientSecret:
+                        "EDvl6jMz1JuJnPADmVh_j2UMKndnsOpIGww58DViBbMS_yF4MDexHtZ7C8-xZsVInBBFaJ3QpGW9z0KS",
+                },
+                hk: {
+                    clientId:
+                        "BAApoTfmlH9OYx9Z1bANXQXITu9PWtVkgQj08_la4JKQzFGWnfIv4T3rPyo56jRt33HNnX01YX-8Duv11k",
+                    clientSecret:
+                        "EJPox6hjLV69j-IAnu8p44x7-esRbnlyQ51RkZE1cOD7ER-dNIj0hCJ_bS9vIjq0I4RA2Jtj5iQOxJiF",
+                },
             };
+            // 当前生效的凭证组（默认 cn），由 #credSet 选择器切换
+            let activeCreds = CRED_SETS.cn;
             const PAYPAL_API_BASE = "https://api-m.sandbox.paypal.com";
             const $ = (id) => document.getElementById(id);
 
@@ -900,9 +924,7 @@
             // ── 直连 PayPal Sandbox REST API(沙箱测试专用,client secret 暴露在前端) ──
             const oauthAuth = () =>
                 "Basic " +
-                btoa(
-                    `${SANDBOX_DEFAULTS.clientId}:${SANDBOX_DEFAULTS.clientSecret}`,
-                );
+                btoa(`${activeCreds.clientId}:${activeCreds.clientSecret}`);
 
             // Step 2 — SDK v6 createInstance() 需要的 browser-safe client token
             // (OAuth response_type=client_token,与 access_token 不是同一种 token)
@@ -1166,6 +1188,29 @@
             }
 
             $("btnPay").addEventListener("click", onPayClick);
+
+            // 把 Session Trace / 资格 / 支付按钮 / 结果 全部复位到初始态（Step 1 SDK
+            // 已加载，保持 ok），用于切换凭证组后重跑
+            function resetFlowUI() {
+                for (let step = 2; step <= 9; step++)
+                    setTrace(step, "pending", "");
+                setElig("isEligible", "pending", "PENDING");
+                setElig("canMakePayments", "pending", "PENDING");
+                $("applePayRow").style.display = "none";
+                $("pmWaiting").style.display = "";
+                $("btnPay").classList.remove("ready");
+                $("log").textContent = "";
+                setStatus("等待支付", "");
+                applePayPaymentSession = null;
+            }
+
+            // 切换凭证组：重置 token 缓存 + UI，用新凭证重跑 initApplePay（SDK 无需重载）
+            $("credSet").addEventListener("change", async () => {
+                activeCreds = CRED_SETS[$("credSet").value] || CRED_SETS.cn;
+                tokenCache = null;
+                resetFlowUI();
+                await initApplePay();
+            });
 
             // ── Kick off ────────────────────────────────────────────
             function loadScript(src) {

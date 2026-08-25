@@ -603,6 +603,15 @@
                 <div class="panel__section">
                     <p class="eyebrow">凭据</p>
                     <div class="field">
+                        <label for="credSet">凭证组</label>
+                        <select id="credSet" class="ctrl">
+                            <option value="cn" selected>
+                                CN · apply-pay-bcdc-cn
+                            </option>
+                            <option value="hk">HK · apply-pay-bcdc-hk</option>
+                        </select>
+                    </div>
+                    <div class="field">
                         <label for="environment">环境</label>
                         <select id="environment" class="ctrl">
                             <option value="sandbox" selected>Sandbox</option>
@@ -753,17 +762,25 @@
             new VConsole();
 
             /**
-             * email: apply-pay-bcdc-cn@test.com
-             * pwd: 111222333
-             * payer-id: 26TQFNTZD6L44
-             *
+             * 两组沙箱测试凭证（BCDC Apple Pay），密码均为 111222333：
+             *   cn — apply-pay-bcdc-cn@test.com / payer-id 26TQFNTZD6L44
+             *   hk — apply-pay-bcdc-hk@test.com / payer-id YCLYKZLA2PHBY
              */
-
-            const SANDBOX_DEFAULTS = {
-                clientId:
-                    "BAAhVujFGtsZHp1Lj2HxmJVEojZ8Z-WI13ugjBMJOaMYkPiyfphsp_ZqkUZhFDP6NY4lJ_30VdwG8BCFgM",
-                clientSecret:
-                    "EDvl6jMz1JuJnPADmVh_j2UMKndnsOpIGww58DViBbMS_yF4MDexHtZ7C8-xZsVInBBFaJ3QpGW9z0KS",
+            const CRED_SETS = {
+                cn: {
+                    label: "CN · apply-pay-bcdc-cn",
+                    clientId:
+                        "BAAhVujFGtsZHp1Lj2HxmJVEojZ8Z-WI13ugjBMJOaMYkPiyfphsp_ZqkUZhFDP6NY4lJ_30VdwG8BCFgM",
+                    clientSecret:
+                        "EDvl6jMz1JuJnPADmVh_j2UMKndnsOpIGww58DViBbMS_yF4MDexHtZ7C8-xZsVInBBFaJ3QpGW9z0KS",
+                },
+                hk: {
+                    label: "HK · apply-pay-bcdc-hk",
+                    clientId:
+                        "BAApoTfmlH9OYx9Z1bANXQXITu9PWtVkgQj08_la4JKQzFGWnfIv4T3rPyo56jRt33HNnX01YX-8Duv11k",
+                    clientSecret:
+                        "EJPox6hjLV69j-IAnu8p44x7-esRbnlyQ51RkZE1cOD7ER-dNIj0hCJ_bS9vIjq0I4RA2Jtj5iQOxJiF",
+                },
             };
 
             const PAYPAL_API_BASE = {
@@ -773,8 +790,17 @@
             const PAYPAL_SCRIPT_ID = "paypal-js-sdk";
 
             const $ = (id) => document.getElementById(id);
-            $("clientId").value = SANDBOX_DEFAULTS.clientId;
-            $("clientSecret").value = SANDBOX_DEFAULTS.clientSecret;
+
+            // 切换凭证组时，把对应 clientId/secret 填进输入框（仍可手动覆盖）
+            function applyCredSet(key) {
+                const s = CRED_SETS[key] || CRED_SETS.cn;
+                $("clientId").value = s.clientId;
+                $("clientSecret").value = s.clientSecret;
+            }
+            applyCredSet($("credSet").value);
+            $("credSet").addEventListener("change", () =>
+                applyCredSet($("credSet").value),
+            );
 
             const logGreen = (m) =>
                 console.log(
