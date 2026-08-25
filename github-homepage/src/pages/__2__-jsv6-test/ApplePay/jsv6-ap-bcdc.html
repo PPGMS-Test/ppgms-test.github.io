@@ -104,6 +104,11 @@
                 grid-template-columns: 320px 1fr;
                 min-height: 100vh;
             }
+            /* 允许网格列收缩到视口以内：默认 min-width:auto 会被长 mono token/长错误
+               文案撑破，导致移动端横向溢出 */
+            .shell > * {
+                min-width: 0;
+            }
             @media (max-width: 900px) {
                 .shell {
                     grid-template-columns: 1fr;
@@ -126,6 +131,13 @@
                     height: auto;
                     border-right: none;
                     border-bottom: 1px solid var(--line);
+                    padding: 18px 16px;
+                }
+                .trace__brand {
+                    margin-bottom: 16px;
+                }
+                .trace-row {
+                    padding: 7px 0;
                 }
             }
             .trace__brand {
@@ -296,6 +308,7 @@
                 margin: 0 0 32px;
                 max-width: 62ch;
                 font-size: 13.5px;
+                overflow-wrap: anywhere;
             }
             .stage__sub code {
                 background: var(--surface-2);

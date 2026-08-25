@@ -116,6 +116,19 @@
                 border-radius: 999px;
                 white-space: nowrap;
             }
+            /* 手机窄屏：诊断台副标题(pill)会撑破横向宽度，隐藏之；
+               同样的信息在下方 lede 标题里已有 */
+            @media (max-width: 560px) {
+                .appbar__inner {
+                    padding: 12px 16px;
+                }
+                .appbar__title {
+                    font-size: 15px;
+                }
+                .appbar__tag {
+                    display: none;
+                }
+            }
 
             /* ── Layout ──────────────────────────────────────────── */
             .console {
@@ -614,8 +627,7 @@
                             spellcheck="false"
                         />
                         <p class="hint">
-                            前端直连 OAuth 换 token
-                            用，仅限沙箱测试，切勿用于生产。
+                            前端直连 OAuth 换 token                            
                         </p>
                     </div>
                 </div>
