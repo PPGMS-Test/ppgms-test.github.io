@@ -547,6 +547,18 @@
                 font-size: 9px;
                 line-height: 1;
                 color: var(--muted-2);
+                white-space: nowrap;
+            }
+            /* 手机窄屏:让 hint 落到整行,marks 与 radio 不被挤压换行 */
+            @media (max-width: 560px) {
+                #applePayRow {
+                    flex-wrap: wrap;
+                }
+                #applePayHint {
+                    flex-basis: 100%;
+                    margin-left: 27px;
+                    margin-top: 6px;
+                }
             }
             .pm-option small {
                 margin-left: auto;
@@ -930,7 +942,7 @@
                                         </svg>
                                         <span class="ap-mark__text">Pay</span>
                                     </span>
-                                    <span class="mark-pair__cap">自绘 (对齐可控)</span>
+                                    <span class="mark-pair__cap">自绘</span>
                                 </span>
                             </div>
                             <small id="applePayHint"
