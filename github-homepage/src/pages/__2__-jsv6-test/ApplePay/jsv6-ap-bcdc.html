@@ -530,21 +530,28 @@
                 line-height: 1;
                 color: var(--ink);
             }
-            /* 两种 mark 并排对比 */
+            /* 两种 mark 上下排布,每条为「图标 + 说明」左右结构 */
             .mark-pair {
                 display: flex;
+                flex-direction: column;
                 align-items: flex-start;
-                gap: 18px;
+                gap: 8px;
             }
             .mark-pair__item {
                 display: flex;
-                flex-direction: column;
+                flex-direction: row;
                 align-items: center;
-                gap: 5px;
+                gap: 9px;
+            }
+            /* 图标区给统一宽度,让右侧两条说明文字左对齐 */
+            .mark-pair__item > apple-pay-mark,
+            .mark-pair__item > .ap-mark {
+                flex: none;
+                min-width: 62px;
             }
             .mark-pair__cap {
                 font-family: var(--mono);
-                font-size: 9px;
+                font-size: 10px;
                 line-height: 1;
                 color: var(--muted-2);
                 white-space: nowrap;
