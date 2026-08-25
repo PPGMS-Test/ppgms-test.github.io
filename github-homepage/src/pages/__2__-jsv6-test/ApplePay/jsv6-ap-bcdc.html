@@ -543,11 +543,13 @@
                 align-items: center;
                 gap: 9px;
             }
-            /* 图标区给统一宽度,让右侧两条说明文字左对齐 */
-            .mark-pair__item > apple-pay-mark,
-            .mark-pair__item > .ap-mark {
+            /* 图标槽固定宽度、内容左对齐,让右侧两条说明左对齐;
+               不要给 <apple-pay-mark> 设 width——它会按宽高比锁定,撑大高度。 */
+            .mark-pair__icon {
                 flex: none;
-                min-width: 62px;
+                width: 64px;
+                display: flex;
+                align-items: center;
             }
             .mark-pair__cap {
                 font-family: var(--mono);
@@ -931,23 +933,30 @@
                             />
                             <div class="mark-pair">
                                 <span class="mark-pair__item">
-                                    <apple-pay-mark></apple-pay-mark>
+                                    <span class="mark-pair__icon"
+                                        ><apple-pay-mark></apple-pay-mark
+                                    ></span>
                                     <span class="mark-pair__cap"
                                         >&lt;apple-pay-mark&gt;</span
                                     >
                                 </span>
                                 <span class="mark-pair__item">
-                                    <span class="ap-mark" aria-label="Apple Pay">
-                                        <svg
-                                            class="ap-mark__logo"
-                                            viewBox="0 0 384 512"
-                                            aria-hidden="true"
+                                    <span class="mark-pair__icon">
+                                        <span
+                                            class="ap-mark"
+                                            aria-label="Apple Pay"
                                         >
-                                            <path
-                                                d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z"
-                                            ></path>
-                                        </svg>
-                                        <span class="ap-mark__text">Pay</span>
+                                            <svg
+                                                class="ap-mark__logo"
+                                                viewBox="0 0 384 512"
+                                                aria-hidden="true"
+                                            >
+                                                <path
+                                                    d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z"
+                                                ></path>
+                                            </svg>
+                                            <span class="ap-mark__text">Pay</span>
+                                        </span>
                                     </span>
                                     <span class="mark-pair__cap">自绘</span>
                                 </span>
