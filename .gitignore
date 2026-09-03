@@ -2,6 +2,14 @@
 github-homepage/node_modules
 github-homepage/dist
 
+# applepay-dashboard
+applepay-dashboard/node_modules
+applepay-dashboard/dist
+
+# bopis-dashboard
+bopis-dashboard/node_modules
+bopis-dashboard/dist
+
 # paypal-backend-api
 paypal-backend-api/node_modules
 paypal-backend-api/.next

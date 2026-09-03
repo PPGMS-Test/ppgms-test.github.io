@@ -1,10 +1,14 @@
-name: Deploy to GitHub Pages
+name: Deploy (GitHub Pages + Cloudflare Pages)
 
 on:
   push:
     branches: [master]
   workflow_dispatch:
 
+# 共存阶段：Cloudflare 用 wrangler（走 secrets），GitHub Pages 需要
+# pages/id-token 权限。等 repo 转 private 后 Pages 会失效，届时把 Pages
+# 相关部分（build-homepage 以外无需动；改 assemble 的 upload 步骤 + 删
+# deploy job）注释掉，permissions 收敛为仅 contents: read。
 permissions:
   contents: read
   pages: write
@@ -15,116 +19,184 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  build:
+  # ══════════════════════════════════════════════════════════════════
+  # 4 个结构相同的子包：matrix 并行，各自缓存跳过、上传产物
+  # ══════════════════════════════════════════════════════════════════
+  build-sub:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { pkg: applepay-dashboard,   artifact: dist-applepay }
+          - { pkg: bopis-dashboard,      artifact: dist-bopis }
+          - { pkg: psp-path-dashboard,   artifact: dist-psp }
+          - { pkg: payment-link-demo,    artifact: dist-paymentlink }
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
+      # 缓存该包的 dist：key 绑定包内所有源码的哈希。源码没变 → 命中 →
+      # 跳过下面的 install/build，直接复用上次产物。
+      - name: Restore ${{ matrix.pkg }} dist cache
+        id: cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ matrix.pkg }}/dist
+          key: dist-${{ matrix.pkg }}-${{ hashFiles(format('{0}/**', matrix.pkg)) }}
+
       - name: Setup pnpm
+        if: steps.cache.outputs.cache-hit != 'true'
         uses: pnpm/action-setup@v3
         with:
           version: 9
 
       - name: Setup Node
+        if: steps.cache.outputs.cache-hit != 'true'
         uses: actions/setup-node@v4
         with:
           node-version: '24'
           cache: 'pnpm'
-          cache-dependency-path: |
-            github-homepage/pnpm-lock.yaml
-            applepay-dashboard/pnpm-lock.yaml
-            bopis-dashboard/pnpm-lock.yaml
-            psp-path-dashboard/pnpm-lock.yaml
-            payment-link-demo/pnpm-lock.yaml
+          cache-dependency-path: ${{ matrix.pkg }}/pnpm-lock.yaml
 
-      # ── applepay-dashboard ──────────────────────────────────────────
-      - name: Install applepay-dashboard dependencies
-        working-directory: applepay-dashboard
+      - name: Install dependencies
+        if: steps.cache.outputs.cache-hit != 'true'
+        working-directory: ${{ matrix.pkg }}
         run: pnpm install --no-frozen-lockfile
 
-      - name: Build applepay-dashboard
-        working-directory: applepay-dashboard
+      - name: Build
+        if: steps.cache.outputs.cache-hit != 'true'
+        working-directory: ${{ matrix.pkg }}
         run: pnpm build
 
-      # ── bopis-dashboard ─────────────────────────────────────────────
-      - name: Install bopis-dashboard dependencies
-        working-directory: bopis-dashboard
-        run: pnpm install --no-frozen-lockfile
+      - name: Upload ${{ matrix.artifact }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}
+          path: ${{ matrix.pkg }}/dist
+          if-no-files-found: error
 
-      - name: Build bopis-dashboard
-        working-directory: bopis-dashboard
-        run: pnpm build
+  # ══════════════════════════════════════════════════════════════════
+  # homepage：多一步 generate-nav，单独 job（与 build-sub 并行）
+  # ══════════════════════════════════════════════════════════════════
+  build-homepage:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      # ── psp-path-dashboard ──────────────────────────────────────────
-      - name: Install psp-path-dashboard dependencies
-        working-directory: psp-path-dashboard
-        run: pnpm install --no-frozen-lockfile
+      - name: Restore github-homepage dist cache
+        id: cache
+        uses: actions/cache@v4
+        with:
+          path: github-homepage/dist
+          key: dist-github-homepage-${{ hashFiles('github-homepage/**') }}
 
-      - name: Build psp-path-dashboard
-        working-directory: psp-path-dashboard
-        run: pnpm build
+      - name: Setup pnpm
+        if: steps.cache.outputs.cache-hit != 'true'
+        uses: pnpm/action-setup@v3
+        with:
+          version: 9
 
-      # ── payment-link-demo ───────────────────────────────────────────
-      - name: Install payment-link-demo dependencies
-        working-directory: payment-link-demo
-        run: pnpm install --no-frozen-lockfile
+      - name: Setup Node
+        if: steps.cache.outputs.cache-hit != 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'pnpm'
+          cache-dependency-path: github-homepage/pnpm-lock.yaml
 
-      - name: Build payment-link-demo
-        working-directory: payment-link-demo
-        run: pnpm build
-
-      # ── github-homepage ─────────────────────────────────────────────
-      - name: Install github-homepage dependencies
+      - name: Install dependencies
+        if: steps.cache.outputs.cache-hit != 'true'
         working-directory: github-homepage
         run: pnpm install --no-frozen-lockfile
 
       - name: Generate navigation data
+        if: steps.cache.outputs.cache-hit != 'true'
         working-directory: github-homepage
         run: pnpm run generate-nav
 
       - name: Build github-homepage
+        if: steps.cache.outputs.cache-hit != 'true'
         working-directory: github-homepage
         run: pnpm run build
         env:
           NODE_ENV: production
 
-      # Merge: applepay-dashboard dist overwrites the stub index.html copied
-      # by copyPages, and adds assets/. Vite base = /__1__-jsv5-test/ApplePay/
-      - name: Merge applepay-dashboard into dist
-        run: |
-          mkdir -p github-homepage/dist/__1__-jsv5-test/ApplePay
-          cp -r applepay-dashboard/dist/. github-homepage/dist/__1__-jsv5-test/ApplePay/
+      - name: Upload dist-homepage
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist-homepage
+          path: github-homepage/dist
+          if-no-files-found: error
 
-      # Merge: bopis-dashboard dist. Vite base = /__2__-jsv6-test/bopis-dashboard/
-      - name: Merge bopis-dashboard into dist
-        run: |
-          mkdir -p github-homepage/dist/__2__-jsv6-test/bopis-dashboard
-          cp -r bopis-dashboard/dist/. github-homepage/dist/__2__-jsv6-test/bopis-dashboard/
+  # ══════════════════════════════════════════════════════════════════
+  # 合并所有产物 → 部署 Cloudflare + 打包 Pages 产物
+  # 各 artifact 直接下载到对应子路径，即还原出合并后的整站
+  # （homepage 是底座，子包覆盖其 stub index.html，与旧 merge 逻辑一致）
+  # ══════════════════════════════════════════════════════════════════
+  assemble:
+    runs-on: ubuntu-latest
+    needs: [build-sub, build-homepage]
+    steps:
+      - name: Download homepage (base)
+        uses: actions/download-artifact@v4
+        with:
+          name: dist-homepage
+          path: site
 
-      # Merge: psp-path-dashboard dist. Vite base = /__6__-API/psp-path-dashboard/
-      - name: Merge psp-path-dashboard into dist
-        run: |
-          mkdir -p github-homepage/dist/__6__-API/psp-path-dashboard
-          cp -r psp-path-dashboard/dist/. github-homepage/dist/__6__-API/psp-path-dashboard/
+      - name: Download applepay
+        uses: actions/download-artifact@v4
+        with:
+          name: dist-applepay
+          path: site/__1__-jsv5-test/ApplePay
 
-      # Merge: payment-link-demo dist. Vite base = /__6__-API/payment-link-demo/
-      - name: Merge payment-link-demo into dist
-        run: |
-          mkdir -p github-homepage/dist/__6__-API/payment-link-demo
-          cp -r payment-link-demo/dist/. github-homepage/dist/__6__-API/payment-link-demo/
+      - name: Download bopis
+        uses: actions/download-artifact@v4
+        with:
+          name: dist-bopis
+          path: site/__2__-jsv6-test/bopis-dashboard
 
-      - name: Upload artifact
+      - name: Download psp-path
+        uses: actions/download-artifact@v4
+        with:
+          name: dist-psp
+          path: site/__6__-API/psp-path-dashboard
+
+      - name: Download payment-link-demo
+        uses: actions/download-artifact@v4
+        with:
+          name: dist-paymentlink
+          path: site/__6__-API/payment-link-demo
+
+      # ── 发布目标 1：Cloudflare Pages ─────────────────────────────────
+      # 前置准备（只需一次）：
+      #   1. Cloudflare 后台 → Workers & Pages → 新建 Pages 项目（Direct
+      #      Upload 类型），项目名填 ppgms-test；生产分支设为 master。
+      #   2. 拿到 Account ID，并创建带 "Cloudflare Pages: Edit" 权限的 API Token。
+      #   3. GitHub 仓库 Settings → Secrets and variables → Actions 里加两个
+      #      secret：CLOUDFLARE_API_TOKEN、CLOUDFLARE_ACCOUNT_ID。
+      - name: Deploy to Cloudflare Pages
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy ./site --project-name=ppgms-test --branch=master
+
+      # ── 发布目标 2：GitHub Pages（上传产物，供下方 deploy job 用）──
+      # ⚠️ repo 转 private 后此步 + 下方 deploy job 会失效，届时一并删除/注释。
+      - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: ./github-homepage/dist
+          path: ./site
 
+  # ── GitHub Pages 部署 job（转 private 后删除/注释本 job）─────────────
   deploy:
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
-    needs: build
+    needs: assemble
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
