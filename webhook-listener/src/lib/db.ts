@@ -274,14 +274,18 @@ class InMemoryStmt implements D1PreparedStatement {
   }
 }
 
-// Singleton memory DB for local dev
-let memoryDB: InMemoryDB | null = null
+// Global memory DB — uses globalThis so it survives Next.js module re-evaluation
+// across different route chunks during dev
+
+const GLOBAL_KEY = '__WL_MEMORY_DB__'
 
 function getMemoryDB(): InMemoryDB {
-  if (!memoryDB) {
-    memoryDB = new InMemoryDB()
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const g = globalThis as any
+  if (!g[GLOBAL_KEY]) {
+    g[GLOBAL_KEY] = new InMemoryDB()
   }
-  return memoryDB
+  return g[GLOBAL_KEY] as InMemoryDB
 }
 
 // ── DB resolution ──────────────────────────────────────────────────────────
@@ -300,7 +304,11 @@ export function getDB(): D1Database {
   }
 
   // Fallback to in-memory store for local development
-  console.warn('[db] D1 binding not available — using in-memory store (data lost on restart)')
+  const g = globalThis as any
+  if (!g['__WL_DB_WARNED__']) {
+    g['__WL_DB_WARNED__'] = true
+    console.warn('[db] D1 binding not available — using in-memory store (data lost on restart)')
+  }
   return getMemoryDB() as unknown as D1Database
 }
 

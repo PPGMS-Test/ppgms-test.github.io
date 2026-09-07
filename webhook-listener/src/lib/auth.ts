@@ -177,7 +177,7 @@ export async function setSessionCookie(token: string, expiresAt: number): Promis
   const cookieStore = await cookies()
   cookieStore.set(COOKIE_NAME, token, {
     httpOnly: true,
-    secure: true,
+    secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
     path: '/',
     expires: new Date(expiresAt),
@@ -188,7 +188,7 @@ export async function clearSessionCookie(): Promise<void> {
   const cookieStore = await cookies()
   cookieStore.set(COOKIE_NAME, '', {
     httpOnly: true,
-    secure: true,
+    secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
     path: '/',
     maxAge: 0,
@@ -247,9 +247,9 @@ export async function bootstrapAdminIfNeeded(): Promise<void> {
   await db
     .prepare(
       `INSERT INTO users (email, password_hash, password_salt, role, created_at)
-       VALUES (?, ?, ?, 'admin', ?)`
+       VALUES (?, ?, ?, ?, ?)`
     )
-    .bind(email, hash, salt, now)
+    .bind(email, hash, salt, 'admin', now)
     .run()
 
   console.log(`Bootstrapped admin user: ${email}`)
