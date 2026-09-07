@@ -6,13 +6,4 @@ pages_build_output_dir = ".vercel/output/static"
 [[d1_databases]]
 binding = "DB"
 database_name = "webhook-listener-db"
-database_id = "your-database-id-here"
-
-# For production deployment:
-# 1. Run: npx wrangler d1 create webhook-listener-db
-# 2. Copy the database_id from output and replace "your-database-id-here" above
-# 3. In Cloudflare Pages dashboard, bind the D1 database with variable name "DB"
-# 4. Run: npx wrangler d1 migrations apply webhook-listener-db --remote
-#
-# No separate [env.production] needed — Cloudflare Pages ignores it.
-# The DB binding is configured in the Pages dashboard, not in wrangler.toml.
+database_id = "89bc77de-298b-44b5-8373-cd472beea80a"

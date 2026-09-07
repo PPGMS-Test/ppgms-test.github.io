@@ -1,5 +1,7 @@
 # Todo
 - [x] PSP path SFTP study ⏫ ✅ 2026-08
+- [ ] Paylater Msg 3rd Party, refactor  ⏫ ✅ 2026-09
+- [x] Webhook dashboard  ⏫ ✅ 2026-09
 - [x] Apple Pay 3rd party test demo 重构 ⏫ ✅ 2026-08
 - [x] Google Pay 3ds test demo 重构 ⏫ ✅ 2026-07
 - [x] ACDC 3ds: how to trigger simple page ⏫ ✅ 2026-08
@@ -41,7 +43,7 @@
   - 需要验证, 如果partner Acct有jsv6 scope而merchant Acct没有的情况下.
 - [x] paypal-backend-api 部署到 Cloudflare 用以解决公司网络无法访问serverless的api endpoint 🔽 ✅ 2026-05-16
 - [ ] Internal Claude Desktop Partner Analysis Tool study 🔽
-- [ ] Payment Link QR-code dashboard Demo 🔽
+- [x] Payment Link QR-code dashboard Demo 🔽 ✅ 2026-09
 - [ ] 3DS Demo, 场景文字描述的改进 🔽
 - [x] Home Page主页, 增加了Screen Record Tool, 并做了Trello化的改造 🔽 ✅ 2026-06-02 
 - [x] Applet Study for Wukong 🔽 ✅ 2026-05-19 
