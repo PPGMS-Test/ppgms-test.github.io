@@ -5,6 +5,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAdmin, deleteUser } from '@/lib/auth'
 
+export const runtime = 'edge'
+
 export async function DELETE(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }

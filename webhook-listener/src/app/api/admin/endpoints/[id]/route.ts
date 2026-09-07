@@ -8,6 +8,8 @@ import { getDB, getEndpointById, updateEndpoint, deleteEndpoint } from '@/lib/db
 import { requireAdmin } from '@/lib/auth'
 import type { EndpointInput } from '@/lib/db'
 
+export const runtime = 'edge'
+
 export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }

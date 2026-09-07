@@ -10,6 +10,8 @@ import { getDB, insertEvent, getEndpointBySlug } from '@/lib/db'
 import { parseWebhookBody } from '@/lib/parse'
 import { verifyWebhookSignature } from '@/lib/verify'
 
+export const runtime = 'edge'
+
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ slug: string }> }

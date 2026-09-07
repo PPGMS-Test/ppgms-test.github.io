@@ -6,6 +6,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getDB, toggleEndpoint } from '@/lib/db'
 import { requireAdmin } from '@/lib/auth'
 
+export const runtime = 'edge'
+
 export async function POST(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }

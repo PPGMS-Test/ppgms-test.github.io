@@ -7,6 +7,8 @@ import { getDB } from '@/lib/db'
 import { bootstrapAdminIfNeeded, createSession, setSessionCookie, verifyPassword } from '@/lib/auth'
 import type { UserRow } from '@/lib/auth'
 
+export const runtime = 'edge'
+
 export async function POST(request: NextRequest): Promise<NextResponse> {
   // Bootstrap the first admin if the users table is empty
   await bootstrapAdminIfNeeded()

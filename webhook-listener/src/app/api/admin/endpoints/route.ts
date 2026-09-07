@@ -8,6 +8,8 @@ import { getDB, getEndpoints, createEndpoint } from '@/lib/db'
 import { requireAdmin } from '@/lib/auth'
 import type { EndpointInput } from '@/lib/db'
 
+export const runtime = 'edge'
+
 export async function GET(): Promise<NextResponse> {
   try {
     await requireAdmin()

@@ -6,6 +6,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAdmin, listUsers, createUser } from '@/lib/auth'
 
+export const runtime = 'edge'
+
 export async function GET(): Promise<NextResponse> {
   try {
     const admin = await requireAdmin()

@@ -5,6 +5,8 @@
 import { NextResponse } from 'next/server'
 import { requireUser } from '@/lib/auth'
 
+export const runtime = 'edge'
+
 export async function GET(): Promise<NextResponse> {
   try {
     const user = await requireUser()
