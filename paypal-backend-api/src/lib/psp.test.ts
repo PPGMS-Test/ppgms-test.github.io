@@ -42,7 +42,7 @@ describe('body 模板', () => {
     const features = body.operations[0].api_integration_preference.rest_api_integration
       .third_party_details.features
     expect(features).toContain('DELAY_FUNDS_DISBURSEMENT')
-    expect(body.partner_configuration_override.return_url).toBe('https://ret')
+    expect(body.partner_config_override.return_url).toBe('https://ret')
   })
   it('order body 带 payee email 与金额', () => {
     const body = buildPspOrderBody({ amount: '160.00', currency: 'GBP', payeeEmail: 'm@x.com', referenceId: 'r1' })

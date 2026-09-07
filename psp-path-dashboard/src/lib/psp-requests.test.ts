@@ -13,7 +13,7 @@ describe('psp-requests', () => {
     expect(
       b.operations[0].api_integration_preference.rest_api_integration.third_party_details.features,
     ).toContain('DELAY_FUNDS_DISBURSEMENT')
-    expect(b.partner_configuration_override.return_url).toBe('https://ret')
+    expect(b.partner_config_override.return_url).toBe('https://ret')
   })
   it('order body 带 payee email、金额、CAPTURE intent', () => {
     const b = buildOrderBody({ amount: '160.00', currency: 'GBP', payeeEmail: 'm@x.com', referenceId: 'psp_GBP' })

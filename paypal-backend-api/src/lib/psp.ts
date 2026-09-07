@@ -57,7 +57,7 @@ export function buildPartnerReferralBody(trackingId: string, returnUrl: string) 
         },
       },
     ],
-    partner_configuration_override: { return_url: returnUrl, action_renewal_url: returnUrl },
+    partner_config_override: { return_url: returnUrl, action_renewal_url: returnUrl },
     legal_consents: [{ type: 'SHARE_DATA_CONSENT', granted: true }],
     products: ['EXPRESS_CHECKOUT'],
   }
