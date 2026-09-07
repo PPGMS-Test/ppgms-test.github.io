@@ -8,7 +8,9 @@
     "dev:api": "pnpm --filter paypal-backend-api dev",
     "dev:psp-local": "concurrently -n backend,frontend -c blue,green \"pnpm --filter paypal-backend-api dev\" \"pnpm --filter psp-path-dashboard dev:local\"",
     "build:homepage": "pnpm --filter github-homepage build",
-    "build:api": "pnpm --filter paypal-backend-api build"
+    "build:api": "pnpm --filter paypal-backend-api build",
+    "dev:webhook": "pnpm --filter webhook-listener dev",
+    "build:webhook": "pnpm --filter webhook-listener build"
   },
   "devDependencies": {
     "concurrently": "^10.0.3"

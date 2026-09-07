@@ -21,6 +21,13 @@ psp-path-dashboard/node_modules
 psp-path-dashboard/dist
 psp-path-dashboard/.env.local
 
+# webhook-listener
+webhook-listener/node_modules
+webhook-listener/.next
+webhook-listener/.env.local
+webhook-listener/tsconfig.tsbuildinfo
+webhook-listener/.wrangler
+
 # payment-link-demo
 payment-link-demo/node_modules
 payment-link-demo/dist
