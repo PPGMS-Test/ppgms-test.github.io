@@ -177,10 +177,15 @@ class InMemoryStmt implements D1PreparedStatement {
       // Apply basic filters
       let results = [...t.rows]
 
-      // WHERE id > ?
+      // WHERE id > ?  (possibly with AND endpoint_id = ?)
       if (upper.includes('WHERE') && upper.includes('ID > ?')) {
         const after = Number(this.params[0] ?? 0)
         results = results.filter((r) => Number(r.id) > after)
+        // Check for additional AND endpoint_id = ? filter
+        if (upper.includes('AND ENDPOINT_ID = ?') && this.params.length >= 2) {
+          const epId = Number(this.params[1])
+          results = results.filter((r) => Number(r.endpoint_id) === epId)
+        }
       }
       // WHERE id = ?
       else if (upper.includes('WHERE') && upper.includes('ID = ?')) {
@@ -321,7 +326,13 @@ function getMemoryDB(): InMemoryDB {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const g = globalThis as any
   if (!g[GLOBAL_KEY]) {
-    g[GLOBAL_KEY] = new InMemoryDB()
+    const db = new InMemoryDB()
+    g[GLOBAL_KEY] = db
+
+    // Seed default endpoint (mimics migration 0002)
+    const now = Date.now()
+    const t = db.ensureTable('endpoints')
+    t.rows.push({ id: t.nextId++, label: 'Default', slug: 'default', description: 'Default webhook endpoint', enabled: 1, paypal_env: 'sandbox', paypal_client_id: '', paypal_client_secret: '', paypal_webhook_id: '', created_at: now })
   }
   return g[GLOBAL_KEY] as InMemoryDB
 }

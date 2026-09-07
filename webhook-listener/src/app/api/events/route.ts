@@ -18,8 +18,11 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   const { searchParams } = new URL(request.url)
   const after = parseInt(searchParams.get('after') || '0', 10)
   const limit = Math.min(parseInt(searchParams.get('limit') || '50', 10), 200)
+  const endpointId = searchParams.get('endpoint_id')
+    ? parseInt(searchParams.get('endpoint_id')!, 10)
+    : undefined
 
-  const events = await getEvents(db, after, limit)
+  const events = await getEvents(db, after, limit, endpointId)
   return NextResponse.json({ events })
 }
 
