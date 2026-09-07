@@ -30,6 +30,30 @@ export interface D1Database {
   exec(sql: string): Promise<void>
 }
 
+export interface Endpoint {
+  id: number
+  label: string
+  slug: string
+  description: string
+  enabled: number
+  paypal_env: string
+  paypal_client_id: string
+  paypal_client_secret: string
+  paypal_webhook_id: string
+  created_at: number
+}
+
+export interface EndpointInput {
+  label: string
+  slug: string
+  description: string
+  enabled: number
+  paypal_env: string
+  paypal_client_id: string
+  paypal_client_secret: string
+  paypal_webhook_id: string
+}
+
 export interface WebhookEvent {
   id: number
   received_at: number
@@ -42,6 +66,8 @@ export interface WebhookEvent {
   event_type: string | null
   resource_type: string | null
   verification: string
+  endpoint_id: number | null
+  endpoint_slug: string | null
 }
 
 export interface WebhookEventInput {
@@ -55,6 +81,8 @@ export interface WebhookEventInput {
   event_type: string | null
   resource_type: string | null
   verification: string
+  endpoint_id: number | null
+  endpoint_slug: string | null
 }
 
 const MAX_EVENTS = 200
@@ -174,6 +202,16 @@ class InMemoryStmt implements D1PreparedStatement {
       else if (upper.includes('WHERE') && upper.includes('USER_ID = ?')) {
         const userId = Number(this.params[0])
         results = results.filter((r) => Number(r.user_id) === userId)
+      }
+      // Generic single-column WHERE clause catch-all
+      else if (upper.includes('WHERE') && this.params.length >= 1) {
+        // Extract column name from WHERE xxx = ?
+        const whereMatch = sql.match(/WHERE\s+(\w+)\s*=\s*\?/i)
+        if (whereMatch) {
+          const colName = whereMatch[1].toLowerCase()
+          const val = String(this.params[0] ?? '')
+          results = results.filter((r) => String(r[colName] ?? '') === val)
+        }
       }
 
       // Sort
@@ -318,8 +356,8 @@ export async function insertEvent(db: D1Database, event: WebhookEventInput): Pro
   const result = await db
     .prepare(
       `INSERT INTO webhook_events
-       (received_at, method, query, source_ip, content_type, headers, raw_body, event_type, resource_type, verification)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+       (received_at, method, query, source_ip, content_type, headers, raw_body, event_type, resource_type, verification, endpoint_id, endpoint_slug)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
     )
     .bind(
       event.received_at,
@@ -331,7 +369,9 @@ export async function insertEvent(db: D1Database, event: WebhookEventInput): Pro
       event.raw_body,
       event.event_type,
       event.resource_type,
-      event.verification
+      event.verification,
+      event.endpoint_id,
+      event.endpoint_slug
     )
     .run()
 
@@ -348,8 +388,22 @@ export async function insertEvent(db: D1Database, event: WebhookEventInput): Pro
 export async function getEvents(
   db: D1Database,
   after: number = 0,
-  limit: number = 50
+  limit: number = 50,
+  endpointId?: number
 ): Promise<WebhookEvent[]> {
+  if (endpointId !== undefined) {
+    const result = await db
+      .prepare(
+        `SELECT * FROM webhook_events
+         WHERE id > ? AND endpoint_id = ?
+         ORDER BY id DESC
+         LIMIT ?`
+      )
+      .bind(after, endpointId, limit)
+      .all<WebhookEvent>()
+    return result.results ?? []
+  }
+
   const result = await db
     .prepare(
       `SELECT * FROM webhook_events
@@ -359,7 +413,6 @@ export async function getEvents(
     )
     .bind(after, limit)
     .all<WebhookEvent>()
-
   return result.results ?? []
 }
 
@@ -380,4 +433,71 @@ export async function enforceRetention(db: D1Database): Promise<void> {
        LIMIT ${MAX_EVENTS}
      )`
   )
+}
+
+// ── Endpoint CRUD ──────────────────────────────────────────────────────────
+
+export async function getEndpoints(db: D1Database): Promise<Endpoint[]> {
+  const result = await db
+    .prepare('SELECT * FROM endpoints ORDER BY id')
+    .all<Endpoint>()
+  return result.results ?? []
+}
+
+export async function getEndpointBySlug(db: D1Database, slug: string): Promise<Endpoint | null> {
+  const result = await db
+    .prepare('SELECT * FROM endpoints WHERE slug = ?')
+    .bind(slug)
+    .first<Endpoint>()
+  return result ?? null
+}
+
+export async function getEndpointById(db: D1Database, id: number): Promise<Endpoint | null> {
+  const result = await db
+    .prepare('SELECT * FROM endpoints WHERE id = ?')
+    .bind(id)
+    .first<Endpoint>()
+  return result ?? null
+}
+
+export async function createEndpoint(db: D1Database, input: EndpointInput): Promise<Endpoint> {
+  const now = Date.now()
+  const result = await db
+    .prepare(
+      `INSERT INTO endpoints (label, slug, description, enabled, paypal_env, paypal_client_id, paypal_client_secret, paypal_webhook_id, created_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+    )
+    .bind(input.label, input.slug, input.description, input.enabled, input.paypal_env,
+          input.paypal_client_id, input.paypal_client_secret, input.paypal_webhook_id, now)
+    .run()
+
+  const id = (result.meta?.last_row_id as number) ?? 0
+  return { id, ...input, created_at: now }
+}
+
+export async function updateEndpoint(db: D1Database, id: number, input: EndpointInput): Promise<void> {
+  await db
+    .prepare(
+      `UPDATE endpoints SET label=?, slug=?, description=?, enabled=?, paypal_env=?, paypal_client_id=?, paypal_client_secret=?, paypal_webhook_id=? WHERE id=?`
+    )
+    .bind(input.label, input.slug, input.description, input.enabled, input.paypal_env,
+          input.paypal_client_id, input.paypal_client_secret, input.paypal_webhook_id, id)
+    .run()
+}
+
+export async function deleteEndpoint(db: D1Database, id: number): Promise<void> {
+  // Delete events associated with this endpoint
+  await db.prepare('DELETE FROM webhook_events WHERE endpoint_id = ?').bind(id).run()
+  await db.prepare('DELETE FROM endpoints WHERE id = ?').bind(id).run()
+}
+
+export async function toggleEndpoint(db: D1Database, id: number): Promise<Endpoint | null> {
+  const current = await getEndpointById(db, id)
+  if (!current) return null
+  const newEnabled = current.enabled ? 0 : 1
+  await db
+    .prepare('UPDATE endpoints SET enabled = ? WHERE id = ?')
+    .bind(newEnabled, id)
+    .run()
+  return { ...current, enabled: newEnabled }
 }
