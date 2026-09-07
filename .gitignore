@@ -24,6 +24,7 @@ psp-path-dashboard/.env.local
 # webhook-listener
 webhook-listener/node_modules
 webhook-listener/.next
+webhook-listener/.vercel
 webhook-listener/.env.local
 webhook-listener/tsconfig.tsbuildinfo
 webhook-listener/.wrangler
