@@ -4,9 +4,9 @@ compatibility_flags = ["nodejs_compat"]
 pages_build_output_dir = ".vercel/output/static"
 
 [[d1_databases]]
-binding = "DB"
+binding = "webhook_listener_db"
 database_name = "webhook-listener-db"
-database_id = ""
+database_id = "89bc77de-298b-44b5-8373-cd472beea80a"
 
 [env.production]
 [[env.production.d1_databases]]
