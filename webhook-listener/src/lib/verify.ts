@@ -2,16 +2,17 @@
  * PayPal webhook signature verification.
  *
  * Calls PayPal's verify-webhook-signature API to confirm the webhook
- * payload authenticity. Gracefully degrades when credentials are missing.
+ * payload authenticity. Credentials are passed in explicitly (per-endpoint),
+ * not read from environment variables.
  */
 
 export type VerificationStatus = 'verified' | 'failed' | 'skipped' | 'error'
 
-interface VerifyEnv {
-  PAYPAL_ENV?: string
-  PAYPAL_CLIENT_ID?: string
-  PAYPAL_CLIENT_SECRET?: string
-  PAYPAL_WEBHOOK_ID?: string
+export interface VerificationCredentials {
+  env: 'sandbox' | 'live'
+  clientId: string
+  clientSecret: string
+  webhookId: string
 }
 
 interface PayPalHeaders {
@@ -22,9 +23,8 @@ interface PayPalHeaders {
   'paypal-transmission-time'?: string
 }
 
-function getBaseUrl(env: VerifyEnv): string {
-  const paypalEnv = env.PAYPAL_ENV || 'sandbox'
-  return paypalEnv === 'live'
+function getBaseUrl(env: 'sandbox' | 'live'): string {
+  return env === 'live'
     ? 'https://api-m.paypal.com'
     : 'https://api-m.sandbox.paypal.com'
 }
@@ -58,12 +58,10 @@ async function getOAuthToken(
 export async function verifyWebhookSignature(
   headers: PayPalHeaders,
   rawBody: string,
-  env: VerifyEnv
+  credentials: VerificationCredentials | null
 ): Promise<VerificationStatus> {
-  const { PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET, PAYPAL_WEBHOOK_ID } = env
-
-  // All required credentials must be present
-  if (!PAYPAL_CLIENT_ID || !PAYPAL_CLIENT_SECRET || !PAYPAL_WEBHOOK_ID) {
+  // No credentials → skip
+  if (!credentials || !credentials.clientId || !credentials.clientSecret || !credentials.webhookId) {
     return 'skipped'
   }
 
@@ -81,15 +79,14 @@ export async function verifyWebhookSignature(
   }
 
   try {
-    const baseUrl = getBaseUrl(env)
-    const accessToken = await getOAuthToken(baseUrl, PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET)
+    const baseUrl = getBaseUrl(credentials.env)
+    const accessToken = await getOAuthToken(baseUrl, credentials.clientId, credentials.clientSecret)
 
-    // Parse raw body as object for the webhook_event field
     let webhookEvent: unknown
     try {
       webhookEvent = JSON.parse(rawBody)
     } catch {
-      return 'error' // can't verify if body isn't parseable JSON
+      return 'error'
     }
 
     const verifyBody = {
@@ -98,7 +95,7 @@ export async function verifyWebhookSignature(
       transmission_id,
       transmission_sig,
       transmission_time,
-      webhook_id: PAYPAL_WEBHOOK_ID,
+      webhook_id: credentials.webhookId,
       webhook_event: webhookEvent,
     }
 

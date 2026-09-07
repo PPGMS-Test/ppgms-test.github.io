@@ -1,68 +1,76 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { verifyWebhookSignature } from './verify'
 
 // We test only the decision logic — the actual HTTP calls are mocked out.
+
+const validCredentials = {
+  env: 'sandbox' as const,
+  clientId: 'client-id',
+  clientSecret: 'secret',
+  webhookId: 'webhook-id',
+}
+
+const validHeaders = {
+  'paypal-auth-algo': 'SHA256withRSA',
+  'paypal-cert-url': 'https://cert.paypal.com',
+  'paypal-transmission-id': 'txn-123',
+  'paypal-transmission-sig': 'sig-value',
+  'paypal-transmission-time': '2024-01-01T00:00:00Z',
+}
+
+const validBody = '{"event_type":"TEST"}'
 
 describe('verifyWebhookSignature', () => {
   beforeEach(() => {
     vi.restoreAllMocks()
   })
 
-  it('returns skipped when PAYPAL_CLIENT_ID is missing', async () => {
+  it('returns skipped when credentials is null', async () => {
     const status = await verifyWebhookSignature(
+      validHeaders,
+      validBody,
+      null
+    )
+    expect(status).toBe('skipped')
+  })
+
+  it('returns skipped when clientId is missing', async () => {
+    const status = await verifyWebhookSignature(
+      validHeaders,
+      validBody,
       {
-        'paypal-auth-algo': 'SHA256withRSA',
-        'paypal-cert-url': 'https://...',
-        'paypal-transmission-id': 'abc',
-        'paypal-transmission-sig': 'sig',
-        'paypal-transmission-time': '2024-01-01T00:00:00Z',
-      },
-      '{"event_type":"TEST"}',
-      {
-        PAYPAL_ENV: 'sandbox',
-        // PAYPAL_CLIENT_ID missing
-        PAYPAL_CLIENT_SECRET: 'secret',
-        PAYPAL_WEBHOOK_ID: 'webhook-id',
+        env: 'sandbox',
+        clientId: '',
+        clientSecret: 'secret',
+        webhookId: 'webhook-id',
       }
     )
     expect(status).toBe('skipped')
   })
 
-  it('returns skipped when PAYPAL_CLIENT_SECRET is missing', async () => {
+  it('returns skipped when clientSecret is missing', async () => {
     const status = await verifyWebhookSignature(
+      validHeaders,
+      validBody,
       {
-        'paypal-auth-algo': 'SHA256withRSA',
-        'paypal-cert-url': 'https://...',
-        'paypal-transmission-id': 'abc',
-        'paypal-transmission-sig': 'sig',
-        'paypal-transmission-time': '2024-01-01T00:00:00Z',
-      },
-      '{"event_type":"TEST"}',
-      {
-        PAYPAL_ENV: 'sandbox',
-        PAYPAL_CLIENT_ID: 'client-id',
-        // PAYPAL_CLIENT_SECRET missing
-        PAYPAL_WEBHOOK_ID: 'webhook-id',
+        env: 'sandbox',
+        clientId: 'client-id',
+        clientSecret: '',
+        webhookId: 'webhook-id',
       }
     )
     expect(status).toBe('skipped')
   })
 
-  it('returns skipped when PAYPAL_WEBHOOK_ID is missing', async () => {
+  it('returns skipped when webhookId is missing', async () => {
     const status = await verifyWebhookSignature(
+      validHeaders,
+      validBody,
       {
-        'paypal-auth-algo': 'SHA256withRSA',
-        'paypal-cert-url': 'https://...',
-        'paypal-transmission-id': 'abc',
-        'paypal-transmission-sig': 'sig',
-        'paypal-transmission-time': '2024-01-01T00:00:00Z',
-      },
-      '{"event_type":"TEST"}',
-      {
-        PAYPAL_ENV: 'sandbox',
-        PAYPAL_CLIENT_ID: 'client-id',
-        PAYPAL_CLIENT_SECRET: 'secret',
-        // PAYPAL_WEBHOOK_ID missing
+        env: 'sandbox',
+        clientId: 'client-id',
+        clientSecret: 'secret',
+        webhookId: '',
       }
     )
     expect(status).toBe('skipped')
@@ -74,13 +82,8 @@ describe('verifyWebhookSignature', () => {
         // Only some headers present
         'paypal-auth-algo': 'SHA256withRSA',
       },
-      '{"event_type":"TEST"}',
-      {
-        PAYPAL_ENV: 'sandbox',
-        PAYPAL_CLIENT_ID: 'client-id',
-        PAYPAL_CLIENT_SECRET: 'secret',
-        PAYPAL_WEBHOOK_ID: 'webhook-id',
-      }
+      validBody,
+      validCredentials
     )
     expect(status).toBe('skipped')
   })
@@ -103,20 +106,9 @@ describe('verifyWebhookSignature', () => {
       ) as unknown as typeof fetch
 
     const status = await verifyWebhookSignature(
-      {
-        'paypal-auth-algo': 'SHA256withRSA',
-        'paypal-cert-url': 'https://cert.paypal.com',
-        'paypal-transmission-id': 'txn-123',
-        'paypal-transmission-sig': 'sig-value',
-        'paypal-transmission-time': '2024-01-01T00:00:00Z',
-      },
-      '{"event_type":"TEST"}',
-      {
-        PAYPAL_ENV: 'sandbox',
-        PAYPAL_CLIENT_ID: 'client-id',
-        PAYPAL_CLIENT_SECRET: 'secret',
-        PAYPAL_WEBHOOK_ID: 'webhook-id',
-      }
+      validHeaders,
+      validBody,
+      validCredentials
     )
     expect(status).toBe('verified')
   })
@@ -138,20 +130,9 @@ describe('verifyWebhookSignature', () => {
       ) as unknown as typeof fetch
 
     const status = await verifyWebhookSignature(
-      {
-        'paypal-auth-algo': 'SHA256withRSA',
-        'paypal-cert-url': 'https://cert.paypal.com',
-        'paypal-transmission-id': 'txn-123',
-        'paypal-transmission-sig': 'sig-value',
-        'paypal-transmission-time': '2024-01-01T00:00:00Z',
-      },
-      '{"event_type":"TEST"}',
-      {
-        PAYPAL_ENV: 'sandbox',
-        PAYPAL_CLIENT_ID: 'client-id',
-        PAYPAL_CLIENT_SECRET: 'secret',
-        PAYPAL_WEBHOOK_ID: 'webhook-id',
-      }
+      validHeaders,
+      validBody,
+      validCredentials
     )
     expect(status).toBe('failed')
   })
@@ -163,20 +144,9 @@ describe('verifyWebhookSignature', () => {
       .mockRejectedValueOnce(new Error('Network error')) as unknown as typeof fetch
 
     const status = await verifyWebhookSignature(
-      {
-        'paypal-auth-algo': 'SHA256withRSA',
-        'paypal-cert-url': 'https://cert.paypal.com',
-        'paypal-transmission-id': 'txn-123',
-        'paypal-transmission-sig': 'sig-value',
-        'paypal-transmission-time': '2024-01-01T00:00:00Z',
-      },
-      '{"event_type":"TEST"}',
-      {
-        PAYPAL_ENV: 'sandbox',
-        PAYPAL_CLIENT_ID: 'client-id',
-        PAYPAL_CLIENT_SECRET: 'secret',
-        PAYPAL_WEBHOOK_ID: 'webhook-id',
-      }
+      validHeaders,
+      validBody,
+      validCredentials
     )
     expect(status).toBe('error')
   })
@@ -184,20 +154,9 @@ describe('verifyWebhookSignature', () => {
   it('returns error when body is not valid JSON', async () => {
     // Even with all credentials set, unparseable body leads to error
     const status = await verifyWebhookSignature(
-      {
-        'paypal-auth-algo': 'SHA256withRSA',
-        'paypal-cert-url': 'https://cert.paypal.com',
-        'paypal-transmission-id': 'txn-123',
-        'paypal-transmission-sig': 'sig-value',
-        'paypal-transmission-time': '2024-01-01T00:00:00Z',
-      },
+      validHeaders,
       'not valid json{{{',
-      {
-        PAYPAL_ENV: 'sandbox',
-        PAYPAL_CLIENT_ID: 'client-id',
-        PAYPAL_CLIENT_SECRET: 'secret',
-        PAYPAL_WEBHOOK_ID: 'webhook-id',
-      }
+      validCredentials
     )
     expect(status).toBe('error')
   })
