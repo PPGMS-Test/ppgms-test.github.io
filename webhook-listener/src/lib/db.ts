@@ -264,6 +264,9 @@ class InMemoryStmt implements D1PreparedStatement {
       if (upper.includes('WHERE ID = ?')) {
         const id = Number(this.params[0])
         t.rows = t.rows.filter((r) => Number(r.id) !== id)
+      } else if (upper.includes('WHERE ENDPOINT_ID = ?')) {
+        const epId = Number(this.params[0])
+        t.rows = t.rows.filter((r) => Number(r.endpoint_id) !== epId)
       } else if (upper.includes('WHERE USER_ID = ?')) {
         const userId = Number(this.params[0])
         t.rows = t.rows.filter((r) => Number(r.user_id) !== userId)
@@ -439,8 +442,12 @@ export async function deleteEvent(db: D1Database, id: number): Promise<void> {
   await db.prepare('DELETE FROM webhook_events WHERE id = ?').bind(id).run()
 }
 
-export async function clearEvents(db: D1Database): Promise<void> {
-  await db.exec('DELETE FROM webhook_events')
+export async function clearEvents(db: D1Database, endpointId?: number): Promise<void> {
+  if (endpointId !== undefined) {
+    await db.prepare('DELETE FROM webhook_events WHERE endpoint_id = ?').bind(endpointId).run()
+  } else {
+    await db.exec('DELETE FROM webhook_events')
+  }
 }
 
 export async function enforceRetention(db: D1Database): Promise<void> {

@@ -219,17 +219,25 @@ export default function DashboardPage() {
     router.refresh()
   }
 
-  // Clear events (respects current filter)
+  // Clear events for the current scope (whole table, or one endpoint) — one
+  // server-side bulk delete, not just the rows loaded in the browser.
   const handleClear = async () => {
-    if (!confirm('Delete all visible webhook events?')) return
-    // Delete events one by one for the current filter
-    const filtered = verifiedOnly ? events.filter(e => e.verification === 'verified') : events
-    for (const ev of filtered) {
-      await fetch(`/api/events/${ev.id}`, { method: 'DELETE' })
+    const scoped = viewMode === 'by-endpoint' && selectedEndpointId !== null
+    const epLabel = scoped ? endpoints.find((e) => e.id === selectedEndpointId)?.label ?? '该端点' : ''
+    const scopeText = scoped ? `「${epLabel}」端点的全部事件` : '全部事件（所有端点）'
+    if (!confirm(`确定删除${scopeText}？此操作不可撤销，且会删除数据库中该范围内的所有历史事件（含未加载/未验证的）。`)) return
+
+    const url = scoped ? `/api/events?endpoint_id=${selectedEndpointId}` : '/api/events'
+    const res = await fetch(url, { method: 'DELETE' })
+    if (!res.ok) {
+      if (res.status === 401) router.push('/login')
+      return
     }
     setEvents([])
     setSelectedId(null)
     maxIdRef.current = 0
+    minIdRef.current = 0
+    setHasMore(false)
   }
 
   // Delete single

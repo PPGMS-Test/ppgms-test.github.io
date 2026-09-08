@@ -31,7 +31,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   return NextResponse.json({ events })
 }
 
-export async function DELETE(): Promise<NextResponse> {
+export async function DELETE(request: NextRequest): Promise<NextResponse> {
   try {
     await requireUser()
   } catch {
@@ -39,6 +39,10 @@ export async function DELETE(): Promise<NextResponse> {
   }
 
   const db = getDB()
-  await clearEvents(db)
+  const { searchParams } = new URL(request.url)
+  const endpointId = searchParams.get('endpoint_id')
+    ? parseInt(searchParams.get('endpoint_id')!, 10)
+    : undefined
+  await clearEvents(db, endpointId)
   return NextResponse.json({ ok: true })
 }
