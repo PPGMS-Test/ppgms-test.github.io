@@ -9,8 +9,7 @@ import {
   Trash2,
   LogOut,
   Settings,
-  Wifi,
-  WifiOff,
+  RefreshCw,
   Filter,
   Clock,
   Layers,
@@ -37,6 +36,11 @@ export default function DashboardPage() {
   const [endpoints, setEndpoints] = useState<Endpoint[]>([])
   const [selectedId, setSelectedId] = useState<number | null>(null)
   const [pollError, setPollError] = useState(false)
+  // Polling is off by default to save requests (free Cloudflare tier).
+  // Click to run a timed burst; re-click resets the countdown.
+  const [polling, setPolling] = useState(false)
+  const [durationMin, setDurationMin] = useState(1) // 1 | 3 | 5
+  const [remaining, setRemaining] = useState(0) // seconds left in current burst
   const [tab, setTab] = useState('body')
   const [verifiedOnly, setVerifiedOnly] = useState(false)
   const [copiedUrl, setCopiedUrl] = useState(false)
@@ -46,7 +50,7 @@ export default function DashboardPage() {
   const [selectedEndpointId, setSelectedEndpointId] = useState<number | null>(null)
 
   const maxIdRef = useRef(0)
-  const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const pollEndRef = useRef(0) // timestamp (ms) when the current burst stops
   const hiddenRef = useRef(false)
 
   // Load user
@@ -120,11 +124,20 @@ export default function DashboardPage() {
   }, [viewMode, selectedEndpointId])
 
   useEffect(() => {
-    pollingRef.current = setInterval(() => {
-      if (!hiddenRef.current) fetchEvents()
-    }, 2000)
-    return () => { if (pollingRef.current) clearInterval(pollingRef.current) }
-  }, [fetchEvents])
+    if (!polling) return
+    fetchEvents() // fetch once immediately when a burst starts
+    const fetchId = setInterval(() => { if (!hiddenRef.current) fetchEvents() }, 2000)
+    const tickId = setInterval(() => {
+      const rem = Math.ceil((pollEndRef.current - Date.now()) / 1000)
+      if (rem <= 0) {
+        setPolling(false)
+        setRemaining(0)
+      } else {
+        setRemaining(rem)
+      }
+    }, 250)
+    return () => { clearInterval(fetchId); clearInterval(tickId) }
+  }, [polling, fetchEvents])
 
   // Webhook URL
   const getWebhookUrl = () => {
@@ -145,6 +158,16 @@ export default function DashboardPage() {
       setTimeout(() => setCopiedUrl(false), 2000)
     } catch {}
   }
+
+  // Start a polling burst, or reset the countdown if one is already running.
+  const togglePolling = () => {
+    pollEndRef.current = Date.now() + durationMin * 60_000
+    setRemaining(durationMin * 60)
+    setPollError(false)
+    if (!polling) setPolling(true)
+  }
+
+  const fmtRemaining = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`
 
   // Logout
   const handleLogout = async () => {
@@ -254,16 +277,45 @@ export default function DashboardPage() {
               </button>
             </div>
 
-            {/* Polling indicator */}
-            <div className="flex items-center gap-1.5 text-xs">
-              {pollError ? (
-                <WifiOff className="w-3.5 h-3.5 text-destructive" />
-              ) : (
-                <Wifi className="w-3.5 h-3.5 text-emerald-400 polling-dot" />
-              )}
-              <span className={pollError ? 'text-destructive' : 'text-muted-foreground'}>
-                {pollError ? 'Offline' : 'Live'}
-              </span>
+            {/* Polling control — off by default; click to run a timed burst */}
+            <div className="flex items-center gap-2 text-xs">
+              <button
+                onClick={togglePolling}
+                title={polling ? '点击重置倒计时' : '点击开始轮询'}
+                className={cn(
+                  'flex items-center gap-1.5 rounded-md border px-2.5 py-1 font-medium transition-colors',
+                  polling
+                    ? pollError
+                      ? 'border-destructive/40 bg-destructive/10 text-destructive'
+                      : 'border-emerald-500/40 bg-emerald-500/10 text-emerald-400'
+                    : 'border-border text-muted-foreground hover:text-foreground hover:bg-accent'
+                )}
+              >
+                <RefreshCw className={cn('w-3.5 h-3.5', polling && 'animate-spin')} />
+                {polling
+                  ? pollError
+                    ? `重连中 ${fmtRemaining(remaining)}`
+                    : `轮询中 ${fmtRemaining(remaining)}`
+                  : '轮询'}
+              </button>
+              {/* Duration presets */}
+              <div className="flex items-center bg-secondary rounded-md p-0.5">
+                {[1, 3, 5].map((m) => (
+                  <button
+                    key={m}
+                    onClick={() => setDurationMin(m)}
+                    title={`每次轮询 ${m} 分钟`}
+                    className={cn(
+                      'px-1.5 py-0.5 rounded text-[11px] font-medium transition-colors',
+                      durationMin === m
+                        ? 'bg-card text-foreground shadow'
+                        : 'text-muted-foreground hover:text-foreground'
+                    )}
+                  >
+                    {m}m
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
 
