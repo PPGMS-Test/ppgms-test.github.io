@@ -57,6 +57,53 @@ export default function DashboardPage() {
   const pollEndRef = useRef(0) // timestamp (ms) when the current burst stops
   const hiddenRef = useRef(false)
 
+  // Resizable sidebar (event list). Width persisted across reloads; clamped so
+  // it can grow wide enough to show full event types but never swallow the pane.
+  const SIDEBAR_MIN = 240
+  const SIDEBAR_MAX = 640
+  const SIDEBAR_DEFAULT = 320
+  const [sidebarWidth, setSidebarWidth] = useState(SIDEBAR_DEFAULT)
+  const paneRef = useRef<HTMLDivElement>(null)
+  const resizingRef = useRef(false)
+
+  useEffect(() => {
+    const saved = parseInt(localStorage.getItem('wl-sidebar-width') || '', 10)
+    if (!Number.isNaN(saved)) {
+      setSidebarWidth(Math.min(SIDEBAR_MAX, Math.max(SIDEBAR_MIN, saved)))
+    }
+  }, [])
+
+  useEffect(() => {
+    const onMove = (e: MouseEvent) => {
+      if (!resizingRef.current) return
+      const left = paneRef.current?.getBoundingClientRect().left ?? 0
+      setSidebarWidth(Math.min(SIDEBAR_MAX, Math.max(SIDEBAR_MIN, e.clientX - left)))
+    }
+    const onUp = () => {
+      if (!resizingRef.current) return
+      resizingRef.current = false
+      document.body.style.userSelect = ''
+      document.body.style.cursor = ''
+    }
+    window.addEventListener('mousemove', onMove)
+    window.addEventListener('mouseup', onUp)
+    return () => {
+      window.removeEventListener('mousemove', onMove)
+      window.removeEventListener('mouseup', onUp)
+    }
+  }, [])
+
+  useEffect(() => {
+    localStorage.setItem('wl-sidebar-width', String(sidebarWidth))
+  }, [sidebarWidth])
+
+  const startResize = (e: React.MouseEvent) => {
+    e.preventDefault()
+    resizingRef.current = true
+    document.body.style.userSelect = 'none'
+    document.body.style.cursor = 'col-resize'
+  }
+
   // Load user
   useEffect(() => {
     fetch('/api/auth/me')
@@ -316,16 +363,16 @@ export default function DashboardPage() {
     <div className="min-h-screen bg-background flex flex-col h-screen">
       {/* Top bar */}
       <header className="flex flex-col border-b border-border shrink-0">
-        <div className="flex items-center justify-between px-6 py-3">
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2">
+        <div className="flex items-center justify-between gap-x-4 gap-y-2 flex-wrap px-6 py-3">
+          <div className="flex items-center gap-4 flex-wrap min-w-0">
+            <div className="flex items-center gap-2 shrink-0">
               <Radio className="w-5 h-5 text-primary" />
               <h1 className="font-semibold text-sm">Webhook Listener</h1>
             </div>
 
             {/* Webhook URL copy */}
-            <div className="flex items-center gap-1.5 bg-card border border-border rounded-md px-3 py-1.5">
-              <code className="text-xs text-muted-foreground max-w-[320px] truncate font-mono">
+            <div className="flex items-center gap-1.5 bg-card border border-border rounded-md px-3 py-1.5 min-w-0">
+              <code className="text-xs text-muted-foreground max-w-[160px] sm:max-w-[240px] lg:max-w-[320px] truncate font-mono">
                 {webhookUrl}
               </code>
               <button onClick={copyWebhookUrl} className="p-0.5 rounded hover:bg-accent transition-colors shrink-0">
@@ -334,7 +381,7 @@ export default function DashboardPage() {
             </div>
 
             {/* Polling control — off by default; click to run a timed burst */}
-            <div className="flex items-center gap-2 text-xs">
+            <div className="flex items-center gap-2 text-xs shrink-0">
               <button
                 onClick={togglePolling}
                 title={polling ? '点击重置倒计时' : '点击开始轮询'}
@@ -375,13 +422,13 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap shrink-0">
             {/* View toggle */}
-            <div className="flex items-center bg-secondary rounded-md p-0.5 mr-2">
+            <div className="flex items-center bg-secondary rounded-md p-0.5">
               <button
                 onClick={() => setViewMode('all')}
                 className={cn(
-                  'px-3 py-1 text-xs rounded font-medium transition-colors',
+                  'px-3 py-1 text-xs rounded font-medium transition-colors whitespace-nowrap',
                   viewMode === 'all' ? 'bg-card text-foreground shadow' : 'text-muted-foreground hover:text-foreground'
                 )}
               >
@@ -395,7 +442,7 @@ export default function DashboardPage() {
                   }
                 }}
                 className={cn(
-                  'px-3 py-1 text-xs rounded font-medium transition-colors',
+                  'px-3 py-1 text-xs rounded font-medium transition-colors whitespace-nowrap',
                   viewMode === 'by-endpoint' ? 'bg-card text-foreground shadow' : 'text-muted-foreground hover:text-foreground'
                 )}
               >
@@ -405,22 +452,24 @@ export default function DashboardPage() {
 
             <button
               onClick={() => setVerifiedOnly(!verifiedOnly)}
+              title="Verified only"
               className={cn(
-                'flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors',
+                'flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-md text-xs font-medium transition-colors whitespace-nowrap',
                 verifiedOnly ? 'bg-emerald-500/15 text-emerald-400' : 'bg-secondary text-muted-foreground hover:text-foreground'
               )}
             >
-              <Filter className="w-3.5 h-3.5" /> Verified only
+              <Filter className="w-3.5 h-3.5 shrink-0" /> <span className="hidden lg:inline">Verified only</span>
             </button>
 
             <button
               onClick={handleClear}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium bg-secondary text-muted-foreground hover:text-destructive transition-colors"
+              title="Clear"
+              className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-md text-xs font-medium bg-secondary text-muted-foreground hover:text-destructive transition-colors whitespace-nowrap"
             >
-              <Trash2 className="w-3.5 h-3.5" /> Clear
+              <Trash2 className="w-3.5 h-3.5 shrink-0" /> <span className="hidden lg:inline">Clear</span>
             </button>
 
-            <span className="text-xs text-muted-foreground">{user?.email}</span>
+            <span className="hidden xl:inline text-xs text-muted-foreground max-w-[160px] truncate">{user?.email}</span>
 
             {user?.role === 'admin' && (
               <Button variant="ghost" size="sm" onClick={() => router.push('/admin')}>
@@ -456,9 +505,12 @@ export default function DashboardPage() {
       </header>
 
       {/* Main content */}
-      <div className="flex-1 flex overflow-hidden">
+      <div ref={paneRef} className="flex-1 flex overflow-hidden">
         {/* Left: Event list */}
-        <aside className="w-80 border-r border-border overflow-y-auto shrink-0">
+        <aside
+          style={{ width: sidebarWidth }}
+          className="border-r border-border overflow-y-auto shrink-0"
+        >
           {filteredEvents.length === 0 ? (
             <div className="p-4 text-sm text-muted-foreground text-center mt-8">
               No events yet. Send a POST to the webhook URL above.
@@ -510,6 +562,25 @@ export default function DashboardPage() {
             </button>
           )}
         </aside>
+
+        {/* Drag handle: resize the event list. Double-click resets to default. */}
+        <div
+          role="separator"
+          aria-orientation="vertical"
+          aria-label="调整列表宽度"
+          tabIndex={0}
+          onMouseDown={startResize}
+          onDoubleClick={() => setSidebarWidth(SIDEBAR_DEFAULT)}
+          onKeyDown={(e) => {
+            if (e.key === 'ArrowLeft') { e.preventDefault(); setSidebarWidth((w) => Math.max(SIDEBAR_MIN, w - 16)) }
+            else if (e.key === 'ArrowRight') { e.preventDefault(); setSidebarWidth((w) => Math.min(SIDEBAR_MAX, w + 16)) }
+            else if (e.key === 'Home') { e.preventDefault(); setSidebarWidth(SIDEBAR_DEFAULT) }
+          }}
+          title="拖动调整宽度，双击复位（←/→ 微调）"
+          className="w-1 shrink-0 cursor-col-resize bg-border hover:bg-primary/60 active:bg-primary focus-visible:bg-primary focus-visible:outline-none transition-colors relative"
+        >
+          <span className="absolute inset-y-0 -left-1 -right-1" aria-hidden />
+        </div>
 
         {/* Right: Event detail */}
         <main className="flex-1 flex flex-col overflow-hidden">
