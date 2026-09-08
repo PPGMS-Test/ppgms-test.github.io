@@ -97,7 +97,8 @@ export async function POST(
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 
-  return NextResponse.json({ ok: true })
+  // Empty 200 ACK so the sender (PayPal) stops retrying this delivery.
+  return new NextResponse(null, { status: 200 })
 }
 
 export async function GET(

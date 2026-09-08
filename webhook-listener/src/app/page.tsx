@@ -202,6 +202,11 @@ export default function DashboardPage() {
 
   const selectedEvent = events.find((e) => e.id === selectedId) ?? null
 
+  // Full address this event was received on (for echo in the detail pane)
+  const eventAddress = selectedEvent
+    ? `${typeof window !== 'undefined' ? window.location.origin : ''}/api/webhook/${selectedEvent.endpoint_slug ?? 'default'}`
+    : ''
+
   // Helper to find endpoint label
   const getEndpointLabel = (slug: string | null) => {
     if (!slug) return 'unknown'
@@ -476,6 +481,12 @@ export default function DashboardPage() {
                 <span>Received: {new Date(selectedEvent.received_at).toLocaleString()}</span>
                 {selectedEvent.source_ip && <span>IP: {selectedEvent.source_ip}</span>}
                 {selectedEvent.content_type && <span>Content-Type: {selectedEvent.content_type}</span>}
+              </div>
+
+              <div className="px-6 py-2 border-b border-border/50 text-xs text-muted-foreground flex items-center gap-1.5">
+                <span className="shrink-0">Address:</span>
+                <code className="font-mono text-foreground/80 truncate">{eventAddress}</code>
+                <div className="shrink-0"><CopyButton text={eventAddress} /></div>
               </div>
 
               <Tabs
