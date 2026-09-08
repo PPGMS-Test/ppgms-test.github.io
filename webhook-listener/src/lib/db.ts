@@ -85,7 +85,8 @@ export interface WebhookEventInput {
   endpoint_slug: string | null
 }
 
-const MAX_EVENTS = 200
+const MAX_EVENTS = 5000 // hard floor on total rows (spike protection)
+const RETENTION_DAYS = 30 // primary retention: drop events older than this
 
 // ── In-memory store (fallback for local next-dev) ──────────────────────────
 
@@ -177,13 +178,18 @@ class InMemoryStmt implements D1PreparedStatement {
       // Apply basic filters
       let results = [...t.rows]
 
-      // WHERE id > ?  (possibly with AND endpoint_id = ?)
+      // WHERE id > ?  (optionally AND id < ?  and/or  AND endpoint_id = ?)
+      // Params are consumed in the same order the clauses appear in getEvents().
       if (upper.includes('WHERE') && upper.includes('ID > ?')) {
-        const after = Number(this.params[0] ?? 0)
+        let pIdx = 0
+        const after = Number(this.params[pIdx++] ?? 0)
         results = results.filter((r) => Number(r.id) > after)
-        // Check for additional AND endpoint_id = ? filter
-        if (upper.includes('AND ENDPOINT_ID = ?') && this.params.length >= 2) {
-          const epId = Number(this.params[1])
+        if (upper.includes('ID < ?')) {
+          const before = Number(this.params[pIdx++] ?? Number.MAX_SAFE_INTEGER)
+          results = results.filter((r) => Number(r.id) < before)
+        }
+        if (upper.includes('ENDPOINT_ID = ?')) {
+          const epId = Number(this.params[pIdx++])
           results = results.filter((r) => Number(r.endpoint_id) === epId)
         }
       }
@@ -400,29 +406,31 @@ export async function getEvents(
   db: D1Database,
   after: number = 0,
   limit: number = 50,
-  endpointId?: number
+  endpointId?: number,
+  before?: number
 ): Promise<WebhookEvent[]> {
-  if (endpointId !== undefined) {
-    const result = await db
-      .prepare(
-        `SELECT * FROM webhook_events
-         WHERE id > ? AND endpoint_id = ?
-         ORDER BY id DESC
-         LIMIT ?`
-      )
-      .bind(after, endpointId, limit)
-      .all<WebhookEvent>()
-    return result.results ?? []
+  // Clause order is fixed (id > ?, id < ?, endpoint_id = ?) so the InMemory
+  // fallback can consume bound params positionally — keep them in sync.
+  const clauses = ['id > ?']
+  const binds: unknown[] = [after]
+  if (before !== undefined) {
+    clauses.push('id < ?')
+    binds.push(before)
   }
+  if (endpointId !== undefined) {
+    clauses.push('endpoint_id = ?')
+    binds.push(endpointId)
+  }
+  binds.push(limit)
 
   const result = await db
     .prepare(
       `SELECT * FROM webhook_events
-       WHERE id > ?
+       WHERE ${clauses.join(' AND ')}
        ORDER BY id DESC
        LIMIT ?`
     )
-    .bind(after, limit)
+    .bind(...binds)
     .all<WebhookEvent>()
   return result.results ?? []
 }
@@ -436,14 +444,21 @@ export async function clearEvents(db: D1Database): Promise<void> {
 }
 
 export async function enforceRetention(db: D1Database): Promise<void> {
-  await db.exec(
-    `DELETE FROM webhook_events
-     WHERE id NOT IN (
-       SELECT id FROM webhook_events
-       ORDER BY id DESC
-       LIMIT ${MAX_EVENTS}
-     )`
-  )
+  // Dual cap: drop events older than the time window, and also anything beyond
+  // the newest MAX_EVENTS (a floor so a traffic spike can't blow up storage).
+  const cutoff = Date.now() - RETENTION_DAYS * 24 * 60 * 60 * 1000
+  await db
+    .prepare(
+      `DELETE FROM webhook_events
+       WHERE received_at < ?
+          OR id NOT IN (
+            SELECT id FROM webhook_events
+            ORDER BY id DESC
+            LIMIT ${MAX_EVENTS}
+          )`
+    )
+    .bind(cutoff)
+    .run()
 }
 
 // ── Endpoint CRUD ──────────────────────────────────────────────────────────

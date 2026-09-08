@@ -41,6 +41,9 @@ export default function DashboardPage() {
   const [polling, setPolling] = useState(false)
   const [durationMin, setDurationMin] = useState(1) // 1 | 3 | 5
   const [remaining, setRemaining] = useState(0) // seconds left in current burst
+  // Pagination for viewing older events on demand
+  const [hasMore, setHasMore] = useState(false)
+  const [loadingOlder, setLoadingOlder] = useState(false)
   const [tab, setTab] = useState('body')
   const [verifiedOnly, setVerifiedOnly] = useState(false)
   const [copiedUrl, setCopiedUrl] = useState(false)
@@ -50,6 +53,7 @@ export default function DashboardPage() {
   const [selectedEndpointId, setSelectedEndpointId] = useState<number | null>(null)
 
   const maxIdRef = useRef(0)
+  const minIdRef = useRef(0) // smallest event id currently loaded (0 = none yet)
   const pollEndRef = useRef(0) // timestamp (ms) when the current burst stops
   const hiddenRef = useRef(false)
 
@@ -88,6 +92,7 @@ export default function DashboardPage() {
   // Polling
   const fetchEvents = useCallback(async () => {
     try {
+      const isInitial = maxIdRef.current === 0
       let url = `/api/events?after=${maxIdRef.current}&limit=50`
       if (viewMode === 'by-endpoint' && selectedEndpointId !== null) {
         url += `&endpoint_id=${selectedEndpointId}`
@@ -104,22 +109,60 @@ export default function DashboardPage() {
         setEvents((prev) => {
           const existingIds = new Set(prev.map((e) => e.id))
           const newEvents = data.events.filter((e: WebhookEventType) => !existingIds.has(e.id))
-          const merged = [...newEvents, ...prev]
-          return merged.slice(0, 500)
+          return [...newEvents, ...prev]
         })
         for (const ev of data.events) {
           if (ev.id > maxIdRef.current) maxIdRef.current = ev.id
+          if (minIdRef.current === 0 || ev.id < minIdRef.current) minIdRef.current = ev.id
         }
       }
+      // On the first load, a full page (50) implies older events exist to page into.
+      if (isInitial) setHasMore((data.events?.length ?? 0) >= 50)
     } catch {
       setPollError(true)
     }
   }, [router, viewMode, selectedEndpointId])
 
+  // Load a page of older events (id < smallest loaded) on demand.
+  const loadOlder = useCallback(async () => {
+    if (loadingOlder || minIdRef.current === 0) return
+    setLoadingOlder(true)
+    try {
+      let url = `/api/events?before=${minIdRef.current}&limit=50`
+      if (viewMode === 'by-endpoint' && selectedEndpointId !== null) {
+        url += `&endpoint_id=${selectedEndpointId}`
+      }
+      const res = await fetch(url)
+      if (!res.ok) {
+        if (res.status === 401) router.push('/login')
+        return
+      }
+      const data = await res.json()
+      const older: WebhookEventType[] = data.events ?? []
+      if (older.length > 0) {
+        setEvents((prev) => {
+          const existingIds = new Set(prev.map((e) => e.id))
+          const fresh = older.filter((e) => !existingIds.has(e.id))
+          return [...prev, ...fresh]
+        })
+        for (const ev of older) {
+          if (minIdRef.current === 0 || ev.id < minIdRef.current) minIdRef.current = ev.id
+        }
+      }
+      setHasMore(older.length >= 50)
+    } catch {
+      // ignore; user can retry
+    } finally {
+      setLoadingOlder(false)
+    }
+  }, [router, viewMode, selectedEndpointId, loadingOlder])
+
   useEffect(() => {
     maxIdRef.current = 0
+    minIdRef.current = 0
     setEvents([])
     setSelectedId(null)
+    setHasMore(false)
     fetchEvents()
   }, [viewMode, selectedEndpointId])
 
@@ -448,6 +491,15 @@ export default function DashboardPage() {
                 </div>
               </div>
             ))
+          )}
+          {events.length > 0 && hasMore && (
+            <button
+              onClick={loadOlder}
+              disabled={loadingOlder}
+              className="w-full px-4 py-3 text-xs text-center text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors disabled:opacity-50"
+            >
+              {loadingOlder ? '加载中…' : '加载更早'}
+            </button>
           )}
         </aside>
 

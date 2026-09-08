@@ -23,8 +23,11 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   const endpointId = searchParams.get('endpoint_id')
     ? parseInt(searchParams.get('endpoint_id')!, 10)
     : undefined
+  const before = searchParams.get('before')
+    ? parseInt(searchParams.get('before')!, 10)
+    : undefined
 
-  const events = await getEvents(db, after, limit, endpointId)
+  const events = await getEvents(db, after, limit, endpointId, before)
   return NextResponse.json({ events })
 }
 
