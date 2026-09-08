@@ -11,10 +11,14 @@
  *   pnpm create-user --email u@x.com --password 'pw' --sql-only   # only print SQL
  *
  * Requires Node 22+ in PATH (wrangler needs it) and `wrangler login` done.
+ * Cross-platform: SQL is written to a temp file and run via `wrangler --file`.
  */
 
 import crypto from 'node:crypto'
-import { execFileSync } from 'node:child_process'
+import { execSync } from 'node:child_process'
+import { writeFileSync, unlinkSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 
 const DB_NAME = 'webhook-listener-db'
 const PBKDF2_ITERATIONS = 100_000
@@ -49,9 +53,11 @@ const hash = crypto
   .toString('hex')
 const now = Date.now()
 
+// email is escaped for the SQL string literal; hash/salt/role are safe charsets.
+const sqlEmail = String(email).replace(/'/g, "''")
 const sql =
   `INSERT INTO users (email, password_hash, password_salt, role, created_at, created_by) ` +
-  `VALUES ('${email}', '${hash}', '${salt}', '${role}', ${now}, 'create-user-script') ` +
+  `VALUES ('${sqlEmail}', '${hash}', '${salt}', '${role}', ${now}, 'create-user-script') ` +
   `ON CONFLICT(email) DO UPDATE SET ` +
   `password_hash = excluded.password_hash, password_salt = excluded.password_salt, role = excluded.role;`
 
@@ -60,12 +66,21 @@ if (sqlOnly) {
   process.exit(0)
 }
 
-// ── execute via wrangler ─────────────────────────────────────────────────────
-const args = ['wrangler', 'd1', 'execute', DB_NAME, local ? '--local' : '--remote', '--command', sql]
+// ── execute via wrangler (temp file avoids cross-platform quoting issues) ─────
+const tmpFile = join(tmpdir(), `wl-create-user-${process.pid}.sql`)
+writeFileSync(tmpFile, sql, 'utf8')
+
+const cmd = `npx wrangler d1 execute ${DB_NAME} ${local ? '--local' : '--remote'} --file "${tmpFile}"`
 console.log(`\n→ ${role} ${email}  (${local ? 'local' : 'remote'})`)
 try {
-  execFileSync('npx', args, { stdio: 'inherit' })
+  execSync(cmd, { stdio: 'inherit' })
   console.log(`\n✓ Done. Login with: ${email} / <your password>`)
 } catch {
   process.exit(1)
+} finally {
+  try {
+    unlinkSync(tmpFile)
+  } catch {
+    // ignore cleanup failure
+  }
 }
