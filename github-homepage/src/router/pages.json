@@ -15,11 +15,6 @@
     "filePath": "__1__-jsv5-test/ApplePay/applepay-test-archive.html"
   },
   {
-    "name": "spb-applepay-bcdc",
-    "path": "__1__-jsv5-test/ApplePay/spb-applepay-bcdc.html",
-    "filePath": "__1__-jsv5-test/ApplePay/spb-applepay-bcdc.html"
-  },
-  {
     "name": "index",
     "path": "__1__-jsv5-test/BCDC",
     "filePath": "__1__-jsv5-test/BCDC/index.html"
@@ -50,9 +45,9 @@
     "filePath": "__2__-jsv6-test/__5__-iframe-hostpage.html"
   },
   {
-    "name": "jsv6-ap-thr-bcdc",
-    "path": "__2__-jsv6-test/ApplePay/jsv6-ap-thr-bcdc.html",
-    "filePath": "__2__-jsv6-test/ApplePay/jsv6-ap-thr-bcdc.html"
+    "name": "jsv6-ap-bcdc",
+    "path": "__2__-jsv6-test/ApplePay/jsv6-ap-bcdc.html",
+    "filePath": "__2__-jsv6-test/ApplePay/jsv6-ap-bcdc.html"
   },
   {
     "name": "jsv6-jsv5-comparison",
@@ -138,6 +133,11 @@
     "name": "__1__-orders-v2-merchant-error-codes",
     "path": "__6__-API/__1__-orders-v2-merchant-error-codes.html",
     "filePath": "__6__-API/__1__-orders-v2-merchant-error-codes.html"
+  },
+  {
+    "name": "__2__-partner-referral",
+    "path": "__6__-API/__2__-partner-referral.html",
+    "filePath": "__6__-API/__2__-partner-referral.html"
   },
   {
     "name": "__3__-create-order-get-from-file",

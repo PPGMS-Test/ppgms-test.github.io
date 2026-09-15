@@ -70,14 +70,6 @@
             "isFolder": false,
             "hasChildren": false,
             "isExternal": false
-          },
-          {
-            "description": "",
-            "url": "__1__-jsv5-test/ApplePay/spb-applepay-bcdc.html",
-            "text": "spb-applepay-bcdc",
-            "isFolder": false,
-            "hasChildren": false,
-            "isExternal": false
           }
         ]
       },
@@ -236,8 +228,8 @@
         "items": [
           {
             "description": "",
-            "url": "__2__-jsv6-test/ApplePay/jsv6-ap-thr-bcdc.html",
-            "text": "jsv6-ap-thr-bcdc",
+            "url": "__2__-jsv6-test/ApplePay/jsv6-ap-bcdc.html",
+            "text": "jsv6-ap-bcdc",
             "isFolder": false,
             "hasChildren": false,
             "isExternal": false
@@ -426,6 +418,14 @@
             "description": "",
             "url": "__6__-API/__1__-orders-v2-merchant-error-codes.html",
             "text": "orders-v2-merchant-error-codes",
+            "isFolder": false,
+            "hasChildren": false,
+            "isExternal": false
+          },
+          {
+            "description": "",
+            "url": "__6__-API/__2__-partner-referral.html",
+            "text": "partner-referral",
             "isFolder": false,
             "hasChildren": false,
             "isExternal": false
