@@ -225,6 +225,22 @@ describe('createPayPalClient', () => {
     expect(headers.Authorization).toBe('Bearer TOK')
   })
 
+  it('getCapture fetches oauth token then GETs the capture with a Bearer header', async () => {
+    const calls = mockFetchSequence([
+      { status: 200, body: { access_token: 'TOK', expires_in: 3600 } },
+      { status: 200, body: { id: 'CAP-1', status: 'COMPLETED', amount: { currency_code: 'USD', value: '420.00' } } },
+    ])
+    const client = createPayPalClient({ config: createPayPalConfig('sandbox'), credential })
+
+    const res = await client.getCapture('CAP-1')
+
+    expect(res.id).toBe('CAP-1')
+    const captureCall = calls[1]
+    expect(captureCall.url).toBe('https://api-m.sandbox.paypal.com/v2/payments/captures/CAP-1')
+    expect(captureCall.init.method).toBe('GET')
+    expect((captureCall.init.headers as Record<string, string>).Authorization).toBe('Bearer TOK')
+  })
+
   it('getImage/deleteImage hit the image asset endpoint with id and right method', async () => {
     const calls = mockFetchSequence([
       { status: 200, body: { access_token: 'TOK', expires_in: 3600 } },

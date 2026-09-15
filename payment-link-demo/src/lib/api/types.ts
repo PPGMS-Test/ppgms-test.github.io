@@ -242,3 +242,14 @@ export function extractNextPageToken(list: PaymentResourceList): string | null {
     return m ? decodeURIComponent(m[1]) : null
   }
 }
+
+/**
+ * 已捕获交易详情（GET /v2/payments/captures/{id}）。
+ * 页面只做原样 JSON 展示，故类型有意宽松：列出常见顶层字段，其余用索引签名兜底。
+ */
+export interface PayPalCapture {
+  id?: string
+  status?: string
+  amount?: { currency_code?: string; value?: string }
+  [key: string]: unknown
+}

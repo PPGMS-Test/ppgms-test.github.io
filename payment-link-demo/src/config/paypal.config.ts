@@ -14,6 +14,8 @@ export interface PayPalConfig {
     paymentResources: string
     /** 图片两步上传端点：POST 上传 / GET {asset_id} 查状态 / DELETE {asset_id} 删孤立图 */
     paymentResourceImages: string
+    /** v2 payments 端点前缀；GET {capture_id} 查已捕获交易详情 */
+    payments: string
   }
 }
 
@@ -36,6 +38,7 @@ export function createPayPalConfig(environment: PayPalEnvironment): PayPalConfig
       oauthToken: '/v1/oauth2/token',
       paymentResources: '/v1/checkout/payment-resources',
       paymentResourceImages: '/v1/checkout/payment-resources/images',
+      payments: '/v2/payments/captures',
     },
   }
 }

@@ -23,6 +23,7 @@ import type {
   PaymentResourceList,
   ImageAsset,
   ImageUploadResponse,
+  PayPalCapture,
 } from './types'
 
 export interface PayPalClientDeps {
@@ -171,6 +172,15 @@ export function createPayPalClient({ config, credential }: PayPalClientDeps) {
         method: 'GET',
         path: config.endpoints.paymentResources,
         url: resourceUrl(id),
+      }),
+
+    /** 查已捕获交易详情；auth 头由管线按 credential.mode 自动注入（1st/3rd party 无需分支） */
+    getCapture: (id: string) =>
+      run<PayPalCapture>({
+        label: 'getCapture',
+        method: 'GET',
+        path: config.endpoints.payments,
+        url: `${config.apiBase}${config.endpoints.payments}/${id}`,
       }),
 
     /** 整体替换 payment resource（PUT）；成功返回 204（body 可能为空） */
