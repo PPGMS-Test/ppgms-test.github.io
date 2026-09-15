@@ -1,0 +1,1049 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Partner Referral — PayPal API Workbench</title>
+<link
+  href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
+  rel="stylesheet"
+/>
+<style>
+/* ─── Tokens ─── */
+:root {
+  --bg:              #f7f8fa;
+  --panel:           #ffffff;
+  --text:            #14181f;
+  --text-dim:        #6b7280;
+  --text-muted:      #9ca3af;
+  --border:          #e5e7eb;
+  --border-strong:   #d1d5db;
+  --accent:          #0070ba;
+  --accent-soft:     #e8f4fd;
+  --env-live:        #0070ba;
+  --env-sandbox:     #f59e0b;
+  --code-bg:         #1e293b;
+  --code-text:       #e2e8f0;
+  --code-key:        #93c5fd;
+  --code-string:     #86efac;
+  --code-number:     #fde68a;
+  --code-bool:       #c4b5fd;
+  --code-null:       #fca5a5;
+  --code-punct:      #94a3b8;
+  --danger:          #dc2626;
+  --danger-soft:     #fef2f2;
+  --success:         #16a34a;
+  --success-soft:    #f0fdf4;
+  --radius:          10px;
+  --radius-sm:       6px;
+  --shadow-sm:       0 1px 2px rgba(0,0,0,.04);
+  --shadow-lg:       0 4px 12px rgba(0,0,0,.08);
+  --font:            "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-mono:       "JetBrains Mono", "SF Mono", "Fira Code", monospace;
+}
+
+/* ─── Reset ─── */
+*,*::before,*::after{box-sizing:border-box;margin:0}
+html,body{
+  height:100%;
+  background:var(--bg);
+  color:var(--text);
+  font-family:var(--font);
+  font-size:14px;
+  line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+}
+
+/* ─── Layout ─── */
+.app{
+  display:flex;
+  min-height:100vh;
+}
+.main{
+  flex:1;
+  padding:28px 32px 40px;
+  display:flex;
+  flex-direction:column;
+  gap:20px;
+  max-width:960px;
+}
+
+/* ─── Header ─── */
+.header h1{
+  font-size:22px;
+  font-weight:700;
+  letter-spacing:-0.02em;
+  color:var(--text);
+}
+.header .sub{
+  font-size:13px;
+  color:var(--text-dim);
+  margin-top:2px;
+}
+
+/* ─── Section card ─── */
+.section{
+  background:var(--panel);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  box-shadow:var(--shadow-sm);
+  overflow:hidden;
+  display:flex;
+  flex-direction:column;
+}
+.section-head{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:12px 18px;
+  border-bottom:1px solid var(--border);
+  background:#fafbfc;
+  flex-shrink:0;
+}
+.section-head h2{
+  font-size:13px;
+  font-weight:600;
+  color:var(--text);
+  letter-spacing:-0.01em;
+}
+.section-head .badge{
+  font-size:11px;
+  font-weight:600;
+  padding:2px 8px;
+  border-radius:999px;
+  background:var(--accent-soft);
+  color:var(--accent);
+}
+.section-body{
+  padding:20px;
+}
+
+#section-headers .section-body{padding:24px 20px}
+
+/* Body section fills remaining space */
+#section-body{
+  flex:1;
+  min-height:0;
+}
+#section-body .section-body{
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  min-height:0;
+  padding:0;
+}
+
+/* ─── Form rows ─── */
+.form-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:16px;
+}
+@media(max-width:720px){.form-grid{grid-template-columns:1fr}}
+.field label{
+  display:block;
+  font-size:11px;
+  font-weight:600;
+  text-transform:uppercase;
+  letter-spacing:0.06em;
+  color:var(--text-muted);
+  margin-bottom:5px;
+}
+.field input,.field select{
+  width:100%;
+  padding:10px 14px;
+  border:1px solid var(--border);
+  border-radius:var(--radius-sm);
+  font-size:13px;
+  font-family:var(--font-mono);
+  color:var(--text);
+  background:var(--panel);
+  outline:none;
+  transition:border-color .15s,box-shadow .15s;
+}
+.field input::placeholder{color:var(--text-muted);font-family:var(--font)}
+.field input:focus,.field select:focus{
+  border-color:var(--accent);
+  box-shadow:0 0 0 3px rgba(0,112,186,.15);
+}
+.field select{
+  -webkit-appearance:none;appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='none' stroke='%236b7280' stroke-width='2'%3E%3Cpath d='M2 4l4 4 4-4'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 12px center;
+  padding-right:32px;font-family:var(--font);
+}
+
+/* ─── Token field with reveal ─── */
+.field.token-field{position:relative}
+.field.token-field .reveal-btn{
+  position:absolute;
+  right:8px;top:28px;
+  width:30px;height:30px;
+  display:flex;align-items:center;justify-content:center;
+  background:transparent;border:none;
+  color:var(--text-muted);
+  cursor:pointer;
+  border-radius:var(--radius-sm);
+  transition:color .15s;
+}
+.field.token-field .reveal-btn:hover{color:var(--text-dim)}
+.field.token-field input{padding-right:40px}
+
+/* ─── JSON editor with syntax-highlight overlay ─── */
+.editor-toolbar{
+  display:flex;
+  align-items:center;
+  gap:4px;
+  padding:6px 12px;
+  background:#fafbfc;
+  border-bottom:1px solid var(--border);
+  flex-shrink:0;
+}
+.editor-toolbar .btn-ghost{padding:4px 10px;font-size:12px}
+
+.json-editor{
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  min-height:0;
+  position:relative;
+}
+
+/* The highlight overlay and textarea share geometry */
+.editor-stage{
+  flex:1;
+  position:relative;
+  overflow:hidden;
+}
+.editor-stage .highlight-layer,
+.editor-stage .edit-layer{
+  position:absolute;
+  top:0;left:0;right:0;bottom:0;
+  padding:16px 20px;
+  font-family:var(--font-mono);
+  font-size:12.5px;
+  line-height:1.7;
+  tab-size:2;
+  white-space:pre-wrap;
+  word-wrap:break-word;
+  overflow:auto;
+  border:none;
+  margin:0;
+}
+.editor-stage .highlight-layer{
+  color:var(--code-text);
+  background:var(--code-bg);
+  pointer-events:none;
+  z-index:1;
+}
+.editor-stage .highlight-layer .key{color:var(--code-key)}
+.editor-stage .highlight-layer .string{color:var(--code-string)}
+.editor-stage .highlight-layer .number{color:var(--code-number)}
+.editor-stage .highlight-layer .bool{color:var(--code-bool)}
+.editor-stage .highlight-layer .null{color:var(--code-null)}
+.editor-stage .highlight-layer .punct{color:var(--code-punct)}
+
+.editor-stage .edit-layer{
+  color:transparent;
+  caret-color:#fff;
+  background:transparent;
+  resize:none;
+  outline:none;
+  z-index:2;
+}
+.json-editor.invalid .editor-stage .edit-layer{
+  box-shadow:inset 0 0 0 2px var(--danger);
+}
+
+.json-editor .error-bar{
+  display:none;
+  align-items:center;
+  gap:8px;
+  padding:7px 20px;
+  background:var(--danger-soft);
+  border-top:1px solid rgba(220,38,38,.15);
+  font-size:11px;
+  color:var(--danger);
+  font-family:var(--font-mono);
+  flex-shrink:0;
+}
+.json-editor .error-bar.visible{display:flex}
+
+/* ─── Response block ─── */
+.response-block{
+  background:var(--code-bg);
+  border-radius:var(--radius-sm);
+  padding:14px 16px;
+  font-family:var(--font-mono);
+  font-size:12px;
+  line-height:1.7;
+  color:var(--code-text);
+  overflow-x:auto;
+  white-space:pre-wrap;
+  word-break:break-all;
+  max-height:300px;
+  overflow-y:auto;
+  margin:0;
+}
+.response-block .key{color:var(--code-key)}
+.response-block .string{color:var(--code-string)}
+.response-block .number{color:var(--code-number)}
+.response-block .bool{color:var(--code-bool)}
+.response-block .null{color:var(--code-null)}
+.response-block .punct{color:var(--code-punct)}
+
+/* ─── Action bar ─── */
+.action-bar{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  flex-shrink:0;
+}
+.action-bar .left{display:flex;align-items:center;gap:10px}
+.btn{
+  display:inline-flex;
+  align-items:center;
+  gap:7px;
+  padding:9px 18px;
+  border-radius:var(--radius-sm);
+  font-size:13px;
+  font-weight:600;
+  font-family:var(--font);
+  cursor:pointer;
+  border:1px solid transparent;
+  transition:all .15s;
+  outline:none;
+}
+.btn:focus-visible{box-shadow:0 0 0 3px rgba(0,112,186,.3)}
+.btn-primary{
+  background:var(--accent);
+  color:#fff;
+  border-color:var(--accent);
+}
+.btn-primary:hover{background:#005b96;border-color:#005b96}
+.btn-primary:disabled{opacity:.5;cursor:not-allowed}
+.btn-ghost{
+  background:transparent;
+  color:var(--text-dim);
+  border-color:transparent;
+  border-radius:var(--radius-sm);
+}
+.btn-ghost:hover{color:var(--text);background:rgba(0,0,0,.04)}
+
+.status-tag{
+  font-size:11px;
+  font-weight:600;
+  padding:3px 10px;
+  border-radius:999px;
+}
+.status-tag.ok{background:var(--success-soft);color:var(--success)}
+.status-tag.err{background:var(--danger-soft);color:var(--danger)}
+
+/* ─── Toast ─── */
+.toast{
+  position:fixed;
+  bottom:24px;
+  left:50%;
+  transform:translateX(-50%);
+  padding:10px 20px;
+  border-radius:999px;
+  font-size:13px;
+  font-weight:500;
+  font-family:var(--font);
+  z-index:999;
+  box-shadow:var(--shadow-lg);
+  transition:opacity .3s,transform .3s;
+  pointer-events:none;
+}
+.toast.hidden{opacity:0;transform:translateX(-50%) translateY(12px)}
+.toast.success{background:#065f46;color:#d1fae5}
+.toast.error{background:#991b1b;color:#fecaca}
+
+/* ─── Credentials slide-out panel ─── */
+.panel-backdrop{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.18);
+  z-index:40;
+  backdrop-filter:blur(3px);
+  display:none;
+}
+.panel-backdrop.open{display:block}
+@media(min-width:1024px){
+  .panel-backdrop{display:none!important}
+}
+
+.cred-panel{
+  position:fixed;
+  right:0;
+  top:0;
+  height:100vh;
+  z-index:50;
+  background:var(--panel);
+  border-left:1px solid var(--border);
+  box-shadow:-2px 0 12px rgba(0,0,0,.04);
+  transition:width .3s ease-in-out;
+  display:flex;
+  flex-direction:column;
+  width:0;
+  overflow:visible;
+}
+.cred-panel-inner{
+  overflow:hidden;
+}
+.cred-panel.open{width:292px}
+@media(min-width:1024px){
+  .cred-panel:not(.open){width:36px}
+}
+
+.cred-panel-toggle{
+  position:absolute;
+  top:50%;
+  transform:translateY(-50%);
+  left:-36px;
+  width:36px;
+  height:64px;
+  background:var(--panel);
+  border:1px solid var(--border);
+  border-right:0;
+  border-radius:8px 0 0 8px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  color:var(--text-muted);
+  transition:color .15s;
+  z-index:10;
+  box-shadow:-1px 0 4px rgba(0,0,0,.02);
+}
+.cred-panel-toggle:hover{color:var(--text)}
+.cred-panel-toggle svg{transition:transform .3s}
+.cred-panel.open .cred-panel-toggle svg{transform:rotate(180deg)}
+
+.cred-panel-inner{
+  flex:1;
+  min-width:292px;
+  display:flex;
+  flex-direction:column;
+  opacity:0;
+  transition:opacity .2s;
+}
+.cred-panel.open .cred-panel-inner{opacity:1}
+
+.cred-panel-header{
+  padding:18px 16px 12px;
+  border-bottom:1px solid #f3f4f6;
+}
+.cred-panel-header h3{
+  font-size:13px;
+  font-weight:600;
+  color:var(--text);
+}
+.cred-panel-header p{
+  font-size:11px;
+  color:var(--text-muted);
+  margin-top:2px;
+}
+
+.cred-panel-list{
+  flex:1;
+  overflow-y:auto;
+  padding:10px 12px;
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+
+.cred-card{
+  width:100%;
+  text-align:left;
+  padding:10px 12px;
+  border:1px solid var(--border);
+  border-radius:var(--radius-sm);
+  background:#fafbfc;
+  cursor:pointer;
+  transition:all .15s;
+  font-family:var(--font);
+}
+.cred-card:hover{border-color:#ccc;background:#fff}
+.cred-card.filled{border-color:var(--accent);background:var(--accent-soft)}
+.cred-card .cred-row{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  margin-bottom:6px;
+}
+.cred-card .cred-dot{
+  width:7px;height:7px;border-radius:50%;flex-shrink:0
+}
+.cred-card .cred-dot.live{background:var(--env-live)}
+.cred-card .cred-dot.sandbox{background:var(--env-sandbox)}
+.cred-card .cred-label{
+  font-size:11px;
+  font-weight:600;
+  color:var(--text-dim);
+}
+.cred-card .cred-env{
+  font-size:10px;
+  color:var(--text-muted);
+}
+.cred-card .cred-fill{
+  margin-left:auto;
+  font-size:10px;
+  font-weight:600;
+  color:var(--text-muted);
+  display:flex;
+  align-items:center;
+  gap:4px;
+}
+.cred-card:hover .cred-fill{color:var(--text-dim)}
+.cred-card.filled .cred-fill{color:var(--success)}
+.cred-card .cred-client-id{
+  font-family:var(--font-mono);
+  font-size:11px;
+  color:var(--text-dim);
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.cred-card.filled .cred-client-id{color:var(--accent)}
+.cred-card .cred-desc{
+  font-size:10px;
+  color:var(--text-muted);
+  margin-top:3px;
+}
+
+.cred-panel-footer{
+  padding:12px 16px;
+  border-top:1px solid #f3f4f6;
+  font-size:10px;
+  color:var(--text-muted);
+  line-height:1.5;
+}
+
+/* ─── Spinner ─── */
+@keyframes spin{to{transform:rotate(360deg)}}
+.spinner{
+  width:15px;height:15px;
+  border:2px solid rgba(255,255,255,.3);
+  border-top-color:#fff;
+  border-radius:50%;
+  animation:spin .6s linear infinite;
+}
+
+/* ─── Scrollbar ─── */
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:#d1d5db;border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:#9ca3af}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <!-- ── MAIN ── -->
+  <main class="main" id="main">
+    <div class="header">
+      <h1>Partner Referral</h1>
+      <p class="sub">Build and test PayPal Partner Referral API requests.</p>
+    </div>
+
+    <!-- Headers -->
+    <div class="section" id="section-headers">
+      <div class="section-head">
+        <h2>Headers</h2>
+        <span class="badge">Auth &amp; Routing</span>
+      </div>
+      <div class="section-body">
+        <div class="form-grid">
+          <div class="field">
+            <label for="hdr-client-id">Client-Id</label>
+            <input id="hdr-client-id" type="text" placeholder="Your PayPal client ID…" autocomplete="off" spellcheck="false" />
+          </div>
+          <div class="field token-field">
+            <label for="hdr-secret">Secret</label>
+            <input id="hdr-secret" type="password" placeholder="Your PayPal secret…" autocomplete="off" spellcheck="false" />
+            <button class="reveal-btn" id="btn-reveal-secret" title="Show/hide secret" tabindex="-1">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+          </div>
+          <div class="field">
+            <label for="hdr-paypal-request-id">PayPal-Request-Id</label>
+            <input id="hdr-paypal-request-id" type="text" placeholder="Auto-generated if empty…" autocomplete="off" spellcheck="false" />
+          </div>
+          <div class="field">
+            <label for="hdr-paypal-partner-attribution-id">PayPal-Partner-Attribution-Id</label>
+            <input id="hdr-paypal-partner-attribution-id" type="text" placeholder="e.g. EASYSHOP_OpenCart" autocomplete="off" spellcheck="false" />
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Body — fills remaining space -->
+    <div class="section" id="section-body">
+      <div class="editor-toolbar">
+        <h2 style="font-size:13px;font-weight:600;color:var(--text);margin-right:8px">Body</h2>
+        <span class="badge">JSON</span>
+        <span style="font-size:11px;color:var(--text-muted);margin-left:8px" id="json-status"></span>
+        <button class="btn btn-ghost" id="btn-format" title="Format JSON" style="margin-left:auto">Format</button>
+        <button class="btn btn-ghost" id="btn-reset-body" title="Reset to default">Reset</button>
+      </div>
+      <div class="json-editor" id="json-editor">
+        <div class="editor-stage">
+          <pre class="highlight-layer" id="highlight-layer" aria-hidden="true"></pre>
+          <textarea class="edit-layer" id="json-body" spellcheck="false"></textarea>
+        </div>
+        <div class="error-bar" id="json-error"></div>
+      </div>
+    </div>
+
+    <!-- Response -->
+    <div class="section" id="section-response" style="display:none">
+      <div class="section-head">
+        <h2>Response</h2>
+        <span class="badge" id="resp-badge">201 Created</span>
+        <a class="btn btn-primary" id="btn-open-referral" target="_blank" rel="noopener" style="margin-left:auto;font-size:12px;padding:6px 14px">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+          Open Referral Link
+        </a>
+      </div>
+      <div class="section-body">
+        <pre class="response-block" id="response-block"></pre>
+      </div>
+    </div>
+    <div class="action-bar">
+      <div class="left">
+        <select id="env-select">
+          <option value="sandbox">Sandbox (api-m.sandbox.paypal.com)</option>
+          <option value="live">Live (api-m.paypal.com)</option>
+        </select>
+        <span id="resp-tag"></span>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-ghost" id="btn-copy-curl">Copy as cURL</button>
+        <button class="btn btn-ghost" id="btn-copy-json">Copy as JSON</button>
+        <button class="btn btn-primary" id="btn-send">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          Send
+        </button>
+      </div>
+    </div>
+  </main>
+
+  <!-- ── CREDENTIALS PANEL ── -->
+  <div class="panel-backdrop" id="panel-backdrop"></div>
+  <aside class="cred-panel" id="cred-panel">
+    <button class="cred-panel-toggle" id="cred-panel-toggle" title="Credentials">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg>
+    </button>
+    <div class="cred-panel-inner">
+      <div class="cred-panel-header">
+        <h3>Credentials</h3>
+        <p>Click a card to fill all fields.</p>
+      </div>
+      <div class="cred-panel-list" id="cred-panel-list"></div>
+      <div class="cred-panel-footer">
+        Pre‑saved Partner Referral credentials.<br/>Do not store real merchant tokens.
+      </div>
+    </div>
+  </aside>
+</div>
+
+<!-- ── Toast ── -->
+<div class="toast hidden" id="toast"></div>
+
+<script>
+/* ═══════════════════════════════════════
+   Partner Referral Workbench
+   ═══════════════════════════════════════ */
+
+// ── Pre‑saved credentials ──
+const CREDENTIALS = [
+  {
+    //email: name-test@yqtest.com
+    label: "Test Name Partner",
+    env: "sandbox",
+    description: "App name: This is a test Store",
+    clientId: "BAAC8PYxiTDKRPwGf5R-ZtmvgsJ0uMJYP0sfO_mMn2mX7MOtt7RaChvg7guwuOyQ4qRmdcrUAIrFff5T_w",
+    secret: "EOIUHoJgPXvxgI_F8gsbjgMGasuXj9QqP-VUBx4inLOstvG8z1mYRDQoLjsZa89foHTumrkBLML2VyW5",
+    partnerId: "testnamestore",
+  }
+];
+
+// ── Default body ──
+const DEFAULT_BODY_OBJ = {
+  tracking_id: "test-entry-" + Date.now(),
+  partner_config_override: {
+    partner_logo_url: "https://example.com/logo.png",
+    return_url: "https://example.com/onboard/complete",
+    return_url_description: "Return to EasyShop dashboard",
+    show_add_credit_card: true,
+  },
+  operations: [
+    {
+      operation: "API_INTEGRATION",
+      api_integration_preference: {
+        rest_api_integration: {
+          integration_method: "PAYPAL",
+          integration_type: "THIRD_PARTY",
+          third_party_details: {
+            features: ["PAYMENT", "REFUND"]
+          }
+        }
+      }
+    }
+  ],
+  products: ["EXPRESS_CHECKOUT"],
+  legal_consents: [
+    {
+      type: "SHARE_DATA_CONSENT",
+      granted: true
+    }
+  ]
+};
+const DEFAULT_BODY = JSON.stringify(DEFAULT_BODY_OBJ, null, 2);
+
+/* ── DOM refs ── */
+const $ = (s) => document.querySelector(s);
+
+const el = {
+  hdrClientId:       $("#hdr-client-id"),
+  hdrSecret:         $("#hdr-secret"),
+  hdrRequestId:      $("#hdr-paypal-request-id"),
+  hdrPartnerAttr:    $("#hdr-paypal-partner-attribution-id"),
+  btnRevealSecret:   $("#btn-reveal-secret"),
+  jsonBody:          $("#json-body"),
+  highlightLayer:    $("#highlight-layer"),
+  jsonEditor:        $("#json-editor"),
+  jsonStatus:        $("#json-status"),
+  jsonError:         $("#json-error"),
+  sectionResponse:   $("#section-response"),
+  respBadge:         $("#resp-badge"),
+  responseBlock:     $("#response-block"),
+  btnOpenReferral:   $("#btn-open-referral"),
+  envSelect:         $("#env-select"),
+  respTag:           $("#resp-tag"),
+  btnSend:           $("#btn-send"),
+  btnFormat:         $("#btn-format"),
+  btnResetBody:      $("#btn-reset-body"),
+  btnCopyCurl:       $("#btn-copy-curl"),
+  btnCopyJson:       $("#btn-copy-json"),
+  toast:             $("#toast"),
+  credPanel:         $("#cred-panel"),
+  credPanelToggle:   $("#cred-panel-toggle"),
+  panelBackdrop:     $("#panel-backdrop"),
+  credPanelList:     $("#cred-panel-list"),
+};
+
+/* ── Syntax highlighting ── */
+function highlightJSON(raw){
+  // Escape HTML then apply span classes
+  const escaped = raw
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+  return escaped.replace(
+    /("(?:\\u[a-fA-F0-9]{4}|\\[^u]|[^"\\])*"\s*:|\b(?:true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+-]?\d+)?|"([^"\\]|\\.)*")/g,
+    (match) => {
+      if (/^"/.test(match)) {
+        if (/:$/.test(match)) {
+          // It's a key:  "foo":
+          return '<span class="key">' + match.slice(0, -1) + '</span><span class="punct">:</span>';
+        }
+        return '<span class="string">' + match + '</span>';
+      }
+      if (/^(true|false)$/.test(match)) return '<span class="bool">' + match + '</span>';
+      if (/^null$/.test(match)) return '<span class="null">' + match + '</span>';
+      return '<span class="number">' + match + '</span>';
+    }
+  );
+}
+
+function syntaxHighlightJSONStatic(raw){
+  const escaped = raw
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+  return escaped.replace(
+    /("(?:\\u[a-fA-F0-9]{4}|\\[^u]|[^"\\])*"\s*:|\b(?:true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+-]?\d+)?|"([^"\\]|\\.)*")/g,
+    (match) => {
+      if (/^"/.test(match)) {
+        if (/:$/.test(match)) return '<span class="key">' + match.slice(0, -1) + '</span><span class="punct">:</span>';
+        return '<span class="string">' + match + '</span>';
+      }
+      if (/^(true|false)$/.test(match)) return '<span class="bool">' + match + '</span>';
+      if (/^null$/.test(match)) return '<span class="null">' + match + '</span>';
+      return '<span class="number">' + match + '</span>';
+    }
+  );
+}
+
+function refreshHighlight(){
+  const raw = el.jsonBody.value;
+  el.highlightLayer.innerHTML = highlightJSON(raw) + '\n';
+  // Sync scroll
+  el.highlightLayer.scrollTop = el.jsonBody.scrollTop;
+  el.highlightLayer.scrollLeft = el.jsonBody.scrollLeft;
+}
+
+function validateBody(){
+  const raw = el.jsonBody.value;
+  try {
+    JSON.parse(raw);
+    el.jsonEditor.classList.remove("invalid");
+    el.jsonError.classList.remove("visible");
+    el.jsonStatus.textContent = "✓ Valid";
+    el.jsonStatus.style.color = "var(--success)";
+  } catch (e) {
+    el.jsonEditor.classList.add("invalid");
+    el.jsonError.textContent = "Invalid JSON: " + e.message;
+    el.jsonError.classList.add("visible");
+    el.jsonStatus.textContent = "✗ Invalid";
+    el.jsonStatus.style.color = "var(--danger)";
+  }
+}
+
+/* ── Init ── */
+el.jsonBody.value = DEFAULT_BODY;
+refreshHighlight();
+validateBody();
+
+// Sync highlight on input + scroll
+el.jsonBody.addEventListener("input", () => {
+  refreshHighlight();
+  validateBody();
+});
+el.jsonBody.addEventListener("scroll", () => {
+  el.highlightLayer.scrollTop = el.jsonBody.scrollTop;
+  el.highlightLayer.scrollLeft = el.jsonBody.scrollLeft;
+});
+
+/* ── Secret reveal toggle ── */
+el.btnRevealSecret.addEventListener("click", () => {
+  const input = el.hdrSecret;
+  const isPassword = input.type === "password";
+  input.type = isPassword ? "text" : "password";
+  el.btnRevealSecret.innerHTML = isPassword
+    ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>'
+    : '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
+});
+
+/* ── Credentials panel toggle ── */
+function openPanel(){el.credPanel.classList.add("open");el.panelBackdrop.classList.add("open")}
+function closePanel(){el.credPanel.classList.remove("open");el.panelBackdrop.classList.remove("open")}
+el.credPanelToggle.addEventListener("click", () => {
+  el.credPanel.classList.contains("open") ? closePanel() : openPanel();
+});
+el.panelBackdrop.addEventListener("click", closePanel);
+
+/* ── Render credential cards ── */
+function renderCreds(){
+  el.credPanelList.innerHTML = CREDENTIALS.map((c, i) => `
+    <button class="cred-card" data-idx="${i}">
+      <div class="cred-row">
+        <span class="cred-dot ${c.env}"></span>
+        <span class="cred-label">${c.label}</span>
+        <span class="cred-env">· ${c.env === "live" ? "Live" : "Sandbox"}</span>
+        <span class="cred-fill">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg>
+          Fill
+        </span>
+      </div>
+      <div class="cred-client-id">${(c.clientId || "").slice(0, 32)}…</div>
+      <div class="cred-desc">${c.description} — ${c.partnerId}</div>
+    </button>
+  `).join("");
+
+  el.credPanelList.querySelectorAll(".cred-card").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const c = CREDENTIALS[parseInt(btn.dataset.idx)];
+      fillCredential(c);
+    });
+  });
+}
+renderCreds();
+
+function fillCredential(c){
+  el.hdrClientId.value = c.clientId || "";
+  el.hdrSecret.value = c.secret || "";
+  el.hdrPartnerAttr.value = c.partnerId || "";
+  const card = el.credPanelList.querySelector(`[data-idx="${CREDENTIALS.indexOf(c)}"]`);
+  if (card) {
+    card.classList.add("filled");
+    setTimeout(() => card.classList.remove("filled"), 1400);
+  }
+}
+
+/* ── Format ── */
+el.btnFormat.addEventListener("click", () => {
+  try {
+    const obj = JSON.parse(el.jsonBody.value);
+    el.jsonBody.value = JSON.stringify(obj, null, 2);
+    refreshHighlight();
+    validateBody();
+    showToast("JSON formatted", "success");
+  } catch (e) {
+    showToast("Cannot format: invalid JSON", "error");
+  }
+});
+
+/* ── Reset body ── */
+el.btnResetBody.addEventListener("click", () => {
+  el.jsonBody.value = DEFAULT_BODY;
+  refreshHighlight();
+  validateBody();
+  showToast("Body reset to default", "success");
+});
+
+/* ── Send ── */
+el.btnSend.addEventListener("click", async () => {
+  const raw = el.jsonBody.value;
+  let body;
+  try { body = JSON.parse(raw); } catch (e) { showToast("Invalid JSON body", "error"); return; }
+
+  const env = el.envSelect.value;
+  const base = env === "sandbox"
+    ? "https://api-m.sandbox.paypal.com"
+    : "https://api-m.paypal.com";
+
+  const headers = {
+    "Content-Type": "application/json",
+  };
+
+  const clientId = el.hdrClientId.value.trim();
+  const secret = el.hdrSecret.value.trim();
+  const hReqId = el.hdrRequestId.value.trim() || ("pr-" + Date.now() + "-" + Math.random().toString(36).slice(2, 8));
+  const hAttr = el.hdrPartnerAttr.value.trim();
+
+  if (clientId && secret) {
+    headers["Authorization"] = "Basic " + btoa(clientId + ":" + secret);
+  }
+  headers["PayPal-Request-Id"] = hReqId;
+  if (hAttr) headers["PayPal-Partner-Attribution-Id"] = hAttr;
+
+  el.btnSend.disabled = true;
+  el.btnSend.innerHTML = '<span class="spinner"></span> Sending…';
+  el.respTag.innerHTML = "";
+
+  const start = performance.now();
+  try {
+    const res = await fetch(base + "/v2/customer/partner-referrals", {
+      method: "POST",
+      headers,
+      body: JSON.stringify(body),
+    });
+    const ms = Math.round(performance.now() - start);
+    const text = await res.text();
+    let json;
+    try { json = JSON.parse(text); } catch (_) { json = null; }
+
+    if (res.ok) {
+      el.respTag.innerHTML = `<span class="status-tag ok">${res.status} OK · ${ms}ms</span>`;
+      showToast(`Partner referral created — ${res.status} (${ms}ms)`, "success");
+      // Show response panel
+      el.sectionResponse.style.display = "";
+      el.respBadge.textContent = res.status + " Created";
+      el.respBadge.style.background = "var(--success-soft)";
+      el.respBadge.style.color = "var(--success)";
+      const respText = json ? JSON.stringify(json, null, 2) : text;
+      el.responseBlock.innerHTML = syntaxHighlightJSONStatic(respText);
+      // Extract partner referral action_url from links
+      const referralUrl = json?.links?.find(l => l.rel === "action_url")?.href;
+      if (referralUrl) {
+        el.btnOpenReferral.href = referralUrl;
+        el.btnOpenReferral.style.display = "";
+      } else {
+        el.btnOpenReferral.style.display = "none";
+      }
+      console.log("Response:", json || text);
+    } else {
+      el.respTag.innerHTML = `<span class="status-tag err">${res.status} · ${ms}ms</span>`;
+      const detail = json?.message || json?.name || text.slice(0, 120);
+      showToast(`${res.status}: ${detail}`, "error");
+      // Show error response too
+      el.sectionResponse.style.display = "";
+      el.respBadge.textContent = res.status + " Error";
+      el.respBadge.style.background = "var(--danger-soft)";
+      el.respBadge.style.color = "var(--danger)";
+      const respText = json ? JSON.stringify(json, null, 2) : text;
+      el.responseBlock.innerHTML = syntaxHighlightJSONStatic(respText);
+      el.btnOpenReferral.style.display = "none";
+      console.error("Error response:", json || text);
+    }
+  } catch (e) {
+    el.respTag.innerHTML = `<span class="status-tag err">Network error</span>`;
+    showToast("Request failed: " + e.message, "error");
+  } finally {
+    el.btnSend.disabled = false;
+    el.btnSend.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>Send`;
+  }
+});
+
+/* ── Copy buttons ── */
+el.btnCopyCurl.addEventListener("click", () => {
+  const env = el.envSelect.value;
+  const base = env === "sandbox"
+    ? "https://api-m.sandbox.paypal.com/v2/customer/partner-referrals"
+    : "https://api-m.paypal.com/v2/customer/partner-referrals";
+
+  const clientId = el.hdrClientId.value.trim();
+  const secret = el.hdrSecret.value.trim();
+  const hReqId = el.hdrRequestId.value.trim() || ("pr-" + Date.now() + "-" + Math.random().toString(36).slice(2, 8));
+  const hAttr = el.hdrPartnerAttr.value.trim();
+
+  let body = "{}";
+  try { body = JSON.stringify(JSON.parse(el.jsonBody.value)); } catch (_) {}
+
+  const lines = [`curl -X POST '${base}' \\`];
+  lines.push(`  -H 'Content-Type: application/json' \\`);
+  lines.push(`  -u '${clientId}:${secret}' \\`);
+  lines.push(`  -H 'PayPal-Request-Id: ${hReqId}' \\`);
+  if (hAttr) lines.push(`  -H 'PayPal-Partner-Attribution-Id: ${hAttr}' \\`);
+  lines.push(`  -d '${body.replace(/'/g, "\\'")}'`);
+
+  copyToClipboard(lines.join("\n"), "cURL");
+});
+
+el.btnCopyJson.addEventListener("click", () => {
+  const env = el.envSelect.value;
+  const base = env === "sandbox"
+    ? "https://api-m.sandbox.paypal.com/v2/customer/partner-referrals"
+    : "https://api-m.paypal.com/v2/customer/partner-referrals";
+
+  const clientId = el.hdrClientId.value.trim();
+  const secret = el.hdrSecret.value.trim();
+  const hReqId = el.hdrRequestId.value.trim() || ("pr-" + Date.now() + "-" + Math.random().toString(36).slice(2, 8));
+  const hAttr = el.hdrPartnerAttr.value.trim();
+
+  const reqHeaders = {};
+  if (clientId && secret) reqHeaders["Authorization"] = "Basic " + btoa(clientId + ":" + secret);
+  reqHeaders["PayPal-Request-Id"] = hReqId;
+  if (hAttr) reqHeaders["PayPal-Partner-Attribution-Id"] = hAttr;
+
+  let reqBody = {};
+  try { reqBody = JSON.parse(el.jsonBody.value); } catch (_) {}
+
+  copyToClipboard(JSON.stringify({method:"POST",url:base,headers:reqHeaders,body:reqBody}, null, 2), "JSON");
+});
+
+async function copyToClipboard(text, label) {
+  try {
+    await navigator.clipboard.writeText(text);
+    showToast(`Copied ${label} to clipboard`, "success");
+  } catch (e) {
+    showToast("Copy failed", "error");
+  }
+}
+
+/* ── Toast ── */
+let toastTimer;
+function showToast(msg, type) {
+  clearTimeout(toastTimer);
+  el.toast.textContent = msg;
+  el.toast.className = "toast " + type;
+  toastTimer = setTimeout(() => { el.toast.classList.add("hidden"); }, 2200);
+}
+</script>
+</body>
+</html>
