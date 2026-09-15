@@ -128,6 +128,8 @@ type CaptureResult = { data: PayPalCapture } | { error: ApiError | Error }
  * 疑似交易号/订单号的键（token/PayerID/txn…）高亮。用于实测"return_url 到底带不带交易号"。
  */
 function ReturnParamsPanel({ extras }: { extras: Array<[string, string]> }) {
+  // getCapture 的 loading/result 状态按整个面板管理，假设 extras 里 tx 行唯一（PayPal 只会追加一个 tx）；
+  // 且只有精确 key === 'tx' 的行才渲染 Get 按钮，TXN_KEY 正则仅用于高亮其他疑似交易参数，不触发请求。
   const client = useCredentialsStore((s) => s.client)
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState<CaptureResult | null>(null)
