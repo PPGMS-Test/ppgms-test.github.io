@@ -51,13 +51,15 @@ jobs:
         with:
           version: 9
 
+      # 子包的 pnpm-lock.yaml 未提交到仓库（被 .gitignore 全局忽略），
+      # 所以这里不能用 setup-node 的 pnpm 缓存（会因找不到 lockfile 报
+      # "Some specified paths were not resolved"）。依赖安装本身不慢，且
+      # 上面的 dist 缓存已覆盖了真正耗时的 install+build。
       - name: Setup Node
         if: steps.cache.outputs.cache-hit != 'true'
         uses: actions/setup-node@v4
         with:
           node-version: '24'
-          cache: 'pnpm'
-          cache-dependency-path: ${{ matrix.pkg }}/pnpm-lock.yaml
 
       - name: Install dependencies
         if: steps.cache.outputs.cache-hit != 'true'
