@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import { CheckCircle2, XCircle, ArrowLeft, Loader2, Info, Receipt } from 'lucide-react'
+import { CheckCircle2, XCircle, ArrowLeft, Loader2, Info, Receipt, Download } from 'lucide-react'
 import { usePaymentLinksStore } from '@/store/payment-links'
 import { useCredentialsStore } from '@/store/credentials'
 import { ApiError } from '@/lib/api/types'
+import type { PayPalCapture } from '@/lib/api/types'
+import { JsonView } from '@/components/JsonView'
 import { RETURN_LINK_PARAM, RETURN_STATUS_PARAM } from '@/lib/return-url'
 
 type Outcome = 'paid' | 'cancelled' | 'unknown'
@@ -118,11 +120,28 @@ export default function ReturnPage() {
   )
 }
 
+/** getCapture 结果：成功携带交易详情，失败携带 ApiError 或普通网络 Error */
+type CaptureResult = { data: PayPalCapture } | { error: ApiError | Error }
+
 /**
  * 回流参数观察卡片：把 PayPal redirect 追加到 return_url 上的全部 query 参数原样列出，
  * 疑似交易号/订单号的键（token/PayerID/txn…）高亮。用于实测"return_url 到底带不带交易号"。
  */
 function ReturnParamsPanel({ extras }: { extras: Array<[string, string]> }) {
+  const client = useCredentialsStore((s) => s.client)
+  const [loading, setLoading] = useState(false)
+  const [result, setResult] = useState<CaptureResult | null>(null)
+
+  const fetchCapture = (id: string) => {
+    setLoading(true)
+    setResult(null)
+    client
+      .getCapture(id)
+      .then((data) => setResult({ data }))
+      .catch((e) => setResult({ error: e instanceof Error ? e : new Error(String(e)) }))
+      .finally(() => setLoading(false))
+  }
+
   return (
     <div className="mt-10 w-full rounded-xl border border-border bg-card p-5 text-left">
       <div className="flex items-center gap-2">
@@ -149,11 +168,50 @@ function ReturnParamsPanel({ extras }: { extras: Array<[string, string]> }) {
                 <dt className={`shrink-0 font-mono text-[11px] uppercase tracking-wide ${isTxn ? 'text-verified' : 'text-muted-foreground'}`}>
                   {key}
                 </dt>
-                <dd className="break-all font-mono text-xs text-foreground">{value}</dd>
+                <dd className="flex items-center gap-2 font-mono text-xs text-foreground">
+                  <span className="break-all">{value}</span>
+                  {key.toLowerCase() === 'tx' && (
+                    <button
+                      type="button"
+                      onClick={() => fetchCapture(value)}
+                      disabled={loading}
+                      className="inline-flex shrink-0 items-center gap-1 rounded-md bg-brand px-2 py-1 text-[11px] font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+                    >
+                      {loading ? <Loader2 className="h-3 w-3 animate-spin" /> : <Download className="h-3 w-3" />}
+                      Get
+                    </button>
+                  )}
+                </dd>
               </div>
             )
           })}
         </dl>
+      )}
+
+      {result && (
+        <div className="mt-4 rounded-lg border border-border bg-muted/30 p-3 text-left">
+          {'data' in result ? (
+            <>
+              <div className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                <Receipt className="h-3.5 w-3.5 text-brand" /> Capture detail
+              </div>
+              <JsonView value={result.data} />
+            </>
+          ) : (
+            <div className="text-xs text-destructive">
+              <p className="font-semibold">Request failed</p>
+              {result.error instanceof ApiError ? (
+                <ul className="mt-1 space-y-0.5 font-mono text-[11px]">
+                  <li>status: {result.error.status}</li>
+                  <li>message: {result.error.message}</li>
+                  {result.error.debugId && <li>debug_id: {result.error.debugId}</li>}
+                </ul>
+              ) : (
+                <p className="mt-1 font-mono text-[11px]">{result.error.message}</p>
+              )}
+            </div>
+          )}
+        </div>
       )}
     </div>
   )
