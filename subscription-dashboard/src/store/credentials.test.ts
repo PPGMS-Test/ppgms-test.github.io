@@ -7,9 +7,10 @@ beforeEach(() => {
 })
 
 describe('credentials store', () => {
-  it('初始为空，视为未配置', () => {
-    expect(useCredentialsStore.getState().clientId).toBe('')
-    expect(useCredentialsStore.getState().isConfigured()).toBe(false)
+  it('默认预填 sandbox 测试凭证，视为已配置', () => {
+    expect(useCredentialsStore.getState().clientId).not.toBe('')
+    expect(useCredentialsStore.getState().clientSecret).not.toBe('')
+    expect(useCredentialsStore.getState().isConfigured()).toBe(true)
   })
 
   it('设置 clientId/secret 后视为已配置', () => {
@@ -29,9 +30,10 @@ describe('credentials store', () => {
     expect(useCredentialsStore.getState().basicAuth()).toBe(btoa('a:b'))
   })
 
-  it('reset 清空凭证', () => {
+  it('reset 恢复默认 sandbox 凭证', () => {
+    const defaultClientId = useCredentialsStore.getState().clientId
     useCredentialsStore.getState().setClientId('x')
     useCredentialsStore.getState().reset()
-    expect(useCredentialsStore.getState().clientId).toBe('')
+    expect(useCredentialsStore.getState().clientId).toBe(defaultClientId)
   })
 })
