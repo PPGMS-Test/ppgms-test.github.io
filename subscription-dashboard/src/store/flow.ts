@@ -64,8 +64,8 @@ export const useFlowStore = create<FlowState>((set) => ({
     set((state) => ({
       stepStatus: { ...state.stepStatus, [s]: status },
       responses: response !== undefined ? { ...state.responses, [s]: response } : state.responses,
-      errors: error !== undefined ? { ...state.errors, [s]: error } : state.errors,
-      debugIds: debugId !== undefined ? { ...state.debugIds, [s]: debugId } : state.debugIds,
+      errors: { ...state.errors, [s]: error },
+      debugIds: { ...state.debugIds, [s]: debugId },
     })),
   reset: () => set({ ...INITIAL_STATE, planConfig: defaultPlanConfig('fixed') }),
 }))

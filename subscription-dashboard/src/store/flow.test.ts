@@ -35,6 +35,15 @@ describe('flow store', () => {
     expect(state.debugIds.createProduct).toBe('debug-1')
   })
 
+  it('setStepResult 成功后应清空上一次失败遗留的 error/debugId（重发请求场景）', () => {
+    useFlowStore.getState().setStepResult('createProduct', 'error', { message: 'boom' }, 'Failed to fetch', 'debug-err')
+    useFlowStore.getState().setStepResult('createProduct', 'success', { id: 'PROD-1' }, undefined, undefined)
+    const state = useFlowStore.getState()
+    expect(state.stepStatus.createProduct).toBe('success')
+    expect(state.errors.createProduct).toBeUndefined()
+    expect(state.debugIds.createProduct).toBeUndefined()
+  })
+
   it('reset 恢复初始状态', () => {
     useFlowStore.getState().setAccessToken('tok')
     useFlowStore.getState().setPlanType('trial')
