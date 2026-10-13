@@ -2,6 +2,7 @@
 import { Card } from '@/components/ui/Card'
 import { useFlowStore } from '@/store/flow'
 import type { IntervalUnit, PlanType } from '@/lib/plan-config'
+import { cn } from '@/lib/utils'
 
 const PLAN_TYPES: { id: PlanType; label: string }[] = [
   { id: 'fixed', label: 'Fixed Price' },
@@ -63,9 +64,10 @@ export function PlanSliders() {
           <button
             key={t.id}
             onClick={() => setPlanType(t.id)}
-            className={`rounded-full px-3 py-1 text-xs font-medium transition ${
-              planType === t.id ? 'bg-accent text-[color:var(--on-accent)]' : 'bg-surface2 text-muted hover:text-ink'
-            }`}
+            className={cn(
+              'rounded-full px-3 py-1 text-xs font-medium transition',
+              planType === t.id ? 'bg-accent text-[color:var(--on-accent)]' : 'bg-surface2 text-muted hover:text-ink',
+            )}
           >
             {t.label}
           </button>
