@@ -1,7 +1,11 @@
 import type { DetailedHTMLProps, HTMLAttributes } from 'react'
 
 type PayPalButtonProps = DetailedHTMLProps<HTMLAttributes<HTMLElement>, HTMLElement> & {
-  type?: 'subscribe' | string
+  type?: 'subscribe' | (string & {})
+  // Intentional escape hatch: the custom element's full attribute surface
+  // isn't confirmed yet (provisional ambient typing ahead of the real
+  // PayPal JS SDK v6 script being wired in), so unknown attributes are
+  // allowed through rather than narrowed.
   [key: string]: unknown
 }
 
