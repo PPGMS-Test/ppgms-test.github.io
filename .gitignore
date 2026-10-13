@@ -33,6 +33,11 @@ webhook-listener/.wrangler
 payment-link-demo/node_modules
 payment-link-demo/dist
 
+# subscription-dashboard
+subscription-dashboard/node_modules
+subscription-dashboard/dist
+subscription-dashboard/.env.local
+
 node_modules
 
 # paypal-mobile Android test app
