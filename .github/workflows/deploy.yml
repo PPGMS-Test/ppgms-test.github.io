@@ -20,7 +20,7 @@ concurrency:
 
 jobs:
   # ══════════════════════════════════════════════════════════════════
-  # 4 个结构相同的子包：matrix 并行，各自缓存跳过、上传产物
+  # 5 个结构相同的子包：matrix 并行，各自缓存跳过、上传产物
   # ══════════════════════════════════════════════════════════════════
   build-sub:
     runs-on: ubuntu-latest
@@ -28,11 +28,11 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - { pkg: applepay-dashboard,   artifact: dist-applepay }
-          - { pkg: bopis-dashboard,      artifact: dist-bopis }
-          - { pkg: psp-path-dashboard,   artifact: dist-psp }
+          - { pkg: applepay-dashboard,     artifact: dist-applepay }
+          - { pkg: bopis-dashboard,        artifact: dist-bopis }
+          - { pkg: psp-path-dashboard,     artifact: dist-psp }
           - { pkg: subscription-dashboard, artifact: dist-subscription }
-          - { pkg: payment-link-demo,    artifact: dist-paymentlink }
+          - { pkg: payment-link-demo,      artifact: dist-paymentlink }
     steps:
       - name: Checkout
         uses: actions/checkout@v4
