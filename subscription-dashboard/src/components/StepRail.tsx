@@ -33,7 +33,9 @@ export function StepRail() {
         return (
           <button
             key={step.id}
+            type="button"
             onClick={() => setActiveStep(step.id)}
+            aria-current={active ? 'step' : undefined}
             className={cn(
               'relative flex items-center gap-3 rounded-lg px-3 py-2 text-left text-sm transition',
               active ? 'bg-surface2 text-ink' : 'text-muted hover:bg-surface2/60 hover:text-ink',
@@ -45,7 +47,8 @@ export function StepRail() {
                 NODE_CLASS[status],
               )}
             >
-              <Icon size={13} className={cn(status === 'running' && 'animate-spin')} />
+              <Icon size={13} aria-hidden="true" className={cn(status === 'running' && 'animate-spin')} />
+              <span className="sr-only">{status}</span>
             </span>
             <span className="flex-1 truncate">
               <span className="mr-1.5 font-mono text-[11px] text-muted">{String(step.order).padStart(2, '0')}</span>
