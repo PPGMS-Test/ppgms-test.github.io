@@ -16,12 +16,27 @@
   --on-accent: #0b0f14;
 }
 
+html.light {
+  --bg: #eef1f5;
+  --paper: #eef1f5;
+  --surface: #ffffff;
+  --surface-2: #e6eaf0;
+  --line: #d3dae2;
+  --ink: #121826;
+  --muted: #5c6b80;
+  --accent: #b2600a;
+  --ok: #0f9d66;
+  --danger: #d1432b;
+  --on-accent: #fff8ec;
+}
+
 html, body, #root { height: 100%; }
 body {
   margin: 0;
   background: var(--bg);
   color: var(--ink);
   font-family: 'Inter', system-ui, -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+  transition: background-color 0.15s ease, color 0.15s ease;
 }
 
 * {

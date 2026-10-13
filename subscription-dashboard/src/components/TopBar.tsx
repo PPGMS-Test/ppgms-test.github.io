@@ -2,6 +2,7 @@ import { NavLink } from 'react-router-dom'
 import { Workflow } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useCredentialsStore } from '@/store/credentials'
+import { ThemeToggle } from '@/components/ThemeToggle'
 
 export function TopBar() {
   const clientId = useCredentialsStore((s) => s.clientId)
@@ -40,6 +41,7 @@ export function TopBar() {
       </nav>
 
       <div className="flex items-center gap-2 text-sm">
+        <ThemeToggle />
         <span
           role="status"
           aria-label={isConfigured ? 'Credentials configured' : 'Credentials not configured'}
