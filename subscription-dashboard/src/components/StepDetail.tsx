@@ -111,9 +111,11 @@ export function StepDetail() {
           <h2 className="font-display text-lg font-semibold text-ink">{step.title}</h2>
           <p className="text-xs text-muted">参考章节：{step.docSection}</p>
         </div>
-        <Badge tone={status === 'success' ? 'ok' : status === 'error' ? 'danger' : status === 'running' ? 'accent' : 'muted'}>
-          {status}
-        </Badge>
+        <span aria-live="polite">
+          <Badge tone={status === 'success' ? 'ok' : status === 'error' ? 'danger' : status === 'running' ? 'accent' : 'muted'}>
+            {status}
+          </Badge>
+        </span>
       </div>
 
       {step.id === 'createPlan' && (
@@ -142,17 +144,19 @@ export function StepDetail() {
         </>
       )}
 
-      {error && (
-        <p className="text-sm text-danger">
-          错误：{error}
-          {debugId ? `（debug-id: ${debugId}）` : ''}
-        </p>
-      )}
-      {!error && response !== undefined && (
-        <pre className="max-h-64 overflow-auto rounded-lg bg-surface2 p-3 font-mono text-xs text-ink">
-          {JSON.stringify(response, null, 2)}
-        </pre>
-      )}
+      <div aria-live="polite">
+        {error && (
+          <p className="text-sm text-danger" role="alert">
+            错误：{error}
+            {debugId ? `（debug-id: ${debugId}）` : ''}
+          </p>
+        )}
+        {!error && response !== undefined && (
+          <pre className="max-h-64 overflow-auto rounded-lg bg-surface2 p-3 font-mono text-xs text-ink">
+            {JSON.stringify(response, null, 2)}
+          </pre>
+        )}
+      </div>
     </Card>
   )
 }
