@@ -80,35 +80,46 @@ export function LifecyclePanel() {
     <Card className="flex flex-col gap-3">
       <div className="flex items-center justify-between">
         <p className="font-display text-sm font-semibold text-ink">生命周期管理</p>
-        <span className="font-mono text-xs text-muted">status: {subscriptionStatus || '未知'}</span>
+        <span className="font-mono text-xs text-muted" aria-live="polite">
+          status: {subscriptionStatus || '未知'}
+        </span>
       </div>
       <div className="flex flex-wrap gap-2">
         <Button variant="outline" disabled={pending !== null} onClick={() => run('query')}>
-          查询状态
+          {pending === 'query' ? '查询中…' : '查询状态'}
         </Button>
         <Button variant="outline" disabled={pending !== null} onClick={() => run('suspend')}>
-          暂停
+          {pending === 'suspend' ? '暂停中…' : '暂停'}
         </Button>
         <Button variant="outline" disabled={pending !== null} onClick={() => run('activate')}>
-          恢复
+          {pending === 'activate' ? '恢复中…' : '恢复'}
         </Button>
         <Button variant="outline" disabled={pending !== null || !planId} onClick={() => run('revise')}>
-          修改 Plan（用当前 Plan）
+          {pending === 'revise' ? '修改中…' : '修改 Plan（用当前 Plan）'}
         </Button>
         <Button variant="outline" disabled={pending !== null} onClick={() => run('capture')}>
-          补扣
+          {pending === 'capture' ? '补扣中…' : '补扣'}
         </Button>
         {confirmCancel ? (
-          <Button variant="danger" disabled={pending !== null} onClick={() => run('cancel')}>
-            确认取消？点击确认
-          </Button>
+          <>
+            <Button variant="danger" disabled={pending !== null} onClick={() => run('cancel')}>
+              {pending === 'cancel' ? '取消中…' : '确认取消？点击确认'}
+            </Button>
+            <Button variant="outline" disabled={false} onClick={() => setConfirmCancel(false)}>
+              再想想
+            </Button>
+          </>
         ) : (
           <Button variant="danger" disabled={pending !== null} onClick={() => setConfirmCancel(true)}>
             取消
           </Button>
         )}
       </div>
-      {message && <p className="text-xs text-muted">{message}</p>}
+      {message && (
+        <p className="text-xs text-muted" aria-live="polite">
+          {message}
+        </p>
+      )}
     </Card>
   )
 }
