@@ -41,6 +41,8 @@ export function TopBar() {
 
       <div className="flex items-center gap-2 text-sm">
         <span
+          role="status"
+          aria-label={isConfigured ? 'Credentials configured' : 'Credentials not configured'}
           className={cn(
             'inline-block h-1.5 w-1.5 rounded-full',
             isConfigured ? 'bg-ok shadow-[0_0_6px_var(--ok)]' : 'bg-danger shadow-[0_0_6px_var(--danger)]',
@@ -49,12 +51,16 @@ export function TopBar() {
         <input
           className="w-36 rounded-lg border border-line bg-surface2 px-2 py-1.5 font-mono text-xs text-ink outline-none focus:border-accent/60"
           placeholder="client_id"
+          aria-label="Client ID"
+          autoComplete="off"
           value={clientId}
           onChange={(e) => setClientId(e.target.value)}
         />
         <input
           className="w-36 rounded-lg border border-line bg-surface2 px-2 py-1.5 font-mono text-xs text-ink outline-none focus:border-accent/60"
           placeholder="client_secret"
+          aria-label="Client Secret"
+          autoComplete="new-password"
           type="password"
           value={clientSecret}
           onChange={(e) => setClientSecret(e.target.value)}
