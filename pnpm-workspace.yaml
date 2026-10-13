@@ -4,9 +4,9 @@ packages:
   - applepay-dashboard
   - bopis-dashboard
   - psp-path-dashboard
+  - subscription-dashboard
   - payment-link-demo
   - webhook-listener
-  - subscription-dashboard
 allowBuilds:
   '@scarf/scarf': true
   '@tree-sitter-grammars/tree-sitter-yaml': true
