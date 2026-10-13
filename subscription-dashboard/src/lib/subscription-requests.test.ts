@@ -5,6 +5,7 @@ import {
   buildPlanBody,
   buildSubscriptionBody,
   buildReviseBody,
+  type PlanBody,
 } from './subscription-requests'
 
 describe('buildProductBody', () => {
@@ -21,7 +22,7 @@ describe('buildProductBody', () => {
 describe('buildPlanBody', () => {
   it('fixed planType: single REGULAR cycle, no setup_fee, taxes percentage "0"', () => {
     const config = defaultPlanConfig('fixed')
-    const body: any = buildPlanBody({
+    const body: PlanBody = buildPlanBody({
       productId: 'PROD-1',
       name: 'Plan Name',
       description: 'Plan Desc',
@@ -48,7 +49,7 @@ describe('buildPlanBody', () => {
 
   it('trial planType: TRIAL cycle sequence 1, REGULAR cycle sequence 2', () => {
     const config = defaultPlanConfig('trial')
-    const body: any = buildPlanBody({
+    const body: PlanBody = buildPlanBody({
       productId: 'PROD-2',
       name: 'Trial Plan',
       description: 'Trial Desc',
@@ -71,7 +72,7 @@ describe('buildPlanBody', () => {
 
   it('setupFee planType: setup_fee present with string value', () => {
     const config = defaultPlanConfig('setupFee')
-    const body: any = buildPlanBody({
+    const body: PlanBody = buildPlanBody({
       productId: 'PROD-3',
       name: 'Setup Fee Plan',
       description: 'Desc',
