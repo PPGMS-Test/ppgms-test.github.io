@@ -31,6 +31,7 @@ jobs:
           - { pkg: applepay-dashboard,   artifact: dist-applepay }
           - { pkg: bopis-dashboard,      artifact: dist-bopis }
           - { pkg: psp-path-dashboard,   artifact: dist-psp }
+          - { pkg: subscription-dashboard, artifact: dist-subscription }
           - { pkg: payment-link-demo,    artifact: dist-paymentlink }
     steps:
       - name: Checkout
@@ -168,6 +169,12 @@ jobs:
         with:
           name: dist-psp
           path: site/__6__-API/psp-path-dashboard
+
+      - name: Download subscription-dashboard
+        uses: actions/download-artifact@v4
+        with:
+          name: dist-subscription
+          path: site/__6__-API/subscription-dashboard
 
       - name: Download payment-link-demo
         uses: actions/download-artifact@v4

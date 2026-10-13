@@ -461,6 +461,14 @@
             "isFolder": false,
             "hasChildren": false,
             "isExternal": true
+          },
+          {
+            "description": "",
+            "url": "/__6__-API/subscription-dashboard/index.html",
+            "text": "Subscription Playground",
+            "isFolder": false,
+            "hasChildren": false,
+            "isExternal": true
           }
         ]
       }
