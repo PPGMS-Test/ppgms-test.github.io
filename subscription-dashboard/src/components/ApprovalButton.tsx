@@ -87,10 +87,10 @@ export function ApprovalButton() {
         cleanupClick = () => button.removeEventListener('click', onClick)
         setStatus('ready')
       })
-      .catch((err: Error) => {
+      .catch((err: unknown) => {
         if (!cancelled) {
           setStatus('error')
-          setError(err.message)
+          setError(err instanceof Error ? err.message : String(err))
         }
       })
 
@@ -106,13 +106,15 @@ export function ApprovalButton() {
 
   return (
     <div className="flex flex-col gap-3">
-      {status === 'loading' && <p className="text-sm text-muted">正在加载 PayPal SDK…</p>}
-      {status === 'error' && (
-        <p className="text-sm text-danger">
-          SDK 加载/按钮出错：{error}（常见原因：client_id 不是 sandbox 账号，或网络被拦截）
-        </p>
-      )}
-      {status === 'approved' && <p className="text-sm text-ok">买家已批准订阅，可以去下方生命周期面板点「查询状态」确认。</p>}
+      <div aria-live="polite">
+        {status === 'loading' && <p className="text-sm text-muted">正在加载 PayPal SDK…</p>}
+        {status === 'error' && (
+          <p className="text-sm text-danger" role="alert">
+            SDK 加载/按钮出错：{error}（常见原因：client_id 不是 sandbox 账号，或网络被拦截）
+          </p>
+        )}
+        {status === 'approved' && <p className="text-sm text-ok">买家已批准订阅，可以去下方生命周期面板点「查询状态」确认。</p>}
+      </div>
       <div ref={containerRef} className="max-w-xs">
         <paypal-button type="subscribe" />
       </div>
