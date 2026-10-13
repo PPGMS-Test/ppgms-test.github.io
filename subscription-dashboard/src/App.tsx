@@ -1,3 +1,15 @@
+// subscription-dashboard/src/App.tsx
+import { HashRouter, Route, Routes } from 'react-router-dom'
+import { PlaygroundPage } from '@/pages/PlaygroundPage'
+import { IntegrationGuidePage } from '@/pages/IntegrationGuidePage'
+
 export default function App() {
-  return <div className="p-8 text-ink">Subscription Playground — scaffold OK</div>
+  return (
+    <HashRouter>
+      <Routes>
+        <Route path="/" element={<PlaygroundPage />} />
+        <Route path="/guide" element={<IntegrationGuidePage />} />
+      </Routes>
+    </HashRouter>
+  )
 }
