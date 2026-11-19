@@ -1,6 +1,15 @@
 # Todo
 - [x] PSP path SFTP study ⏫ ✅ 2026-08
-- [ ] Paylater Msg 3rd Party, refactor  ⏫ ✅ 2026-09
+- [x] 3rd party payment link demo site ⏫ ✅ 2026-09
+- [ ] Easybilling的各种问题解答和后续 ⏫ ✅ 2026-09
+  - [ ] NG testing
+  - [ ] Payment link webhook
+  - [ ] server sdk capture call no BNCODE
+  - [ ] 
+- [ ] Woo Commerce 是不是能强开 CBT PLM ⏫ ✅ 2026-09
+- [ ] Woo Commerce Google Pay缺失shipping address ⏫ ✅ 2026-09
+- [x] C2 BCDC ApplePay 研究 ⏫ ✅ 2026-09
+- [x] Paylater Msg 3rd Party, refactor  ⏫ ✅ 2026-09
 - [x] Webhook dashboard  ⏫ ✅ 2026-09
 - [x] Apple Pay 3rd party test demo 重构 ⏫ ✅ 2026-08
 - [x] Google Pay 3ds test demo 重构 ⏫ ✅ 2026-07
