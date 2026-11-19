@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- PayPal blue background -->
+  <rect width="32" height="32" rx="6" fill="#003087"/>
+  <!-- Link chain: two connected links representing payment links -->
+  <g fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Left link -->
+    <path d="M11.5 11.5c-1.5 1.5-1.5 4 0 5.5l2 2"/>
+    <path d="M6 6l3.5 3.5"/>
+    <!-- Right link -->
+    <path d="M20.5 20.5c1.5-1.5 1.5-4 0-5.5l-2-2"/>
+    <path d="M26 26l-3.5-3.5"/>
+    <!-- Connection -->
+    <path d="M13.5 18.5l5-5"/>
+    <!-- Dollar sign in center -->
+  </g>
+  <text x="16" y="19.5" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="10" font-weight="700" fill="#009CDE" text-anchor="middle">$</text>
+</svg>
