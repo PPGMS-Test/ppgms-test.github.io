@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- PayPal blue background -->
+  <rect width="32" height="32" rx="6" fill="#003087"/>
+  <!-- Webhook: a hook shape with radio waves, representing incoming webhook events -->
+  <g fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Hook curve -->
+    <path d="M16 26V16"/>
+    <path d="M16 16c-3 0-5.5-2.5-5.5-5.5s2.5-5.5 5.5-5.5"/>
+    <circle cx="16" cy="10.5" r="1.5" fill="white"/>
+    <!-- Signal waves coming in -->
+    <path d="M10 7c-3 2-3 5 0 7"/>
+    <path d="M7 5c-4 3-4 8 0 11"/>
+    <!-- Incoming arrow -->
+    <path d="M22 10l-3-3m0 0l3-3m-3 3h7"/>
+  </g>
+</svg>
