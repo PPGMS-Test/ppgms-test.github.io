@@ -1,13 +1,16 @@
 # Todo
+- [x] jsv6 iframe 完成具体测试用例 ⏫ ✅ 2026-11
 - [x] PSP path SFTP study ⏫ ✅ 2026-08
 - [x] 3rd party payment link demo site ⏫ ✅ 2026-09
 - [ ] Easybilling的各种问题解答和后续 ⏫ ✅ 2026-09
   - [ ] NG testing
   - [ ] Payment link webhook
   - [ ] server sdk capture call no BNCODE
+  - 这个是正常现象, 事实上, 虽然create和capture都传的best practice, 但是minimal只有create order传递就可以了
   - [ ] 
 - [ ] Woo Commerce 是不是能强开 CBT PLM ⏫ ✅ 2026-09
-- [ ] Woo Commerce Google Pay缺失shipping address ⏫ ✅ 2026-09
+- [x] Woo Commerce Google Pay缺失shipping address ⏫ ✅ 2026-10
+  - 这个问题应该是在插件的4.2.0升级中升级了.
 - [x] C2 BCDC ApplePay 研究 ⏫ ✅ 2026-09
 - [x] Paylater Msg 3rd Party, refactor  ⏫ ✅ 2026-09
 - [x] Webhook dashboard  ⏫ ✅ 2026-09
