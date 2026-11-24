@@ -4,101 +4,619 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PayPal JS SDK v6 Iframe Test</title>
-    <!-- Materialize CSS -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css" rel="stylesheet">
-    <!-- Material Icons -->
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-    <!-- Google Fonts - Roboto -->
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
-    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=DM+Mono:wght@400;500&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+
     <style>
-        /* Material Design base styles */
+        :root {
+            --paper: #e8edf1;
+            --surface: #ffffff;
+            --ink: #0c1b2a;
+            --ink-soft: #52636f;
+            --line: #c9d3dc;
+            --host: #2338d4;
+            --host-tint: #e7eafc;
+            --frame: #b45f00;
+            --frame-fill: #f5a524;
+            --frame-tint: #fdf0da;
+            --ok: #0f7b4f;
+            --bad: #b3261e;
+            --radius: 14px;
+            --font-display: "Bricolage Grotesque", "Segoe UI", sans-serif;
+            --font-body: "Instrument Sans", "Segoe UI", sans-serif;
+            --font-mono: "DM Mono", ui-monospace, Menlo, monospace;
+        }
+
+        * { box-sizing: border-box; }
+
         body {
-            font-family: 'Roboto', sans-serif;
-            background-color: #f0f0f0; /* 使用更高级的灰色调 */
             margin: 0;
-            padding: 20px 0 40px 0; 
-            min-height: 100vh;
+            padding: 28px clamp(16px, 4vw, 48px) 56px;
+            background: var(--paper);
+            color: var(--ink);
+            font-family: var(--font-body);
+            font-size: 15px;
+            line-height: 1.45;
+        }
+
+        [hidden] { display: none !important; }
+        button { font: inherit; color: inherit; cursor: pointer; }
+        button:disabled { cursor: not-allowed; opacity: 0.45; }
+        :focus-visible { outline: 3px solid var(--host); outline-offset: 2px; }
+
+        .page { max-width: 1320px; margin: 0 auto; }
+
+        /* Header */
+        .masthead {
             display: flex;
-            flex-direction: column;
+            flex-wrap: wrap;
+            align-items: flex-end;
+            justify-content: space-between;
+            gap: 16px 32px;
+            margin-bottom: 24px;
+        }
+        .masthead h1 {
+            margin: 0;
+            font-family: var(--font-display);
+            font-weight: 800;
+            font-size: clamp(1.7rem, 3.2vw, 2.4rem);
+            letter-spacing: -0.02em;
+            line-height: 1.05;
+        }
+        .masthead p { margin: 6px 0 0; color: var(--ink-soft); max-width: 60ch; }
+
+        .link-strip {
+            display: flex;
             align-items: center;
-            justify-content: flex-start; /* 内容从顶部开始排列 */
-            color: #333;
+            flex-wrap: wrap;
+            gap: 8px;
+            font-family: var(--font-mono);
+            font-size: 12.5px;
         }
-        
-        /* Header section */
-        .header {
-            text-align: center;
-            margin-bottom: 16px;
-            padding: 10px;
+        .origin-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 7px 14px;
+            border-radius: 999px;
+            border: 1.5px solid currentColor;
+            background: var(--surface);
+            max-width: 100%;
+            overflow-wrap: anywhere;
         }
-        
-        .header h1 {
-            font-size: 2rem;
-            font-weight: 500;
-            color: #1976d2;
-            margin-bottom: 2px;
+        .origin-pill.host { color: var(--host); }
+        .origin-pill.frame { color: var(--frame); }
+        .link-state {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 7px 14px;
+            border-radius: 999px;
+            background: var(--ink);
+            color: #fff;
+            white-space: nowrap;
         }
-        
-        .header p {
+        .dot {
+            width: 9px; height: 9px;
+            border-radius: 50%;
+            background: #8a98a4;
+        }
+        .link-state[data-state="linked"] .dot { background: #3ddc97; }
+        .link-state[data-state="waiting"] .dot { background: var(--frame-fill); }
+        .link-state.pulse .dot { animation: pulse 0.5s ease-out; }
+        @keyframes pulse {
+            from { box-shadow: 0 0 0 0 rgba(61, 220, 151, 0.9); }
+            to { box-shadow: 0 0 0 10px rgba(61, 220, 151, 0); }
+        }
+
+        /* Workspace */
+        .workspace {
+            display: grid;
+            grid-template-columns: minmax(300px, 380px) minmax(0, 1fr);
+            gap: 20px;
+            align-items: start;
+        }
+        .stack { display: grid; gap: 20px; }
+
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--line);
+            border-radius: var(--radius);
+            padding: 20px;
+        }
+        .card-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 14px;
+        }
+        .card-head h2 {
+            margin: 0;
+            font-family: var(--font-display);
+            font-weight: 600;
             font-size: 1.1rem;
-            color: #666;
-            max-width: 800px;
-            margin: 0 auto;
+            letter-spacing: -0.01em;
         }
-        
-        /* Iframe container */
-        .iframe-container {
-            width: 85%;
-            max-height: calc(100vh - 200px); /* 考虑顶部和底部留白，设置最大高度 */
-            height: auto;
-            min-height: 60vh;
-            margin: 0 auto;
-            border-radius: 12px;
-            overflow-y: auto;
-            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
-            border: 3px solid #1976d2;
-            background-color: #ffffff;
+        .tag {
+            font-family: var(--font-mono);
+            font-size: 11.5px;
+            padding: 3px 9px;
+            border-radius: 999px;
+            background: var(--host-tint);
+            color: var(--host);
+            white-space: nowrap;
         }
-        
-        /* Iframe styling */
-        .iframe-container iframe {
-            width: 100%;
-            min-height: 1200px; /* 设置最小高度以确保内容完整显示 */
-            border: none;
+
+        .item-name { font-weight: 600; font-size: 1.05rem; }
+        .item-price { color: var(--ink-soft); font-family: var(--font-mono); font-size: 13px; }
+
+        .stepper {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin: 16px 0;
+        }
+        .stepper button {
+            width: 46px; height: 46px;
+            border-radius: 50%;
+            border: 1.5px solid var(--host);
+            background: var(--surface);
+            color: var(--host);
+            font-size: 22px;
+            line-height: 1;
+        }
+        .stepper button:hover:not(:disabled) { background: var(--host); color: #fff; }
+        .qty {
+            min-width: 2ch;
+            text-align: center;
+            font-family: var(--font-display);
+            font-weight: 800;
+            font-size: 2.2rem;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .total-row {
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            padding-top: 14px;
+            border-top: 1px dashed var(--line);
+        }
+        .total-row span:first-child { color: var(--ink-soft); }
+        .total {
+            font-family: var(--font-display);
+            font-weight: 800;
+            font-size: 1.7rem;
+            font-variant-numeric: tabular-nums;
+        }
+        .hint { margin: 10px 0 0; font-size: 12.5px; color: var(--ink-soft); }
+
+        .actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+        .btn {
+            padding: 8px 14px;
+            border-radius: 999px;
+            border: 1.5px solid var(--line);
+            background: var(--surface);
+            font-weight: 500;
+            font-size: 13.5px;
+        }
+        .btn:hover:not(:disabled) { border-color: var(--ink); }
+
+        /* Receipt */
+        .receipt-empty { margin: 0; color: var(--ink-soft); }
+        .receipt dl { margin: 0; display: grid; gap: 10px; }
+        .receipt dt { font-size: 12px; color: var(--ink-soft); }
+        .receipt dd { margin: 2px 0 0; font-family: var(--font-mono); font-size: 13.5px; overflow-wrap: anywhere; }
+        .receipt .txn { font-size: 1.15rem; font-weight: 500; color: var(--ok); }
+        .receipt-state { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: 12px; }
+        .receipt-state.ok { background: #dff3e9; color: var(--ok); }
+        .receipt-state.bad { background: #fbe4e2; color: var(--bad); }
+        .receipt-state.idle { background: var(--frame-tint); color: var(--frame); }
+
+        /* Frame */
+        .frame-card { padding: 0; overflow: hidden; border-color: var(--frame-fill); border-width: 2px; }
+        .frame-bar {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            padding: 12px 16px;
+            background: var(--frame-tint);
+            border-bottom: 1px solid var(--frame-fill);
+        }
+        .frame-url {
+            font-family: var(--font-mono);
+            font-size: 12.5px;
+            color: var(--frame);
+            overflow-wrap: anywhere;
+            min-width: 0;
+        }
+        .frame-tools { display: flex; align-items: center; gap: 8px; }
+        .switch {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            cursor: pointer;
+        }
+        .switch input { accent-color: var(--frame); width: 16px; height: 16px; }
+        .frame-card iframe {
             display: block;
+            width: 100%;
+            height: clamp(640px, 82vh, 1100px);
+            border: 0;
+            background: var(--surface);
         }
-        
-        /* Responsive adjustments */
-        @media (max-width: 768px) {
-            .header h1 {
-                font-size: 1.5rem;
-            }
-            
-            .header p {
-                font-size: 1rem;
-            }
-            
-            .iframe-container {
-                width: 95%;
-                height: 75vh;
-            }
+
+        /* Ledger */
+        .ledger-card { margin-top: 20px; }
+        .ledger-legend {
+            display: flex; gap: 16px;
+            font-family: var(--font-mono);
+            font-size: 12px;
+            color: var(--ink-soft);
+        }
+        .ledger-legend .host-key { color: var(--host); }
+        .ledger-legend .frame-key { color: var(--frame); }
+        .ledger {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            max-height: 420px;
+            overflow-y: auto;
+            position: relative;
+        }
+        .ledger::before {
+            content: "";
+            position: absolute;
+            left: 50%; top: 0; bottom: 0;
+            width: 2px;
+            background: var(--line);
+            transform: translateX(-1px);
+        }
+        .ledger-empty { text-align: center; color: var(--ink-soft); padding: 28px 0; position: relative; background: var(--surface); }
+        .entry {
+            position: relative;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            padding: 5px 0;
+            animation: drop-in 0.18s ease-out;
+        }
+        @keyframes drop-in {
+            from { opacity: 0; transform: translateY(-6px); }
+            to { opacity: 1; transform: none; }
+        }
+        .entry::after {
+            content: "";
+            position: absolute;
+            left: 50%; top: 50%;
+            width: 12px; height: 12px;
+            border-radius: 50%;
+            background: var(--surface);
+            border: 3px solid var(--entry-color);
+            transform: translate(-50%, -50%);
+        }
+        .entry.host { --entry-color: var(--host); --entry-tint: var(--host-tint); }
+        .entry.frame { --entry-color: var(--frame); --entry-tint: var(--frame-tint); }
+        .entry.host .packet { grid-column: 1; margin-right: 22px; }
+        .entry.frame .packet { grid-column: 2; margin-left: 22px; }
+        .packet {
+            background: var(--entry-tint);
+            border: 1px solid var(--entry-color);
+            border-radius: 10px;
+            padding: 8px 12px;
+            min-width: 0;
+        }
+        .packet-head {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: baseline;
+            gap: 4px 10px;
+            font-family: var(--font-mono);
+            font-size: 12px;
+        }
+        .packet-dir { color: var(--entry-color); font-weight: 500; }
+        .packet-type { font-weight: 500; color: var(--ink); }
+        .packet-time { margin-left: auto; color: var(--ink-soft); }
+        .packet-body {
+            margin: 4px 0 0;
+            font-family: var(--font-mono);
+            font-size: 12px;
+            color: var(--ink-soft);
+            white-space: pre-wrap;
+            overflow-wrap: anywhere;
+        }
+
+        @media (max-width: 960px) {
+            .workspace { grid-template-columns: minmax(0, 1fr); }
+            .ledger::before { left: 8px; }
+            .entry { grid-template-columns: minmax(0, 1fr); padding-left: 28px; }
+            .entry::after { left: 8px; }
+            .entry.host .packet, .entry.frame .packet { grid-column: 1; margin: 0; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .entry, .link-state.pulse .dot { animation: none; }
         }
     </style>
 </head>
 <body>
-    <!-- Header section with notice -->
-    <div class="header">
-        <h1>PayPal JS SDK v6 Iframe Test</h1>
-        <p>Please notice, this is a test page for PayPal JS SDK v6 in iframe behavior.</p>
+    <div class="page">
+        <header class="masthead">
+            <div>
+                <h1>PayPal JS SDK v6 Iframe Test</h1>
+                <p>This merchant page embeds the checkout page in an iframe. Change the quantity here, pay inside the frame, and watch every <code>postMessage</code> cross the boundary.</p>
+            </div>
+            <div class="link-strip" aria-label="Connection">
+                <span class="origin-pill host" id="hostOrigin"></span>
+                <span class="link-state" id="linkState" data-state="waiting" role="status"><span class="dot"></span><span id="linkLabel">Waiting for frame</span></span>
+                <span class="origin-pill frame" id="frameOrigin"></span>
+            </div>
+        </header>
+
+        <main class="workspace">
+            <div class="stack">
+                <section class="card" aria-labelledby="cart-title">
+                    <div class="card-head">
+                        <h2 id="cart-title">Merchant cart</h2>
+                        <span class="tag">host</span>
+                    </div>
+                    <div class="item-name" id="itemName">Waiting for the frame…</div>
+                    <div class="item-price" id="itemPrice">Unit price unknown</div>
+
+                    <div class="stepper">
+                        <button type="button" id="qtyDown" aria-label="Decrease quantity" disabled>&minus;</button>
+                        <span class="qty" id="qty" aria-live="polite">&ndash;</span>
+                        <button type="button" id="qtyUp" aria-label="Increase quantity" disabled>+</button>
+                    </div>
+
+                    <div class="total-row">
+                        <span>Total confirmed by frame</span>
+                        <span class="total" id="total">&ndash;</span>
+                    </div>
+                    <p class="hint">The quantity is sent to the frame, which updates its own cart and echoes the new total back. The frame's order uses this quantity.</p>
+
+                    <div class="actions">
+                        <button type="button" class="btn" id="pingBtn" disabled>Ping frame</button>
+                        <button type="button" class="btn" id="syncBtn" disabled>Resync cart</button>
+                    </div>
+                </section>
+
+                <section class="card receipt" aria-labelledby="txn-title" aria-live="polite">
+                    <div class="card-head">
+                        <h2 id="txn-title">Transaction</h2>
+                        <span class="receipt-state idle" id="txnState">No payment yet</span>
+                    </div>
+                    <p class="receipt-empty" id="txnEmpty">Pay inside the frame. The transaction ID shows up here once the frame reports the capture.</p>
+                    <dl id="txnDetail" hidden>
+                        <div><dt>Transaction ID</dt><dd class="txn" id="txnId"></dd></div>
+                        <div><dt>Order ID</dt><dd id="txnOrder"></dd></div>
+                        <div><dt>Amount</dt><dd id="txnAmount"></dd></div>
+                        <div><dt>Capture status</dt><dd id="txnStatus"></dd></div>
+                    </dl>
+                </section>
+            </div>
+
+            <section class="card frame-card" aria-label="Embedded checkout page">
+                <div class="frame-bar">
+                    <span class="frame-url" id="frameUrl"></span>
+                    <div class="frame-tools">
+                        <label class="switch"><input type="checkbox" id="sandboxToggle"> Sandbox attribute</label>
+                        <button type="button" class="btn" id="reloadBtn">Reload frame</button>
+                    </div>
+                </div>
+                <iframe id="checkoutFrame" title="PayPal checkout test page" allow="payment"></iframe>
+            </section>
+        </main>
+
+        <section class="card ledger-card" aria-labelledby="ledger-title">
+            <div class="card-head">
+                <h2 id="ledger-title">Message ledger</h2>
+                <div class="ledger-legend">
+                    <span class="host-key">&#9679; host &rarr; frame</span>
+                    <span class="frame-key">&#9679; frame &rarr; host</span>
+                    <button type="button" class="btn" id="clearLog">Clear</button>
+                </div>
+            </div>
+            <ol class="ledger" id="ledger">
+                <li class="ledger-empty" id="ledgerEmpty">No messages yet. They appear here, newest first.</li>
+            </ol>
+        </section>
     </div>
-    
-    <!-- Iframe container -->
-    <div class="iframe-container">
-        <iframe src="https://jsv6-test.pages.dev/jsv6-test-cases/browser-display/sandboxedIframe" allow="payment"></iframe>
-    </div>
-    
-    <!-- Materialize JS -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+
+    <script>
+        (function () {
+            var SOURCE = "jsv6-test";
+            var VERSION = 1;
+            var DEFAULT_FRAME_URL = "https://jsv6-test.pages.dev/jsv6-test-cases/browser-display/sandboxedIframe";
+            var ALLOWED_FRAME_ORIGINS = [
+                /^https:\/\/jsv6-test\.pages\.dev$/,
+                /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/
+            ];
+            var FRAME_TO_HOST = ["frame:ready", "pong", "cart:changed", "payment:start", "payment:approved", "payment:cancelled", "payment:error"];
+            var SANDBOX = "allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-forms allow-downloads";
+
+            function resolveFrameUrl() {
+                var requested = new URLSearchParams(location.search).get("src");
+                if (requested) {
+                    try {
+                        var u = new URL(requested);
+                        if (ALLOWED_FRAME_ORIGINS.some(function (re) { return re.test(u.origin); })) return u.href;
+                    } catch (e) {}
+                }
+                return DEFAULT_FRAME_URL;
+            }
+
+            var frameUrl = resolveFrameUrl();
+            var frameOrigin = new URL(frameUrl).origin;
+            var frame = document.getElementById("checkoutFrame");
+            var cart = null;
+            var linked = false;
+
+            function $(id) { return document.getElementById(id); }
+            function money(value, currency) {
+                try { return new Intl.NumberFormat("en-US", { style: "currency", currency: currency || "USD" }).format(value); }
+                catch (e) { return String(value); }
+            }
+
+            $("hostOrigin").textContent = location.origin === "null" ? "file://" : location.origin;
+            $("frameOrigin").textContent = frameOrigin;
+            $("frameUrl").textContent = frameUrl;
+
+            /* Ledger */
+            function stamp() {
+                var d = new Date();
+                var p = function (n, w) { return String(n).padStart(w, "0"); };
+                return p(d.getHours(), 2) + ":" + p(d.getMinutes(), 2) + ":" + p(d.getSeconds(), 2) + "." + p(d.getMilliseconds(), 3);
+            }
+            function log(dir, type, payload) {
+                $("ledgerEmpty").hidden = true;
+                var li = document.createElement("li");
+                li.className = "entry " + (dir === "out" ? "host" : "frame");
+
+                var packet = document.createElement("div");
+                packet.className = "packet";
+
+                var head = document.createElement("div");
+                head.className = "packet-head";
+                var d = document.createElement("span");
+                d.className = "packet-dir";
+                d.textContent = dir === "out" ? "host → frame" : "frame → host";
+                var t = document.createElement("span");
+                t.className = "packet-type";
+                t.textContent = type;
+                var time = document.createElement("span");
+                time.className = "packet-time";
+                time.textContent = stamp();
+                head.append(d, t, time);
+
+                var body = document.createElement("pre");
+                body.className = "packet-body";
+                body.textContent = JSON.stringify(payload);
+
+                packet.append(head, body);
+                li.append(packet);
+                $("ledger").insertBefore(li, $("ledger").children[1] || null);
+                while ($("ledger").children.length > 61) $("ledger").lastElementChild.remove();
+            }
+
+            /* Connection state */
+            function setLinked(value) {
+                linked = value;
+                var state = $("linkState");
+                state.dataset.state = value ? "linked" : "waiting";
+                $("linkLabel").textContent = value ? "Linked" : "Waiting for frame";
+                ["qtyDown", "qtyUp", "pingBtn", "syncBtn"].forEach(function (id) { $(id).disabled = !value; });
+                if (value) {
+                    state.classList.remove("pulse");
+                    void state.offsetWidth;
+                    state.classList.add("pulse");
+                }
+                renderCart();
+            }
+
+            /* Sending */
+            function send(type, payload) {
+                if (!frame.contentWindow) return;
+                frame.contentWindow.postMessage({ source: SOURCE, version: VERSION, type: type, payload: payload || {}, ts: Date.now() }, frameOrigin);
+                log("out", type, payload || {});
+            }
+
+            /* Cart view */
+            function renderCart() {
+                var ready = linked && cart;
+                $("qtyDown").disabled = !ready || cart.quantity <= 1;
+                $("qtyUp").disabled = !ready || cart.quantity >= 99;
+                if (!cart) return;
+                $("itemName").textContent = cart.title;
+                $("itemPrice").textContent = money(cart.unitPrice, cart.currency) + " each";
+                $("qty").textContent = cart.quantity;
+                $("total").textContent = money(cart.total, cart.currency);
+            }
+
+            /* Transaction view */
+            function showReceipt(state, label, receipt) {
+                var badge = $("txnState");
+                badge.className = "receipt-state " + state;
+                badge.textContent = label;
+                if (!receipt) return;
+                $("txnEmpty").hidden = true;
+                $("txnDetail").hidden = false;
+                $("txnId").textContent = receipt.txnId || "(none)";
+                $("txnOrder").textContent = receipt.orderId || "(none)";
+                $("txnAmount").textContent = receipt.amount ? money(receipt.amount, receipt.currency) : "(none)";
+                $("txnStatus").textContent = receipt.status || "(none)";
+            }
+
+            /* Receiving */
+            window.addEventListener("message", function (event) {
+                if (event.origin !== frameOrigin || event.source !== frame.contentWindow) return;
+                var msg = event.data;
+                if (!msg || msg.source !== SOURCE || msg.version !== VERSION || FRAME_TO_HOST.indexOf(msg.type) === -1) return;
+                var payload = msg.payload || {};
+                log("in", msg.type, payload);
+                if (!linked) setLinked(true);
+                else {
+                    var state = $("linkState");
+                    state.classList.remove("pulse");
+                    void state.offsetWidth;
+                    state.classList.add("pulse");
+                }
+
+                switch (msg.type) {
+                    case "frame:ready":
+                    case "cart:changed":
+                        cart = payload;
+                        renderCart();
+                        break;
+                    case "payment:start":
+                        showReceipt("idle", "Payment in progress");
+                        break;
+                    case "payment:approved":
+                        showReceipt("ok", "Captured", payload);
+                        break;
+                    case "payment:cancelled":
+                        showReceipt("idle", "Cancelled by buyer");
+                        break;
+                    case "payment:error":
+                        showReceipt("bad", "Payment error: " + (payload.message || "unknown"));
+                        break;
+                }
+            });
+
+            /* Controls */
+            $("qtyUp").addEventListener("click", function () { if (cart) send("cart:set-quantity", { quantity: cart.quantity + 1 }); });
+            $("qtyDown").addEventListener("click", function () { if (cart && cart.quantity > 1) send("cart:set-quantity", { quantity: cart.quantity - 1 }); });
+            $("pingBtn").addEventListener("click", function () { send("ping", { ts: Date.now() }); });
+            $("syncBtn").addEventListener("click", function () { send("sync"); });
+            $("clearLog").addEventListener("click", function () {
+                var ledger = $("ledger");
+                Array.from(ledger.querySelectorAll(".entry")).forEach(function (n) { n.remove(); });
+                $("ledgerEmpty").hidden = false;
+            });
+
+            function loadFrame() {
+                cart = null;
+                setLinked(false);
+                $("itemName").textContent = "Waiting for the frame…";
+                $("itemPrice").textContent = "Unit price unknown";
+                $("qty").textContent = "–";
+                $("total").textContent = "–";
+                if ($("sandboxToggle").checked) frame.setAttribute("sandbox", SANDBOX);
+                else frame.removeAttribute("sandbox");
+                frame.src = frameUrl;
+            }
+            $("reloadBtn").addEventListener("click", loadFrame);
+            $("sandboxToggle").addEventListener("change", loadFrame);
+
+            /* The frame may have loaded and announced itself before this listener; ask again once loaded. */
+            frame.addEventListener("load", function () { send("sync"); });
+
+            loadFrame();
+        })();
+    </script>
 </body>
 </html>
